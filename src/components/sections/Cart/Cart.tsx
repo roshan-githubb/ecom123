@@ -3,9 +3,14 @@ import { CartItems, CartSummary } from "@/components/organisms"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { retrieveCart } from "@/lib/data/cart"
 import CartPromotionCode from "../CartReview/CartPromotionCode"
+import { retrieveCustomer } from "@/lib/data/customer"
 
 export const Cart = async () => {
+  const user = await retrieveCustomer();
   const cart = await retrieveCart()
+
+  console.log({user});
+  
 
   return (
     <>
@@ -25,7 +30,7 @@ export const Cart = async () => {
             currency_code={cart?.currency_code || ""}
             tax={cart?.tax_total || 0}
           />
-          <LocalizedClientLink href="/checkout?step=address">
+          <LocalizedClientLink href={!user ? "/user" : "/checkout?step=address"}>
             <Button className="w-full py-3 flex justify-center items-center">
               Go to checkout
             </Button>

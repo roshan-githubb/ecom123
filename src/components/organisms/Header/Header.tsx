@@ -40,6 +40,9 @@ export const Header = async () => {
     parentCategories: HttpTypes.StoreProductCategory[]
   }
 
+  console.log({regions});
+  
+
   return (
     <header>
       <div className="flex py-2 lg:px-8 px-4">

@@ -78,7 +78,10 @@ export const ProductCard = ({
   //   variantId,
   // })
 
-  const price = getRegionPrice(product, currency_code || "usd")
+  const price = getRegionPrice(product, currency_code || "npr")
+
+  console.log({ product, price });
+  
 
   if (!price.calculated_price) {
     return null

@@ -22,6 +22,9 @@ export const HomeProductsCarousel = async ({
     },
   })
 
+  console.log({ products, sellerProducts, locale });
+  
+
   if (!products.length && !sellerProducts.length) return null
 
   return (
