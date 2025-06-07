@@ -23,15 +23,15 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 export const Header = async () => {
   const cart = await retrieveCart().catch(() => null)
   const user = await retrieveCustomer()
-  let wishlist: Wishlist[] = []
-  if (user) {
-    const response = await getUserWishlists()
-    wishlist = response.wishlists
-  }
+  // let wishlist: Wishlist[] = []
+  // if (user) {
+  //   // const response = await getUserWishlists()
+  //   // wishlist = response.wishlists
+  // }
 
   const regions = await listRegions()
 
-  const wishlistCount = wishlist?.[0]?.products.length || 0
+  // const wishlistCount = wishlist?.[0]?.products.length || 0
 
   const { categories, parentCategories } = (await listCategories({
     headingCategories: PARENT_CATEGORIES,
@@ -66,7 +66,7 @@ export const Header = async () => {
         </div>
         <div className="flex items-center justify-end gap-2 lg:gap-4 w-full lg:w-1/3 py-2">
           <UserDropdown user={user} />
-          {user && (
+          {/* {user && (
             <LocalizedClientLink href="/user/wishlist" className="relative">
               <HeartIcon size={20} />
               {Boolean(wishlistCount) && (
@@ -75,7 +75,7 @@ export const Header = async () => {
                 </Badge>
               )}
             </LocalizedClientLink>
-          )}
+          )} */}
 
           <CartDropdown cart={cart} />
           <CountrySelector regions={regions} />

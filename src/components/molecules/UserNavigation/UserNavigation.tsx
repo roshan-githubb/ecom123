@@ -15,10 +15,10 @@ const navigationItems = [
     label: "Reviews",
     href: "/user/reviews",
   },
-  {
-    label: "Wishlist",
-    href: "/user/wishlist",
-  },
+  // {
+  //   label: "Wishlist",
+  //   href: "/user/wishlist",
+  // },
 ]
 
 export const UserNavigation = () => {
