@@ -1,3 +1,42 @@
+
+
+## STEPS TO RUN THE SERVER 
+
+""" 
+
+# Dev server 
+pm2 start npm --name "b2c-storefront-dev" -- run dev
+
+# Logging 
+
+pm2 logs b2c-storefront-dev
+pm2 status
+
+
+# Stop and  Delete Server
+pm2 logs b2c-storefront-dev
+pm2 status
+
+
+"""
+
+
+## How to update the deployed code 
+
+"""
+
+# SSH into Server and do `sudo su`
+# Then go to `/home/deltadot-marketfront/htdocs/marketfront.deltadotai.com`
+# `git pull` the changes from the Latest Git repo
+# The Server should automatically update, in case it doesn't Stop adn Restart the server using above commands
+
+"""
+
+
+
+
+
+
 ![B2C Storefront Cover](https://cdn.prod.website-files.com/6790aeffc4b432ccaf1b56e5/67a21bd27b4ac8b812c1d84f_B2C%20Storefront%20Cover.png)
 
 <div align="center">
