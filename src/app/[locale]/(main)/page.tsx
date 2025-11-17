@@ -125,7 +125,7 @@ export default async function Home({
   return (
     <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start text-primary">
       <link
-        rel="preload"
+        // rel="preload"
         as="image"
         href="/images/hero/Image.jpg"
         imageSrcSet="/images/hero/Image.jpg 700w"

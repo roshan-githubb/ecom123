@@ -124,7 +124,7 @@ export const CartDropdown = () => {
                   Your shopping cart is empty
                 </h4>
                 <p className="text-lg text-center py-4">
-                  Are you looging for inspiration?
+                  Are you looking for inspiration?
                 </p>
                 <LocalizedClientLink href="/categories">
                   <Button className="w-full py-3">Explore Home Page</Button>

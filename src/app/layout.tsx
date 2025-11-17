@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Funnel_Display } from "next/font/google"
-import "./globals.css"
+import './globals.css'
 import { Toaster } from "@medusajs/ui"
 import Head from "next/head"
 import { retrieveCart } from "@/lib/data/cart"
@@ -16,15 +16,15 @@ export const metadata: Metadata = {
   title: {
     template: `%s | ${
       process.env.NEXT_PUBLIC_SITE_NAME ||
-      "Mercur B2C Demo - Marketplace Storefront"
+      "Saransa - Marketplace Storefront"
     }`,
     default:
       process.env.NEXT_PUBLIC_SITE_NAME ||
-      "Mercur B2C Demo - Marketplace Storefront",
+      "Saransa - Marketplace Storefront",
   },
   description:
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ||
-    "Mercur B2C Demo - Marketplace Storefront",
+    "Saransa - Marketplace Storefront",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
   ),
@@ -56,7 +56,7 @@ export default async function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link rel="preconnect"  href="https://fonts.gstatic.com" />
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"

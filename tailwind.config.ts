@@ -73,6 +73,15 @@ export default {
         secondary: "rgba(var(--content-secondary))",
         tertiary: "rgba(var(--content-tertiary))",
         disabled: "rgba(var(--content-disabled))",
+
+        //from fignma design files
+        contentOrange: "rgba(var(--content-orange))",
+        contentBlue: "rgba(var(--content-blue))",
+        contentGray: "rgba(var(--content-gray))",
+        contentLightgray: "rgba(var(--content-lightgray))",
+        contentRed: "rgba(var(--content-red))",
+        contentWhite: "rgba(var(--content-white))",
+
         action: {
           DEFAULT: "rgba(var(--content-action-primary))",
           hover: "rgba(var(--content-action-primary-hover))",
