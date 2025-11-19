@@ -1,5 +1,3 @@
-import { SellerProps } from "./seller"
-
 export interface AdditionalAttributeProps {
   id: string
   attribute_id: string
@@ -10,18 +8,38 @@ export interface AdditionalAttributeProps {
   }
 }
 
+// types/product.ts
+export type SellerProps = {
+  id?: string
+  name?: string
+  handle?: string
+  description?: string
+  photo?: string
+  tax_id?: string
+  store_status: string
+  created_at?: string
+  updated_at?: string
+  products?: Product[]
+}
+
 export interface Product {
-  id: number
-  brand: string
-  handle: string
+  id: string
   title: string
-  size: string
+  handle: string
+  description: string
+  images: string[]
+  brand?: string
+  size?: string
   price: number
   originalPrice: number
-  thumbnail: string
-  created_at: string
-  sold?: boolean
+  currency: string
+  attribute_values?: AdditionalAttributeProps[]
+  seller?: SellerProps
+  created_at?: string   
 }
+
+
+
 
 export type SortOptions = "price_asc" | "price_desc" | "created_at"
 

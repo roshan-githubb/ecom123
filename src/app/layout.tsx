@@ -53,6 +53,19 @@ export default async function RootLayout({
   const { locale } = await params
   const cart = await retrieveCart()
 
+  // Fix TypeScript type mismatch by mapping StoreCart to expected Cart type
+  const mappedCart = cart
+    ? {
+        ...cart,
+        promotions: (cart.promotions ?? []).map((promo: any) => ({
+          ...promo,
+          created_at: promo.created_at || new Date().toISOString(),
+          updated_at: promo.updated_at || new Date().toISOString(),
+          deleted_at: promo.deleted_at ?? null,
+        })),
+      }
+    : null
+
   const ALGOLIA_APP = process.env.NEXT_PUBLIC_ALGOLIA_ID
   const htmlLang = locale || "en"
 
@@ -128,7 +141,7 @@ export default async function RootLayout({
       <body
         className={`${poppins.className} antialiased bg-primary text-secondary relative`}
       >
-        <Providers cart={cart}>{children}</Providers>
+        <Providers cart={mappedCart}>{children}</Providers>
         <Toaster position="top-right" />
       </body>
     </html>

@@ -1,8 +1,7 @@
 import Medusa from "@medusajs/js-sdk"
 
-// Defaults to standard port for Medusa server
 const MEDUSA_BACKEND_URL =
-  process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
 
 export const sdk = new Medusa({
   baseUrl: MEDUSA_BACKEND_URL,
@@ -10,52 +9,49 @@ export const sdk = new Medusa({
   publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
 })
 
-type FetchQueryOptions = Omit<RequestInit, "headers" | "body"> & {
-  headers?: Record<string, string | null | { tags: string[] }>
-  query?: Record<string, string | number>
-  body?: Record<string, any>
-}
-
 export async function fetchQuery(
   url: string,
-  { method, query, headers, body }: FetchQueryOptions
+  { method = "GET", query, headers, body }: any = {}
 ) {
-  const params = Object.entries(query || {}).reduce(
-    (acc, [key, value], index) => {
-      if (value && value !== undefined) {
-        const queryLength = Object.values(query || {}).filter((i) => !!i).length
-        acc += `${key}=${value}${index + 1 <= queryLength ? "&" : ""}`
-      }
-      return acc
-    },
-    ""
-  )
+  const params = query
+    ? "?" +
+      Object.entries(query)
+        .filter(([_, v]) => v != null)
+        .map(([k, v]) => `${k}=${v}`)
+        .join("&")
+    : ""
 
-  const res = await fetch(
-    `${MEDUSA_BACKEND_URL}${url}${params && `?${params}`}`,
-    {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "x-publishable-api-key": process.env
-          .NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY as string,
-        ...headers,
-      },
-      body: body ? JSON.stringify(body) : null,
-    }
-  )
+  const res = await fetch(`${MEDUSA_BACKEND_URL}${url}${params}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+      ...headers,
+    },
+    body: body ? JSON.stringify(body) : null,
+    credentials: "include", 
+  })
 
   let data
   try {
     data = await res.json()
   } catch {
-    data = { message: res.statusText || "Unknown error" }
+    data = { message: res.statusText }
   }
 
-  return {
-    ok: res.ok,
-    status: res.status,
-    error: res.ok ? null : { message: data?.message },
-    data: res.ok ? data : null,
-  }
+  return { ok: res.ok, status: res.status, data, error: res.ok ? null : data }
 }
+
+
+export const publicProductClient = new Medusa({
+  baseUrl: MEDUSA_BACKEND_URL,
+  publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+  // auth: false,
+  // This is the magic: no cookies, no auth headers ever
+  // requestConfig: {
+  //   credentials: "omit",
+  //   headers: {
+  //     "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+  //   },
+  // },
+})

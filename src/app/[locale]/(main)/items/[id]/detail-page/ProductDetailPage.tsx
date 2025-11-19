@@ -19,7 +19,7 @@ const colors = [
 
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
 
-function StarIcon({ className = "w-4 h-4" }: { className?: string }) {
+function StarIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 20 20"
@@ -47,7 +47,7 @@ export default function ItemDetailPage({ id }: { id: string }) {
     price: 1925,
     mrp: 3500,
     save: 1575,
-    badges: ["BESTSELLER"],
+    badges: ["BEST SELLER"],
     images: sampleImages,
   }
 
@@ -79,13 +79,13 @@ export default function ItemDetailPage({ id }: { id: string }) {
                 {/* Stars */}
                 <div className="flex items-center text-contentOrange">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon key={i} className="w-4 h-4" />
+                    <StarIcon key={i} className="w-6 h-6" />
                   ))}
                 </div>
               </div>
 
-              <div className="text-sm text-gray-500">
-                ({product.reviews.toLocaleString()})
+              <div className="text-sm font-medium text-[#222222] leading-[21px]">
+                {product.reviews.toLocaleString()}
               </div>
             </div>
           </div>
@@ -93,7 +93,7 @@ export default function ItemDetailPage({ id }: { id: string }) {
           {/* Product Title + Badges */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex-1">
-              <h1 className="text-md font-normal leading-[21px] text-[#666666] flex items-end">
+              <h1 className="text-sm font-medium leading-[21px] text-[#666666] flex items-end">
                 {product.title}
               </h1>
 
@@ -101,22 +101,22 @@ export default function ItemDetailPage({ id }: { id: string }) {
                 {product.badges.map((b) => (
                   <span
                     key={b}
-                    className="text-xs bg-[#f80707] text-white px-2 py-1 rounded-sm font-medium"
+                    className="text-xs bg-[#F80000] text-white px-2 py-1 rounded-sm font-medium"
                   >
                     #{b}
                   </span>
                 ))}
                 <Link
                   href={product.store.url}
-                  className="text-md font-medium mt-1 text-contentBlue"
+                  className="text-sm font-normal mt-1 text-[#425699]"
                 >
                   in Shirt & Tops
                 </Link>
               </div>
 
-              <div className="mt-2 text-gray-800">
+              <div className="mt-2 text-[#222222] text-sm">
                 <span className="font-semibold">{product.soldLastMonth}</span>{" "}
-                <strong>Sold Out</strong> in last month
+                <span className="font-semibold">Sold Out</span> in last month
               </div>
             </div>
           </div>
@@ -157,9 +157,9 @@ export default function ItemDetailPage({ id }: { id: string }) {
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Color Selector */}
           <div>
-            <div className="text-sm mb-2 text-black">
+            <div className="text-[16px] font-normal text-black mb-2">
               Color:{" "}
-              <span className="font-bold text-black">
+              <span className="font-semibold text-[16px] text-black">
                 {colors.find((c) => c.id === selectedColor)?.label}
               </span>
             </div>
@@ -173,18 +173,18 @@ export default function ItemDetailPage({ id }: { id: string }) {
                       setIndex(i)
                       setSelectedColor(i.toString())
                     }}
-                    className={`w-14 h-14 rounded-sm border overflow-hidden flex items-center justify-center ${
+                    className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
                       isSelected
-                        ? "ring-2 ring-offset-1 ring-blue-600"
-                        : "border-gray-300"
+                        ? "border-2 border-[#1A315A]"
+                        : "border border-gray-300"
                     }`}
                     aria-pressed={isSelected}
                   >
                     <Image
                       src={imgSrc}
                       alt={`Variant ${i + 1}`}
-                      width={56}
-                      height={56}
+                      width={84}
+                      height={74}
                       className="object-cover w-full h-full"
                     />
                   </button>
@@ -197,7 +197,9 @@ export default function ItemDetailPage({ id }: { id: string }) {
 
           {/* Size Selector */}
           <div>
-            <div className="text-sm mb-2 text-black">Size:</div>
+            <div className="text-base font-normal mb-2 text-[#222222]">
+              Size:
+            </div>
             <div className="flex flex-wrap gap-2">
               {sizes.map((s) => {
                 const isSelected = selectedSize === s
@@ -205,10 +207,10 @@ export default function ItemDetailPage({ id }: { id: string }) {
                   <button
                     key={s}
                     onClick={() => setSelectedSize(s)}
-                    className={`px-3 py-1.5 rounded-sm border uppercase text-sm tracking-wide ${
+                    className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
                       isSelected
-                        ? "bg-gray-900 text-white border-gray-900"
-                        : "bg-transparent text-gray-700 border-gray-300"
+                        ? "border-2 border-[#1A315A] bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-[#333333] font-normal text-base"
+                        : "border border-[#333333] bg-transparent text-[#333333] font-normal text-base"
                     }`}
                   >
                     {s}
@@ -223,25 +225,25 @@ export default function ItemDetailPage({ id }: { id: string }) {
 
         {/* Price & Badges */}
         <div className="mt-4 flex flex-col gap-1">
-          <div className="bg-[#F80000]  text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
+          <div className="bg-[#F80000] text-[#FFFFFF] px-3 py-1.5 rounded-sm text-base font-medium w-fit">
             45% OFF + Cash on Delivery
           </div>
           <div className="flex items-center">
-            <div className="px-1 py-0.5 text-[32px] text-[#F80000] rounded-md font-medium">
+            <div className="px-1 py-0.5 text-[32px] text-[#F80000] rounded-md font-normal">
               -45%
             </div>
-            <div className="px-2 py-0.5 rounded-md text-xs font-semibold flex items-baseline gap-0.5">
+            <div className="px-2 py-0.5 text-[32px] text-[#222222] rounded-md text-xs font-semibold flex items-baseline gap-0.5">
               <span className="text-[14px] align-top relative -top-0.5">
                 Rs
               </span>
-              <span className="text-[32px] font-medium">{product.price}</span>
+              <span className="text-[32px] font-medium text-[#222222]">{product.price}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-600">
+            <div className="font-normal text-base text-[#777777]">
               M.R.P.: <span className="line-through">Rs {product.mrp}</span>
             </div>
-            <div className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold">
+            <div className="bg-[#EAEFFF] text-[#307345] text-base font-medium">
               Save Rs {product.save}
             </div>
           </div>
@@ -251,7 +253,7 @@ export default function ItemDetailPage({ id }: { id: string }) {
           <hr className="-mx-4 w-screen border-t border-gray-300" />
           {/* Product details */}
           <details className="">
-            <summary className="cursor-pointer font-bold text-black flex justify-between items-center list-none">
+            <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
               <span>Product Details</span>
               <Image
                 src="/images/icons/arrow.png"
@@ -262,19 +264,19 @@ export default function ItemDetailPage({ id }: { id: string }) {
               />
             </summary>
             <div>
-              <table className="w-full text-md text-black text-left">
+              <table className="w-full font-semibold text-[16px] text-[#222222] text-left">
                 <tbody>
                   <tr>
-                    <td className="py-2 font-bold w-40">Material</td>
-                    <td className="py-2">100% Cotton</td>
+                    <td className="py-2 w-40">Material</td>
+                    <td className="py-2 font-normal text-[16px]">100% Cotton</td>
                   </tr>
                   <tr>
-                    <td className="py-2 font-bold">Fit</td>
-                    <td className="py-2">Regular</td>
+                    <td className="py-2">Fit</td>
+                    <td className="py-2 font-normal text-[16px]">Regular</td>
                   </tr>
                   <tr>
-                    <td className="py-2 font-bold">Care</td>
-                    <td className="py-2">Machine wash cold</td>
+                    <td className="py-2">Care</td>
+                    <td className="py-2 font-normal text-[16px]">Machine wash cold</td>
                   </tr>
                 </tbody>
               </table>
@@ -285,7 +287,7 @@ export default function ItemDetailPage({ id }: { id: string }) {
 
           {/* Product specification */}
           <details className="">
-            <summary className="cursor-pointer font-bold text-black flex justify-between items-center list-none">
+            <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
               <span>Product specification</span>
               <Image
                 src="/images/icons/arrow.png"
@@ -296,15 +298,15 @@ export default function ItemDetailPage({ id }: { id: string }) {
               />
             </summary>
             <div>
-              <table className="w-full text-md text-black text-left">
+              <table className="w-full font-semibold text-[16px] text-[#222222] text-left">
                 <tbody>
                   <tr>
-                    <td className="py-2 font-bold w-40">Brand</td>
-                    <td className="py-2">Puma</td>
+                    <td className="py-2 w-40">Brand</td>
+                    <td className="py-2 font-normal text-[16px]">Puma</td>
                   </tr>
                   <tr>
-                    <td className="py-2 font-bold">Model</td>
-                    <td className="py-2">TSH-1234</td>
+                    <td className="py-2 w-40">Model</td>
+                    <td className="py-2 font-normal text-[16px]">TSH-1234</td>
                   </tr>
                 </tbody>
               </table>
@@ -315,7 +317,7 @@ export default function ItemDetailPage({ id }: { id: string }) {
 
           {/* Questions & Reviews */}
           <details className="">
-            <summary className="cursor-pointer font-bold text-black flex justify-between items-center list-none">
+            <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
               <span>Questions & Reviews</span>
               <Image
                 src="/images/icons/arrow.png"
@@ -329,19 +331,19 @@ export default function ItemDetailPage({ id }: { id: string }) {
               {/* Rating Summary */}
               <div className="flex items-center gap-2">
                 <StarRating rate={4.6} starSize={15} />
-                <span className="text-[15px] text-black font-medium">
+                <span className="text-[14px] text-[#222222] font-medium">
                   4.6 out of 5
                 </span>
               </div>
 
-              <span className="text-sm">3420 global rating</span>
+              <span className="text-[12px] font-normal">3420 global rating</span>
 
               <div>
-                <p className="text-[18px] text-black font-medium">
+                <p className="text-[14px] text-[#222222] font-medium">
                   Customers say
                 </p>
-                <span>
-                  Customers consistently praise this shirt for its perfect fit
+                <span className="text-[14px] font-normal text-[#666666]">
+                  {`"Customers consistently praise this shirt for its perfect fit
                   and exceptional comfort, nothing the high-quality, soft fabric
                   offers great value for the price. Many highlight that it holds
                   up beautifully after washing with no shrinking, and the
@@ -349,7 +351,7 @@ export default function ItemDetailPage({ id }: { id: string }) {
                   shopping hassle-free. It has quickly become a go-to piece for
                   both the office and casual wear, with several users mentioning
                   they receive frequent compliments. Overall, buyers are highly
-                  satisfied and report they are likely to purchase more colors.
+                  satisfied and report they are likely to purchase more colors."`}
                 </span>
               </div>
 
@@ -360,36 +362,36 @@ export default function ItemDetailPage({ id }: { id: string }) {
                   <Image
                     src={`/images/users/john-doe.jpg`}
                     alt="Reviewer"
-                    width={10}
-                    height={10}
-                    className="w-10 h-10 rounded-full object-cover"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 rounded-full object-cover"
                     quality={80}
                   />
                   <div className="flex flex-col">
-                    <span className="font-semibold">John Doe</span>
+                    <span className="font-medium text-[14px] text-[#222222]">John Doe</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 text-contentOrange text-xs">
                   <StarRating rate={5} starSize={15} />
-                  <span className="text-[10px] text-orage-600 ml-1">
+                  <span className="text-[10px] font-normal text-[#FA6308]">
                     Verified Purchase
                   </span>
                 </div>
 
-                <div className="text-black">
+                <div className="text-[14px] font-medium text-[#222222]">
                   Soft, Great shirt and fantastic quality
                 </div>
 
-                <div className="text-[10px] text-gray-500 mt-1">
+                <div className="text-[10px] font-normal text-[#888888] mt-1">
                   Reviewed in the United States on October 13, 2025
                 </div>
 
-                <div className="text-[10px] text-gray-400">
+                <div className="text-[10px] font-normal text-[#888888]">
                   Size: Medium{" "}
                   <span className="text-gray-400">(Quantity: 1)</span>
                 </div>
 
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-[14px] font-normal text-[#666666]">
                   “
                   {`I’ve been using this product for a few weeks now, and I’m genuinely impressed by the build quality and comfort.
 The fit is exactly as described, and the material feels durable without being too heavy.

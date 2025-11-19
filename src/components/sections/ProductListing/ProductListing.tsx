@@ -6,7 +6,8 @@ import {
   ProductsPagination,
 } from "@/components/organisms"
 import { PRODUCT_LIMIT } from "@/const"
-import { listProductsWithSort } from "@/lib/data/products"
+import { listProducts } from "@/lib/data/products"
+import { getRegion } from "@/lib/data/regions"  
 
 export const ProductListing = async ({
   category_id,
@@ -21,21 +22,22 @@ export const ProductListing = async ({
   showSidebar?: boolean
   locale?: string
 }) => {
-  const { response } = await listProductsWithSort({
-    seller_id,
-    category_id,
-    collection_id,
-    countryCode: locale,
-    sortBy: "created_at",
+
+  const region = await getRegion(locale)   // "pl", "np", "us", etc.
+  if (!region) throw new Error("Region not found")
+
+  const { response } = await listProducts({
+    pageParam: 1,
     queryParams: {
       limit: PRODUCT_LIMIT,
+      category_id,
+      collection_id,
+      seller_id,
     },
+    regionId: region.id,   // ← THIS IS THE ONLY CHANGE INSIDE listProducts call
   })
 
-  const { products } = await response
-
-  const count = products.length
-
+  const { products, count } = response
   const pages = Math.ceil(count / PRODUCT_LIMIT) || 1
 
   return (

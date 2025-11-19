@@ -1,18 +1,27 @@
 import 'server-only';
 import { cookies as nextCookies } from 'next/headers';
 
-export const getAuthHeaders = async (): Promise<
-  { authorization: string } | {}
-> => {
-  const cookies = await nextCookies();
-  const token = cookies.get('_medusa_jwt')?.value;
+// export const getAuthHeaders = async (): Promise<
+//   { authorization: string } | {}
+// > => {
+//   const cookies = await nextCookies();
+//   const token = cookies.get('_medusa_jwt')?.value;
 
-  if (!token) {
-    return {};
-  }
+//   if (!token) {
+//     return {};
+//   }
 
-  return { authorization: `Bearer ${token}` };
+//   return { authorization: `Bearer ${token}` };
+// };
+
+
+
+export const getAuthHeaders = async () => {
+  // For storefront (products, categories, homepage, etc)
+  // NEVER send authorization header
+  return {};
 };
+
 
 export const getCacheTag = async (
   tag: string

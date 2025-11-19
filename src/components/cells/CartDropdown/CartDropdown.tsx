@@ -12,39 +12,56 @@ import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useCartContext } from "@/components/providers"
 
+// Helper to safely map Cart to StoreCart
+const mapCartToStoreCart = (cart: any): HttpTypes.StoreCart | null => {
+  if (!cart) return null
+
+  return {
+    ...cart,
+    promotions: cart.promotions?.map((promo: any) => ({
+      ...promo,
+      created_at: promo.created_at || new Date().toISOString(),
+      updated_at: promo.updated_at || new Date().toISOString(),
+      deleted_at: promo.deleted_at ?? null,
+    })) || [],
+  }
+}
+
 const getItemCount = (cart: HttpTypes.StoreCart | null) => {
   return cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0
 }
 
 export const CartDropdown = () => {
   const { cart } = useCartContext()
+  const mappedCart = mapCartToStoreCart(cart)
+
   const [open, setOpen] = useState(false)
 
-  const previousItemCount = usePrevious(getItemCount(cart))
-  const cartItemsCount = (cart && getItemCount(cart)) || 0
+  const previousItemCount = usePrevious(getItemCount(mappedCart))
+  const cartItemsCount = (mappedCart && getItemCount(mappedCart)) || 0
   const pathname = usePathname()
 
   // Filter out items with invalid data (missing prices/variants)
-  const validItems = filterValidCartItems(cart?.items)
+  const validItems = filterValidCartItems(mappedCart?.items)
 
   const total = convertToLocale({
-    amount: cart?.total || 0,
-    currency_code: cart?.currency_code || "eur",
+    amount: mappedCart?.total || 0,
+    currency_code: mappedCart?.currency_code || "eur",
   })
 
   const delivery = convertToLocale({
-    amount: cart?.shipping_subtotal || 0,
-    currency_code: cart?.currency_code || "eur",
+    amount: mappedCart?.shipping_subtotal || 0,
+    currency_code: mappedCart?.currency_code || "eur",
   })
 
   const tax = convertToLocale({
-    amount: cart?.tax_total || 0,
-    currency_code: cart?.currency_code || "eur",
+    amount: mappedCart?.tax_total || 0,
+    currency_code: mappedCart?.currency_code || "eur",
   })
 
   const items = convertToLocale({
-    amount: cart?.item_subtotal || 0,
-    currency_code: cart?.currency_code || "eur",
+    amount: mappedCart?.item_subtotal || 0,
+    currency_code: mappedCart?.currency_code || "eur",
   })
 
   useEffect(() => {
@@ -96,7 +113,7 @@ export const CartDropdown = () => {
                     <CartDropdownItem
                       key={`${item.product_id}-${item.variant_id}`}
                       item={item}
-                      currency_code={cart?.currency_code || "eur"}
+                      currency_code={mappedCart?.currency_code || "eur"}
                     />
                   ))}
                 </div>

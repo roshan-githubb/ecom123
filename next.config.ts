@@ -9,9 +9,12 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    domains: ["saransa-marketplace-bucket-stage.s3.ap-south-1.amazonaws.com"],
+
     remotePatterns: [
       {
         protocol: "https",
+
         hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com",
       },
       {

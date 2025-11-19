@@ -114,8 +114,8 @@ async function Category({
     response: { products: jsonLdProducts },
   } = await listProducts({
     countryCode: locale,
-    queryParams: { limit: 8, order: "created_at", fields: "id,title,handle" },
-    category_id: category.id,
+    queryParams: { limit: 8, order: "created_at", fields: "id,title,handle", category_id: category.id },
+    
   })
 
   const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
