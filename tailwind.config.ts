@@ -9,6 +9,13 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-poppins)"], 
+        // display: ["var(--font-funnel-sans)", "sans-serif"],
+      },
+      fontWeight: {
+        semibold: "600", 
+      },
       backgroundColor: {
         primary: "rgba(var(--bg-primary))",
         secondary: "rgba(var(--bg-secondary))",

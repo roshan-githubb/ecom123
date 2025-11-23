@@ -104,7 +104,7 @@ function RootLayout(_a) {
                             }) }) : null;
                     ALGOLIA_APP = process.env.NEXT_PUBLIC_ALGOLIA_ID;
                     htmlLang = locale || "en";
-                    return [2 /*return*/, (React.createElement("html", { lang: htmlLang },
+                    return [2 /*return*/, (React.createElement("html", { lang: htmlLang, className: poppins.variable },
                             React.createElement(head_1["default"], null,
                                 React.createElement("link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" }),
                                 React.createElement("link", { rel: "preconnect", href: "https://fonts.gstatic.com" }),
@@ -125,7 +125,7 @@ function RootLayout(_a) {
                                 React.createElement("link", { rel: "dns-prefetch", href: "https://s3.eu-central-1.amazonaws.com" }),
                                 React.createElement("link", { rel: "preconnect", href: "https://api.mercurjs.com", crossOrigin: "anonymous" }),
                                 React.createElement("link", { rel: "dns-prefetch", href: "https://api.mercurjs.com" })),
-                            React.createElement("body", { className: poppins.className + " antialiased bg-primary text-secondary relative" },
+                            React.createElement("body", { className: poppins.variable + " antialiased bg-primary text-secondary relative" },
                                 React.createElement(providers_1.Providers, { cart: mappedCart }, children),
                                 React.createElement(ui_1.Toaster, { position: "top-right" }))))];
             }

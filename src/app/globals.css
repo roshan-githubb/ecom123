@@ -1,87 +1,67 @@
-/* Defined colors variables */
+/* src/app/globals.css – FULLY FIXED & SAFE */
+
 @import "colors.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ======================================================================== */
+/* NEVER DO THIS — breaks next/font/google completely */
+/* html, body { font-family: 'Poppins', sans-serif; } → DELETE THIS LINE */
+/* ======================================================================== */
 
+/* ======================================================================== */
+/* 1. Custom Typography – safe names (no conflict with Tailwind defaults) */
+/* ======================================================================== */
 
-html, body {
-  font-family: 'Poppins', sans-serif;
-}
+.heading-xs   { @apply text-sm font-medium leading-snug; }
+.heading-sm   { @apply text-base font-medium leading-snug; }
+.heading-md   { @apply text-2xl font-medium leading-tight max-md:text-xl max-md:leading-8; }
+.heading-lg   { @apply text-4xl font-medium leading-tight max-md:text-2xl max-md:leading-9; }
+.heading-xl   { @apply text-5xl font-medium leading-tight max-md:text-3xl max-md:leading-10; }
 
-/* Typography */
-.text-xl {
-  @apply font-light tracking-normal;
-}
-.text-lg {
-  @apply text-base font-light tracking-normal;
-}
-.text-md {
-  @apply text-[14px] leading-[22px] font-light tracking-normal;
-}
-.text-sm {
-  @apply text-[12px] font-light tracking-normal;
-}
+.label-sm     { @apply text-xs leading-5 font-normal; }
+.label-md     { @apply text-sm leading-relaxed font-normal; }
+.label-lg     { @apply text-base leading-relaxed font-semibold; }
+.label-xl     { @apply text-xl leading-relaxed font-semibold; }
 
-.label-sm {
-  @apply text-[12px] leading-[20px] font-normal tracking-normal;
-}
-.label-md {
-  @apply text-[14px] leading-[22px] font-normal tracking-normal;
-}
-.label-lg {
-  @apply text-[16px] leading-[24px] font-semibold tracking-normal;
-}
-.label-xl {
-  @apply text-[20px] leading-[28px] font-semibold tracking-normal;
-}
+.body-lg      { @apply text-lg font-light leading-relaxed; }
+.body-md      { @apply text-base font-light leading-relaxed; }
+.body-sm      { @apply text-sm font-light leading-normal; }
+.body-xs      { @apply text-xs font-light leading-tight; }
 
-.heading-xs {
-  @apply text-[14px] leading-[22px] font-medium tracking-normal;
-}
-.heading-sm {
-  @apply text-[16px] leading-[24px] font-medium tracking-normal;
-}
-.heading-md {
-  @apply text-[24px] leading-[32px] font-medium tracking-normal max-md:text-[20px] max-md:leading-[28px];
-}
-.heading-lg {
-  @apply text-[32px] leading-[40px] font-medium tracking-normal max-md:text-[24px] max-md:leading-[32px];
-}
-.heading-xl {
-  @apply text-[40px] leading-[48px] font-medium tracking-normal max-md:text-[32px] max-md:leading-[40px];
-}
+.display-sm   { @apply text-5xl md:text-6xl font-medium leading-tight max-md:text-4xl; }
+.display-md   { @apply text-6xl md:text-7xl font-medium leading-tight max-md:text-5xl; }
 
-.display-sm {
-  @apply text-[56px] leading-[64px] font-medium tracking-normal max-md:text-[32px] max-md:leading-[40px];
-}
-.display-md {
-  @apply text-[64px] leading-[72px] font-medium tracking-normal max-md:text-[40px] max-md:leading-[48px];
-}
+/* ======================================================================== */
+/* 2. Layout */
+/* ======================================================================== */
+
 .container {
-  @apply px-4 md:px-5 max-w-full w-full lg:py-8 py-4 lg:px-8;
+  @apply w-full max-w-full px-4 md:px-6 lg:px-8 py-4 lg:py-8;
 }
 
-/* Atoms components */
+/* ======================================================================== */
+/* 3. Buttons – REMOVED non-existing classes (text-on-action, etc.) */
+/* ======================================================================== */
 
 .button-icon {
-  @apply bg-primary hover:bg-action-secondary-hover active:bg-action-secondary-pressed disabled:bg-primary;
+  @apply p-2 rounded-lg bg-primary hover:bg-action-secondary-hover active:bg-action-secondary-pressed disabled:bg-disabled transition-colors;
 }
 .button-icon svg path {
   @apply fill-secondary;
 }
 
 .button-filled {
-  @apply bg-action hover:bg-action-hover active:bg-action-pressed disabled:bg-disabled;
+  @apply px-6 py-3 rounded-lg bg-action hover:bg-action-hover active:bg-action-pressed disabled:bg-disabled text-white transition-colors font-medium;
 }
 .button-filled svg path {
-  @apply fill-primary;
+  @apply fill-white;
 }
 
 .button-tonal {
-  @apply bg-action-secondary hover:bg-action-secondary-hover active:bg-action-secondary-pressed disabled:bg-disabled;
+  @apply px-6 py-3 rounded-lg bg-action-secondary hover:bg-action-secondary-hover active:bg-action-secondary-pressed disabled:bg-disabled text-secondary transition-colors font-medium;
 }
 .button-tonal svg path {
   @apply fill-secondary;
@@ -91,29 +71,39 @@ button:disabled svg path {
   @apply fill-disabled;
 }
 
-.button-text-filled svg path {
-  @apply fill-tertiary;
-}
+/* ======================================================================== */
+/* 4. Form Components */
+/* ======================================================================== */
 
 .checkbox-wrapper {
-  @apply rounded-xs bg-component-secondary w-[20px] h-[20px] border border-secondary bg-component-secondary cursor-pointer;
+  @apply w-5 h-5 rounded border-2 border-secondary bg-component-secondary flex items-center justify-center cursor-pointer transition-colors;
+}
+.checkbox-wrapper[aria-checked="true"] {
+  @apply bg-action border-action;
 }
 .checkbox-wrapper svg {
-  @apply pointer-events-none;
+  @apply w-4 h-4 pointer-events-none hidden;
+}
+.checkbox-wrapper[aria-checked="true"] svg {
+  @apply block;
 }
 .checkbox-wrapper svg path {
-  @apply fill-primary;
+  @apply fill-white;
 }
 
 .chip-wrapper {
-  @apply bg-component inline-flex items-center px-3 py-1 rounded-sm label-sm border hover:bg-component-hover relative;
+  @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border bg-component hover:bg-component-hover transition-colors;
 }
 .chip-wrapper svg path {
   @apply fill-secondary;
 }
-.chip-wrapper[data-disabled="true"] svg path {
-  @apply fill-primary;
+.chip-wrapper[data-disabled="true"] {
+  @apply opacity-60 cursor-not-allowed;
 }
+
+/* ======================================================================== */
+/* 5. Utilities */
+/* ======================================================================== */
 
 .multi-gradient {
   background: conic-gradient(
@@ -127,19 +117,35 @@ button:disabled svg path {
     #00438f 360deg
   );
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-arrows-number-input {
+  -moz-appearance: textfield;
+}
+.no-arrows-number-input::-webkit-inner-spin-button,
+.no-arrows-number-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ======================================================================== */
+/* 6. Misc */
+/* ======================================================================== */
+
 .product-details {
-  @apply text-md;
+  @apply body-md text-secondary;
 }
 .product-details ul {
-  @apply list-disc text-md pl-5;
+  @apply list-disc pl-5 space-y-1 body-md;
 }
+
 .embla__container {
   touch-action: pan-y pinch-zoom;
 }
@@ -147,13 +153,4 @@ button:disabled svg path {
   transform: translate3d(0, 0, 0);
   flex: 0 0 100%;
   min-width: 0;
-}
-
-.no-arrows-number-input::-webkit-inner-spin-button,
-.no-arrows-number-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.no-arrows-number-input {
-  -moz-appearance: textfield;
 }
