@@ -70,7 +70,7 @@ export default async function RootLayout({
   const htmlLang = locale || "en"
 
   return (
-    <html lang={htmlLang}>
+    <html lang={htmlLang} className={poppins.variable}>
       <Head>
         <link
           rel="preconnect"
@@ -139,7 +139,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://api.mercurjs.com" />
       </Head>
       <body
-        className={`${poppins.className} antialiased bg-primary text-secondary relative`}
+        className={`${poppins.variable} antialiased bg-primary text-secondary relative`}
       >
         <Providers cart={mappedCart}>{children}</Providers>
         <Toaster position="top-right" />

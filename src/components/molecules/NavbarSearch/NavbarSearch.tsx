@@ -21,7 +21,7 @@ export function NavbarSearch() {
   }
 
   return (
-    <form className="flex items-center" method="POST" onSubmit={submitHandler}>
+    <form className="flex items-center w-[285px]" method="POST" onSubmit={submitHandler}>
       <Input
         icon={<SearchIcon className="w-4 h-4 text-gray-500" />}
         placeholder="Search product"

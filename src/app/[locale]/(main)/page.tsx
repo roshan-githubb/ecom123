@@ -65,16 +65,17 @@ export default function HomePage() {
           <ItemCategoryCard key={c.id} imageUrl={c.image} label={c.label} shape="circle" />
         ))}
       </div>
-
       {/* Flash Sale section (dark blue header) */}
       <div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between ">
           <h2 className="text-[20px] font-medium" style={{ color: "#32425A" }}>Flash Sale</h2>
           <button className="text-[14px] font-medium" style={{ color: "#144293" }}>See all</button>
         </div>
 
+        <div className="my-5"></div>
         {/* two cards side-by-side */}
-        <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3">
+        {/* <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3"> */}
+        <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
           {flashProducts.map((p) => (
             <HomeProductCard
               key={p.id}

@@ -62,7 +62,7 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
             <Suspense fallback={<ProductListingSkeleton />}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                     {recommendedProducts.map((product: HttpTypes.StoreProduct) => (
-                        <ProductCard key={product.id} api_product={product} />
+                        <ProductCard key={product.id} api_product={product} locale={locale}/>
                     ))}
                 </div>
             </Suspense>

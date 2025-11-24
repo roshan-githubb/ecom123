@@ -1,0 +1,451 @@
+"use client"
+
+import Image from "next/image"
+import Link from "next/link"
+import { useState } from "react"
+import { StarRating } from "@/components/atoms"
+import { useCartStore } from "@/store/useCartStore"
+import toast, { Toaster } from "react-hot-toast"
+
+interface ProductOptionValue {
+  id: string
+  value: string
+}
+
+interface ProductOption {
+  id: string
+  title: string
+  values: ProductOptionValue[]
+}
+
+interface ProductVariantOption {
+  id: string
+  value: string
+}
+
+interface ProductVariant {
+  id: string
+  options: ProductVariantOption[]
+  calculated_price?: {
+    calculated_amount: number
+    original_amount: number
+    currency_code: string
+  }
+}
+
+interface Product {
+  id: string
+  title: string
+  store?: { name: string; url: string }
+  collection?: { title: string }
+  soldLastMonth?: number
+  review_count?: number
+  material?: string
+  images?: { url: string }[]
+  options?: ProductOption[]
+  variants?: ProductVariant[]
+}
+
+interface ColorOption {
+  id: string
+  label: string
+  bg: string
+  ring: string
+}
+
+function StarIcon({ className = "w-6 h-6" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.137 3.49a1 1 0 00.95.69h3.665c.969 0 1.371 1.24.588 1.81l-2.965 2.16a1 1 0 00-.364 1.118l1.137 3.49c.3.921-.755 1.688-1.54 1.118l-2.965-2.16a1 1 0 00-1.176 0l-2.965 2.16c-.784.57-1.838-.197-1.54-1.118l1.137-3.49a1 1 0 00-.364-1.118L2.708 9.917c-.783-.57-.38-1.81.588-1.81h3.665a1 1 0 00.95-.69l1.137-3.49z" />
+    </svg>
+  )
+}
+
+export default function ProductDetailClient({ product }: { product: Product }) {
+  const [index, setIndex] = useState(0)
+  const addToCart = useCartStore((state) => state.addToCart)
+
+  // --- Colors ---
+  const colorOption = product.options?.find(
+    (opt) => opt.title.toLowerCase() === "color"
+  )
+  const colors: ColorOption[] =
+    colorOption?.values.map((v) => {
+      let bgClass = "bg-gray-200"
+      let ringClass = "ring-gray-300"
+      switch (v.value.toLowerCase()) {
+        case "white":
+          bgClass = "bg-white"
+          ringClass = "ring-gray-300"
+          break
+        case "black":
+          bgClass = "bg-black"
+          ringClass = "ring-gray-700"
+          break
+        case "red":
+          bgClass = "bg-red-500"
+          ringClass = "ring-red-300"
+          break
+      }
+      return { id: v.id, label: v.value, bg: bgClass, ring: ringClass }
+    }) || []
+
+  // --- Sizes ---
+  const sizeOption = product.options?.find(
+    (opt) => opt.title.toLowerCase() === "size"
+  )
+  const sizes = sizeOption ? sizeOption.values.map((v) => v.value) : []
+
+  // --- State ---
+  const [selectedColor, setSelectedColor] = useState(colors[0]?.id)
+  const [selectedSize, setSelectedSize] = useState(sizes[0])
+  const images = product.images?.map((img) => img.url) || []
+
+  // --- Handle Add To Cart ---
+  const handleAddToCart = () => {
+    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
+    const sizeLabel = selectedSize
+
+    const selectedVariant = product.variants?.find((v) => {
+      const hasColor = v.options?.some((o) => o.value === colorLabel)
+      const hasSize = v.options?.some((o) => o.value === sizeLabel)
+      return hasColor && hasSize
+    })
+
+    if (!selectedVariant) {
+      toast.error("Please select a valid variant")
+      console.log("No variant matched", colorLabel, sizeLabel)
+      return
+    }
+
+    addToCart({
+      id: selectedVariant.id,
+      title: product.title,
+      price: selectedVariant.calculated_price?.calculated_amount ?? 0,
+      image: images[index] || "/images/product/wireless-headphone.jpg",
+      quantity: 1,
+      color: colorLabel,
+    })
+
+    toast.success("Item added to cart successfully!")
+  }
+
+  const selectedVariant = product.variants?.find((v) => {
+    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
+    const sizeLabel = selectedSize
+    const hasColor = v.options?.some((o) => o.value === colorLabel)
+    const hasSize = v.options?.some((o) => o.value === sizeLabel)
+    return hasColor && hasSize
+  })
+
+  const price = selectedVariant?.calculated_price?.calculated_amount ?? 0
+  const originalPrice =
+    selectedVariant?.calculated_price?.original_amount ?? price
+  const discountPercent =
+    originalPrice > price
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : 0
+  const currency =
+    selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "NPR"
+
+  return (
+    <main className="min-h-screen">
+      {/* Toast messages */}
+      <Toaster position="top-right" reverseOrder={false} />
+
+      {/* Top Section */}
+      <section className="w-full bg-white border-b border-gray-200">
+        <div className="max-w-4xl mx-auto py-4 px-4">
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={product.store?.url || "#"}
+              className="inline-flex items-end w-full max-w-[163px] h-[21px] text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
+            >
+              Visit the {product.store?.name || "Store"} store
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <div className="flex items-center text-contentOrange">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <StarIcon key={i} />
+                  ))}
+                </div>
+              </div>
+              <div className="text-sm font-medium text-[#222222]">
+                {product.review_count || 0}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
+            <div className="flex-1">
+              <h1 className="text-sm font-medium leading-[21px] text-[#666666] flex items-end">
+                {product.title}
+              </h1>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
+                  #Best Seller
+                </span>
+                <span className="text-md font-medium mt-1 text-contentBlue">
+                  in {product?.collection?.title}
+                </span>
+              </div>
+              <div className="mt-2 text-[#222222] text-sm">
+                <span className="font-semibold">
+                  {product.soldLastMonth || "0"}
+                </span>{" "}
+                Sold Out in past month
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Image Carousel */}
+      <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
+        <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
+          <div
+            className="w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px]
+                    h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px]
+                    overflow-hidden rounded-[16px] flex items-center justify-center"
+          >
+            {images[index] && (
+              <Image
+                src={images[index]}
+                alt={product.title + " image"}
+                width={296}
+                height={320}
+                className="object-cover w-full h-full rounded-[16px]"
+              />
+            )}
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              className={`w-2 h-2 rounded-full ${
+                i === index ? "bg-blue-800" : "bg-gray-300"
+              }`}
+              aria-label={`View image ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+        {/* Color & Size */}
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <div className="text-[16px] font-normal text-black mb-2">
+              Color:{" "}
+              <span className="font-semibold text-[16px] text-black">
+                {colors.find((c) => c.id === selectedColor)?.label}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              {colors.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedColor(c.id)}
+                  className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
+                    selectedColor === c.id
+                      ? "border-2 border-[#1A315A]"
+                      : "border border-gray-300"
+                  }`}
+                >
+                  <div className={`${c.bg} w-full h-full`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+       
+
+          <div>
+            <div className="text-base font-normal mb-2 text-[#222222]">
+              Size:
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSelectedSize(s)}
+                  className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
+                    selectedSize === s
+                      ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
+                      : "border border-[#333333] bg-transparent text-[#333333]"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+        {/* Price & Discount */}
+        <div className="mt-3 flex flex-col gap-1">
+          <div className="bg-[#F80000] text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
+            {discountPercent}% OFF + Cash on Delivery
+          </div>
+          <div className="flex items-center pt-1">
+            <div className="pr-2 py-0.5 text-[32px] text-[#F80000] rounded-md font-medium">
+              -{discountPercent}%
+            </div>
+            <div className="px-2 rounded-md text-xs font-semibold flex items-baseline gap-1">
+              <span className="text-[14px] leading-none self-start">
+                {currency}
+              </span>
+              <span className="text-[32px] font-medium leading-none">
+                {price}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-normal font-base text-gray-600">
+              M.R.P.:{" "}
+              <span className="line-through">
+                {currency} {originalPrice}
+              </span>
+            </div>
+            <div className="bg-[#EAEFFF] text-[#307345] text-base font-medium">
+              Save {currency} {originalPrice - price}
+            </div>
+          </div>
+        </div>
+
+        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+        {/* Product Details */}
+        <details className="mt-4">
+          <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+            <span>Product Details</span>
+            <Image
+              src="/images/icons/arrow.png"
+              alt="arrow"
+              width={16}
+              height={16}
+            />
+          </summary>
+          <div>
+            <table className="w-full font-semibold text-[16px] text-[#222222] text-left">
+              <tbody>
+                <tr>
+                  <td className="py-2 w-40">Material</td>
+                  <td className="py-2 font-normal text-[16px]">
+                    {product?.material || "Not given"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2">Fit</td>
+                  <td className="py-2 font-normal text-[16px]">Regular</td>
+                </tr>
+                <tr>
+                  <td className="py-2">Care</td>
+                  <td className="py-2 font-normal text-[16px]">
+                    Machine wash cold
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+        {/* Product Specification */}
+        <details className="mt-4">
+          <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+            <span>Product Specification</span>
+            <Image
+              src="/images/icons/arrow.png"
+              alt="arrow"
+              width={16}
+              height={16}
+            />
+          </summary>
+          <div>
+            <table className="w-full font-semibold text-[16px] text-[#222222] text-left">
+              <tbody>
+                <tr>
+                  <td className="py-2 w-40">Brand</td>
+                  <td className="py-2 font-normal text-[16px]">Puma</td>
+                </tr>
+                <tr>
+                  <td className="py-2 w-40">Model</td>
+                  <td className="py-2 font-normal text-[16px]">TSH-1234</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+        {/* Questions & Reviews */}
+        <details className="mt-4">
+          <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+            <span>Questions & Reviews</span>
+            <Image
+              src="/images/icons/arrow.png"
+              alt="arrow"
+              width={16}
+              height={16}
+              className="transition-transform duration-300 group-open:rotate-180"
+            />
+          </summary>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <StarRating rate={4.6} starSize={15} />
+              <span className="text-[14px] text-[#222222] font-medium">
+                4.6 out of 5
+              </span>
+            </div>
+            <span className="text-[12px] font-normal">3420 global rating</span>
+          </div>
+        </details>
+      </section>
+
+      <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+      {/* Sticky Action Bar */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">
+        <div className="max-w-4xl mx-auto flex gap-3">
+          <button
+            onClick={handleAddToCart}
+            className="w-[180px] h-[40px] md:flex-1 md:w-auto md:h-[48px] bg-gradient-to-t from-[#3002FC] to-[#3002FC] text-white rounded-[24px] font-medium flex items-center justify-center gap-2 shadow"
+          >
+            <Image
+              src="/images/icons/cart.png"
+              alt="Cart"
+              width={20}
+              height={20}
+            />
+            Add to cart
+          </button>
+          <button
+            onClick={() => console.log("Buy now", product.id)}
+            className="w-[180px] h-[40px] md:flex-1 md:w-auto md:h-[48px] bg-gradient-to-r from-[#FF4A53] to-[#FFA626] text-white rounded-[24px] font-medium flex items-center justify-center gap-2 shadow"
+          >
+            Buy now
+          </button>
+        </div>
+      </div>
+    </main>
+  )
+}

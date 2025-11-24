@@ -50,7 +50,7 @@ export const ProductListing = async ({
         {showSidebar && <ProductSidebar />}
         <section className={showSidebar ? "col-span-3" : "col-span-4"}>
           <div className="flex flex-wrap gap-4">
-            <ProductsList products={products} />
+            <ProductsList products={products} locale={locale}/>
           </div>
           <ProductsPagination pages={pages} />
         </section>
