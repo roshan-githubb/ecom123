@@ -78,6 +78,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     colorOption?.values.map((v) => {
       let bgClass = "bg-gray-200"
       let ringClass = "ring-gray-300"
+
       switch (v.value.toLowerCase()) {
         case "white":
           bgClass = "bg-white"
@@ -91,55 +92,117 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           bgClass = "bg-red-500"
           ringClass = "ring-red-300"
           break
+        case "green":
+          bgClass = "bg-green-500"
+          ringClass = "ring-green-300"
+          break
+        case "blue":
+          bgClass = "bg-blue-500"
+          ringClass = "ring-blue-300"
+          break
+        case "yellow":
+          bgClass = "bg-yellow-400"
+          ringClass = "ring-yellow-300"
+          break
+        case "orange":
+          bgClass = "bg-orange-500"
+          ringClass = "ring-orange-300"
+          break
+        case "purple":
+          bgClass = "bg-purple-500"
+          ringClass = "ring-purple-300"
+          break
+        case "pink":
+          bgClass = "bg-pink-500"
+          ringClass = "ring-pink-300"
+          break
+        case "gray":
+        case "grey":
+          bgClass = "bg-gray-500"
+          ringClass = "ring-gray-300"
+          break
+        case "brown":
+          bgClass = "bg-amber-700"
+          ringClass = "ring-amber-400"
+          break
+        case "cyan":
+          bgClass = "bg-cyan-500"
+          ringClass = "ring-cyan-300"
+          break
+        case "teal":
+          bgClass = "bg-teal-500"
+          ringClass = "ring-teal-300"
+          break
+        case "indigo":
+          bgClass = "bg-indigo-500"
+          ringClass = "ring-indigo-300"
+          break
+        case "lime":
+          bgClass = "bg-lime-500"
+          ringClass = "ring-lime-300"
+          break
+        case "amber":
+          bgClass = "bg-amber-500"
+          ringClass = "ring-amber-300"
+          break
+        case "violet":
+          bgClass = "bg-violet-500"
+          ringClass = "ring-violet-300"
+          break
+        case "rose":
+          bgClass = "bg-rose-500"
+          ringClass = "ring-rose-300"
+          break
+        default:
+          // fallback for unknown colors
+          bgClass = "bg-gray-200"
+          ringClass = "ring-gray-300"
+          break
       }
+
       return { id: v.id, label: v.value, bg: bgClass, ring: ringClass }
     }) || []
 
+  const sizeShortMap: Record<string, string> = {
+    small: "S",
+    medium: "M",
+    large: "L",
+    "extra large": "XL",
+    xl: "XL",
+    l: "L",
+    m: "M",
+    s: "S",
+  }
+
   // --- Sizes ---
-  const sizeOption = product.options?.find(
-    (opt) => opt.title.toLowerCase() === "size"
-  )
-  const sizes = sizeOption ? sizeOption.values.map((v) => v.value) : []
+  const variantSizes =
+    product.variants?.map((v) => {
+      const sizeOpt = v.options.find((o) =>
+        product.options
+          ?.find((opt) => opt.title.toLowerCase() === "size")
+          ?.values.some((val) => val.value === o.value)
+      )
+      return sizeOpt?.value
+    }) || []
+
+  const sizes = [...new Set(variantSizes)].filter(Boolean)
 
   // --- State ---
   const [selectedColor, setSelectedColor] = useState(colors[0]?.id)
   const [selectedSize, setSelectedSize] = useState(sizes[0])
-  const images = product.images?.map((img) => img.url) || []
+  const images = product.images?.map((img) => img.url).filter((url) => url) || [
+    "/images/not-available/not-available.png",
+  ]
 
-  // --- Handle Add To Cart ---
-  const handleAddToCart = () => {
-    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
-    const sizeLabel = selectedSize
-
-    const selectedVariant = product.variants?.find((v) => {
-      const hasColor = v.options?.some((o) => o.value === colorLabel)
-      const hasSize = v.options?.some((o) => o.value === sizeLabel)
-      return hasColor && hasSize
-    })
-
-    if (!selectedVariant) {
-      toast.error("Please select a valid variant")
-      console.log("No variant matched", colorLabel, sizeLabel)
-      return
-    }
-
-    addToCart({
-      id: selectedVariant.id,
-      title: product.title,
-      price: selectedVariant.calculated_price?.calculated_amount ?? 0,
-      image: images[index] || "/images/product/wireless-headphone.jpg",
-      quantity: 1,
-      color: colorLabel,
-    })
-
-    toast.success("Item added to cart successfully!")
-  }
-
+  // --- Variant selection ---
   const selectedVariant = product.variants?.find((v) => {
     const colorLabel = colors.find((c) => c.id === selectedColor)?.label
     const sizeLabel = selectedSize
-    const hasColor = v.options?.some((o) => o.value === colorLabel)
-    const hasSize = v.options?.some((o) => o.value === sizeLabel)
+    const hasColor = colors.length > 0
+    ? v.options?.some((o) => o.value === colorLabel)
+    : true
+    const hasSize =
+      sizes.length > 0 ? v.options?.some((o) => o.value === sizeLabel) : true
     return hasColor && hasSize
   })
 
@@ -153,9 +216,32 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const currency =
     selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "NPR"
 
+  // --- Add to cart ---
+  const handleAddToCart = () => {
+    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
+    const sizeLabel = selectedSize
+    const variant = selectedVariant
+
+    if (!variant) {
+      toast.error("Please select a valid variant")
+      console.log("No variant matched", colorLabel, sizeLabel)
+      return
+    }
+
+    addToCart({
+      id: variant.id,
+      title: product.title,
+      price: variant.calculated_price?.calculated_amount ?? 0,
+      image: images[index],
+      quantity: 1,
+      color: colorLabel || "",
+    })
+
+    toast.success("Item added to cart successfully!")
+  }
+
   return (
     <main className="min-h-screen">
-      {/* Toast messages */}
       <Toaster position="top-right" reverseOrder={false} />
 
       {/* Top Section */}
@@ -169,12 +255,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               Visit the {product.store?.name || "Store"} store
             </Link>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <div className="flex items-center text-contentOrange">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon key={i} />
-                  ))}
-                </div>
+              <div className="flex items-center gap-1 text-contentOrange">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <StarIcon key={i} />
+                ))}
               </div>
               <div className="text-sm font-medium text-[#222222]">
                 {product.review_count || 0}
@@ -208,20 +292,14 @@ export default function ProductDetailClient({ product }: { product: Product }) {
       {/* Image Carousel */}
       <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
         <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
-          <div
-            className="w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px]
-                    h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px]
-                    overflow-hidden rounded-[16px] flex items-center justify-center"
-          >
-            {images[index] && (
-              <Image
-                src={images[index]}
-                alt={product.title + " image"}
-                width={296}
-                height={320}
-                className="object-cover w-full h-full rounded-[16px]"
-              />
-            )}
+          <div className="w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px] overflow-hidden rounded-[16px] flex items-center justify-center">
+            <Image
+              src={images[index] || "/images/not-available/not-available.png"}
+              alt={product.title + " image"}
+              width={296}
+              height={320}
+              className="object-cover w-full h-full rounded-[16px]"
+            />
           </div>
         </div>
         <div className="mt-4 flex items-center justify-center gap-2">
@@ -241,54 +319,61 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         {/* Color & Size */}
+        
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <div className="text-[16px] font-normal text-black mb-2">
-              Color:{" "}
-              <span className="font-semibold text-[16px] text-black">
-                {colors.find((c) => c.id === selectedColor)?.label}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              {colors.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedColor(c.id)}
-                  className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
-                    selectedColor === c.id
-                      ? "border-2 border-[#1A315A]"
-                      : "border border-gray-300"
-                  }`}
-                >
-                  <div className={`${c.bg} w-full h-full`} />
-                </button>
-              ))}
-            </div>
-          </div>
+          {colors.length > 0 && (
+  <div>
+    <div className="text-[16px] font-normal text-black mb-2">
+      Color:{" "}
+      <span className="font-semibold text-[16px] text-black">
+        {colors.find((c) => c.id === selectedColor)?.label}
+      </span>
+    </div>
+    <div className="flex items-center gap-3">
+      {colors.map((c) => (
+        <button
+          key={c.id}
+          onClick={() => setSelectedColor(c.id)}
+          className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
+            selectedColor === c.id
+              ? "border-2 border-[#1A315A]"
+              : "border border-gray-300"
+          }`}
+        >
+          <div className={`${c.bg} w-full h-full`} />
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
-          <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
-       
 
-          <div>
-            <div className="text-base font-normal mb-2 text-[#222222]">
-              Size:
+          {sizes.length > 0 && (
+            <div>
+              <div className="text-base font-normal mb-2 text-[#222222]">
+                Size:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {sizes.map((s, i) => {
+                  const shortLabel = sizeShortMap[s?.toLowerCase() ?? ""] || s
+
+                  return (
+                    <button
+                      key={`${s}-${i}`}
+                      onClick={() => setSelectedSize(s)}
+                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
+                        selectedSize === s
+                          ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
+                          : "border border-[#333333] bg-transparent text-[#333333]"
+                      }`}
+                    >
+                      {shortLabel}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSelectedSize(s)}
-                  className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
-                    selectedSize === s
-                      ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
-                      : "border border-[#333333] bg-transparent text-[#333333]"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
@@ -421,7 +506,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
       </section>
 
       <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
-        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+      <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
       {/* Sticky Action Bar */}
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">

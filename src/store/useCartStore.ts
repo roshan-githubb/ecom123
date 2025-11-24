@@ -9,8 +9,8 @@ export interface CartItem {
   price: number
   image: string
   quantity?: number
-  color?: string 
-  size?:string
+  color?: string
+  size?: string
   options?: Record<string, any>
 }
 
@@ -36,7 +36,7 @@ export const useCartStore = create<CartState>()(
           set({
             items: get().items.map((i) =>
               i.id === item.id
-                ? { ...i, quantity: i.quantity ?? 0 + quantity }
+                ? { ...i, quantity: (i.quantity ?? 0) + quantity } // <-- fix here
                 : i
             ),
           })
@@ -47,29 +47,33 @@ export const useCartStore = create<CartState>()(
 
       increase: (id) =>
         set({
-          items: get().items.map((i) =>
-            i.id === id ? { ...i, quantity: i.quantity ?? 0 + 1 } : i
+          items: get().items.map(
+            (i) => (i.id === id ? { ...i, quantity: (i.quantity ?? 0) + 1 } : i) // <-- fix here
           ),
         }),
 
       decrease: (id) =>
         set({
-          items: get().items
-            .map((i) =>
-              i.id === id ? { ...i, quantity: i.quantity ??0 - 1 } : i
+          items: get()
+            .items.map(
+              (i) =>
+                i.id === id ? { ...i, quantity: (i.quantity ?? 0) - 1 } : i // <-- fix here
             )
-            .filter((i) => i.quantity ?? 0 > 0),
+            .filter((i) => (i.quantity ?? 0) > 0),
         }),
 
       updateQuantity: (id, quantity) =>
         set({
-          items: get().items
-            .map((i) => (i.id === id ? { ...i, quantity } : i))
+          items: get()
+            .items.map((i) => (i.id === id ? { ...i, quantity } : i))
             .filter((i) => i.quantity ?? 0 > 0),
         }),
 
       total: () =>
-        get().items.reduce((sum, item) => sum + item.price * (item.quantity ?? 0), 0),
+        get().items.reduce(
+          (sum, item) => sum + item.price * (item.quantity ?? 0),
+          0
+        ),
 
       clearCart: () => set({ items: [] }),
     }),

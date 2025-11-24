@@ -32,7 +32,7 @@ exports.useCartStore = zustand_1.create()(middleware_1.persist(function (set, ge
                 items: get().items.map(function (i) {
                     var _a;
                     return i.id === item.id
-                        ? __assign(__assign({}, i), { quantity: (_a = i.quantity) !== null && _a !== void 0 ? _a : 0 + quantity }) : i;
+                        ? __assign(__assign({}, i), { quantity: ((_a = i.quantity) !== null && _a !== void 0 ? _a : 0) + quantity }) : i;
                 })
             });
         }
@@ -42,20 +42,22 @@ exports.useCartStore = zustand_1.create()(middleware_1.persist(function (set, ge
     },
     increase: function (id) {
         return set({
-            items: get().items.map(function (i) { var _a; return i.id === id ? __assign(__assign({}, i), { quantity: (_a = i.quantity) !== null && _a !== void 0 ? _a : 0 + 1 }) : i; })
+            items: get().items.map(function (i) { var _a; return (i.id === id ? __assign(__assign({}, i), { quantity: ((_a = i.quantity) !== null && _a !== void 0 ? _a : 0) + 1 }) : i); } // <-- fix here
+            )
         });
     },
     decrease: function (id) {
         return set({
-            items: get().items
-                .map(function (i) { var _a; return i.id === id ? __assign(__assign({}, i), { quantity: (_a = i.quantity) !== null && _a !== void 0 ? _a : 0 - 1 }) : i; })
-                .filter(function (i) { var _a; return (_a = i.quantity) !== null && _a !== void 0 ? _a : 0 > 0; })
+            items: get()
+                .items.map(function (i) { var _a; return i.id === id ? __assign(__assign({}, i), { quantity: ((_a = i.quantity) !== null && _a !== void 0 ? _a : 0) - 1 }) : i; } // <-- fix here
+            )
+                .filter(function (i) { var _a; return ((_a = i.quantity) !== null && _a !== void 0 ? _a : 0) > 0; })
         });
     },
     updateQuantity: function (id, quantity) {
         return set({
-            items: get().items
-                .map(function (i) { return (i.id === id ? __assign(__assign({}, i), { quantity: quantity }) : i); })
+            items: get()
+                .items.map(function (i) { return (i.id === id ? __assign(__assign({}, i), { quantity: quantity }) : i); })
                 .filter(function (i) { var _a; return (_a = i.quantity) !== null && _a !== void 0 ? _a : 0 > 0; })
         });
     },

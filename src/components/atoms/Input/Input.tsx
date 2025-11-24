@@ -57,18 +57,19 @@ export function Input({
         )}
 
         <input
-          className={cn(
-            "w-full h-[38px] px-[16px] py-[12px] border rounded-md bg-component-secondary focus:border-primary focus:outline-none focus:ring-0",
-            error && "border-negative focus:border-negative",
-            props.disabled && "bg-disabled cursor-not-allowed",
-            paddingY,
-            className
-          )}
-          value={props.value}
-          onChange={(e) => changeHandler(e.target.value)}
-          {...props}
-          type={props.type === "password" ? inputType : props.type}
-        />
+  className={cn(
+    "w-full max-w-[400px] sm:max-w-[285px] md:max-w-[350px] h-10 sm:h-[38px] px-4 sm:px-[16px] py-2 sm:py-[12px] border rounded-md bg-component-secondary focus:border-primary focus:outline-none focus:ring-0",
+    error && "border-negative focus:border-negative",
+    props.disabled && "bg-disabled cursor-not-allowed",
+    paddingY,
+    className
+  )}
+  value={props.value}
+  onChange={(e) => changeHandler(e.target.value)}
+  {...props}
+  type={props.type === "password" ? inputType : props.type}
+/>
+
         {clearable && props.value && (
           <span
             className="absolute h-full flex items-center top-0 right-[16px] cursor-pointer"

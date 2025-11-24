@@ -35,7 +35,7 @@ export const ProductCard = ({
     : 0
 
   const productImage =
-    api_product?.images?.[0]?.url || "/images/product/wireless-headphone.jpg"
+    api_product?.images?.[0]?.url || "/images/not-available/not-available.png"
 
 
  const colorOption = api_product.options?.find(opt => opt.title.toLowerCase() === "color");
