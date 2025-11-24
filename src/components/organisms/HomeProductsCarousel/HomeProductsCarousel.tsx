@@ -21,7 +21,7 @@ export const HomeProductsCarousel = async ({
     queryParams: {
       limit: home ? 4 : undefined,
       order: "created_at",
-      forceCache: !home,
+      // forceCache: !home,
       handle: home
         ? undefined
         : sellerProducts.map((product) => product.handle)
