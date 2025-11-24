@@ -25,8 +25,7 @@ export default function Navbar({
 
 
   const goToCheckoutPage = () => {
-  const baseUrl = "http://localhost:3000";
-  router.push(`${baseUrl}/in/check`);
+  router.push(`/in/check`);
 };
 
   return (

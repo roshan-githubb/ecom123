@@ -27,7 +27,7 @@ export function NavbarSearch() {
       onSubmit={submitHandler}
     >
       <Input
-        icon={<SearchIcon className="w-5 h-5 text-gray-500" />}
+        icon={<SearchIcon className="w-5 h-5 text-gray-500 lg:hidden" />}
         placeholder="Search product"
         value={search}
         changeValue={setSearch}
