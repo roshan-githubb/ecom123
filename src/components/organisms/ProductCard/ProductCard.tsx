@@ -84,10 +84,10 @@ export const ProductCard = ({
               <p className="font-medium">{cheapestPrice?.calculated_price}</p>
               {cheapestPrice?.calculated_price !==
                 cheapestPrice?.original_price && (
-                <p className="text-sm text-gray-500 line-through">
-                  {cheapestPrice?.original_price}
-                </p>
-              )}
+                  <p className="text-sm text-gray-500 line-through">
+                    {cheapestPrice?.original_price}
+                  </p>
+                )}
             </div>
           </div>
         </div>

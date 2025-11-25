@@ -1,188 +1,137 @@
-import {
-  BannerSection,
-  BlogSection,
-  Hero,
-  HomeCategories,
-  HomeProductSection,
-  ShopByStyleSection,
-} from "@/components/sections"
 
-import type { Metadata } from "next"
-import { headers } from "next/headers"
-import Script from "next/script"
-import { listRegions } from "@/lib/data/regions"
-import { toHreflang } from "@/lib/helpers/hreflang"
+import { SectionHeader } from "@/components/atoms/SectionHeader/SectionHeader";
+import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard";
+import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel";
+import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard";
+import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}): Promise<Metadata> {
-  const { locale } = await params
 
-  const headersList = await headers()
-  const host = headersList.get("host")
-  const protocol = headersList.get("x-forwarded-proto") || "https"
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
+export default function HomePage() {
+  const categoryItems = new Array(8).fill(0).map((_, i) => ({
+    id: String(i),
+    image: "/images/product/cotton-Tshirt.jpg",
+    label: ["Flash sale", "Home", "Kitchen", "Lighting", "Lamps", "Decor", "Essentials", "Gadgets"][i % 8],
+  }));
 
-  // Build alternates based on available regions (locales)
-  let languages: Record<string, string> = {}
-  try {
-    const regions = await listRegions()
-    const locales = Array.from(
-      new Set(
-        (regions || [])
-          .map((r) => r.countries?.map((c) => c.iso_2) || [])
-          .flat()
-          .filter(Boolean)
-      )
-    ) as string[]
+  const bannerSlides = [
+    { id: "b1", image: "/images/banner-section/sale-banner.webp" },
+    { id: "b2", image: "/images/banner-section/sale-banner-1.avif" },
+    { id: "b3", image: "/images/banner-section/sale-banner.webp" },
+  ];
 
-    languages = locales.reduce<Record<string, string>>((acc, code) => {
-      const hrefLang = toHreflang(code)
-      acc[hrefLang] = `${baseUrl}/${code}`
-      return acc
-    }, {})
-  } catch {
-    // Fallback: only current locale
-    languages = { [toHreflang(locale)]: `${baseUrl}/${locale}` }
-  }
+  const flashProducts = [
+    { id: "p1", image: "/images/product/cotton-Tshirt.jpg", title: "Classic T shirt", currentPrice: 3000, oldPrice: 3500, discount: "45% OFF", description: "Stunning white T shirt" },
+    { id: "p2", image: "/images/product/cotton-Tshirt.jpg", title: "Denim Jacket", currentPrice: 4200, oldPrice: 5200, discount: "20% OFF", description: "Stylish denim jacket" },
+  ];
 
-  const title = "Home"
-  const description =
-    "Welcome to Mercur B2C Demo! Create a modern marketplace that you own and customize in every aspect with high-performance, fully customizable storefront."
-  const ogImage = "/B2C_Storefront_Open_Graph.png"
-  const canonical = `${baseUrl}/${locale}`
-
-  return {
-    title,
-    description,
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-image-preview": "large",
-        "max-video-preview": -1,
-        "max-snippet": -1,
-      },
-    },
-    alternates: {
-      canonical,
-      languages: {
-        ...languages,
-        "x-default": baseUrl,
-      },
-    },
-    openGraph: {
-      title: `${title} | ${
-        process.env.NEXT_PUBLIC_SITE_NAME ||
-        "Mercur B2C Demo - Marketplace Storefront"
-      }`,
-      description,
-      url: canonical,
-      siteName:
-        process.env.NEXT_PUBLIC_SITE_NAME ||
-        "Mercur B2C Demo - Marketplace Storefront",
-      type: "website",
-      images: [
-        {
-          url: ogImage.startsWith("http") ? ogImage : `${baseUrl}${ogImage}`,
-          width: 1200,
-          height: 630,
-          alt:
-            process.env.NEXT_PUBLIC_SITE_NAME ||
-            "Mercur B2C Demo - Marketplace Storefront",
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImage.startsWith("http") ? ogImage : `${baseUrl}${ogImage}`],
-    },
-  }
-}
-
-export default async function Home({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
-  const { locale } = await params
-
-  const headersList = await headers()
-  const host = headersList.get("host")
-  const protocol = headersList.get("x-forwarded-proto") || "https"
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
-
-  const siteName =
-    process.env.NEXT_PUBLIC_SITE_NAME ||
-    "Mercur B2C Demo - Marketplace Storefront"
+  const recommended = new Array(8).fill(0).map((_, i) => ({
+    id: String(i),
+    image: "/images/product/cotton-Tshirt.jpg",
+    title: `Product ${i + 1}`,
+    currentPrice: 2000 + i * 100,
+    oldPrice: 2400 + i * 120,
+    discount: i % 2 === 0 ? "10% OFF" : "25% OFF",
+    description: "Short description",
+  }));
 
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start text-primary">
-      <link
-        // rel="preload"
-        as="image"
-        href="/images/hero/Image.jpg"
-        imageSrcSet="/images/hero/Image.jpg 700w"
-        imageSizes="(min-width: 1024px) 50vw, 100vw"
-      />
-      {/* Organization JSON-LD */}
-      <Script
-        id="ld-org"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: siteName,
-            url: `${baseUrl}/${locale}`,
-            logo: `${baseUrl}/favicon.ico`,
-          }),
-        }}
-      />
-      {/* WebSite JSON-LD */}
-      <Script
-        id="ld-website"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: siteName,
-            url: `${baseUrl}/${locale}`,
-            inLanguage: toHreflang(locale),
-          }),
-        }}
-      />
+    <div className="space-y-6 px-4 lg:px-8 py-4">
+      {/* Top horizontal category scroller (item category cards) with visible arrows */}
+      <HorizontalScroller >
+        {categoryItems.map((c) => (
+          <div key={c.id} className=" flex-shrink-0">
+            <ItemCategoryCard imageUrl={c.image} label={c.label} shape="rounded" height={100} width={100} />
+          </div>
+        ))}
+      </HorizontalScroller>
 
-      <Hero
-        image="/images/hero/Image.jpg"
-        heading="Snag your style in a flash"
-        paragraph="Buy, sell, and discover pre-loved gems from the trendiest brands."
-        buttons={[
-          { label: "Buy now", path: "/categories" },
-          {
-            label: "Sell now",
-            path:
-              process.env.NEXT_PUBLIC_VENDOR_URL ||
-              "https://vendor.mercurjs.com",
-          },
-        ]}
-      />
-      <div className="px-4 lg:px-8 w-full">
-        <HomeProductSection heading="trending listings" locale={locale} home />
+      {/* Large banner carousel */}
+      <div className="pt-2">
+        {/* <CarouselBanner slides={bannerSlides} /> */}
+        <CarouselBanner
+          images={[
+            "/images/banner-section/sale-banner.webp",
+            "/images/banner-section/sale-banner-1.avif",
+            "/images/banner-section/sale-banner.webp",
+          ]}
+        />
+
       </div>
-      <div className="px-4 lg:px-8 w-full">
-        <HomeCategories heading="SHOP BY CATEGORY" />
+
+      {/* Circular categories (grid) */}
+      {/* <SectionHeader title="Categories" actionLabel="See all"  /> */}
+      <div className="grid grid-cols-4 gap-4">
+        {categoryItems.map((c) => (
+          <ItemCategoryCard key={c.id} imageUrl={c.image} label={c.label} shape="circle" />
+        ))}
       </div>
-      <BannerSection />
-      <ShopByStyleSection />
-      <BlogSection />
-    </main>
-  )
+      {/* Flash Sale section (dark blue header) */}
+      <div>
+        <div className="flex items-center justify-between ">
+          <h2 className="text-[20px] font-medium" style={{ color: "#32425A" }}>Flash Sale</h2>
+          <button className="text-[14px] font-medium" style={{ color: "#144293" }}>See all</button>
+        </div>
+
+        <div className="my-5"></div>
+        {/* two cards side-by-side */}
+        {/* <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3"> */}
+        <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
+          {flashProducts.map((p) => (
+            <HomeProductCard
+              key={p.id}
+              imageUrl={p.image}
+              title={p.title}
+              currentPrice={p.currentPrice}
+              oldPrice={p.oldPrice}
+              discount={p.discount}
+              description={p.description}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Recommended for you — horizontal, hidden scrollbar */}
+      <SectionHeader title="Recommended for you" actionLabel="See all" />
+      <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
+        {recommended.map((r) => (
+          <div key={r.id} className="flex-shrink-0">
+            {/* <HomeProductCard {...r} /> */}
+            <HomeProductCard imageUrl="/images/product/cotton-Tshirt.jpg" title="Classic T shirt" currentPrice={3000} oldPrice={3500} description="Stunning white T shirt with modern flair" discount="45% OFF" />
+          </div>
+        ))}
+      </div>
+
+      {/* Top brands (use item category card circular) */}
+      <SectionHeader title="Top Brands" actionLabel="See all" />
+      <HorizontalScroller className="no-scrollbar">
+        {categoryItems.map((c) => (
+          <div key={c.id} className="w-[100px] flex-shrink-0">
+            <ItemCategoryCard imageUrl={c.image} label={c.label} shape="circle" />
+          </div>
+        ))}
+      </HorizontalScroller>
+
+      {/* Best deals */}
+      <SectionHeader title="Best Deals" actionLabel="See all" />
+      <HorizontalScroller className="no-scrollbar">
+        {recommended.map((r) => (
+          <div key={r.id} className="w-[180px] flex-shrink-0">
+            {/* <HomeProductCard {...r} /> */}
+            <HomeProductCard imageUrl="/images/product/cotton-Tshirt.jpg" title="Classic T shirt" currentPrice={3000} oldPrice={3500} description="Stunning white T shirt with modern flair" discount="45% OFF" />
+          </div>
+        ))}
+      </HorizontalScroller>
+
+      {/* Most Popular */}
+      <SectionHeader title="Most Popular" actionLabel="See all" />
+      <HorizontalScroller className="no-scrollbar">
+        {recommended.map((r) => (
+          <div key={r.id} className="w-[180px] flex-shrink-0">
+            {/* <HomeProductCard {...r} /> */}
+            <HomeProductCard imageUrl="/images/product/cotton-Tshirt.jpg" title="Classic T shirt" currentPrice={3000} oldPrice={3500} description="Stunning white T shirt with modern flair" discount="45% OFF" />
+          </div>
+        ))}
+      </HorizontalScroller>
+    </div>
+  );
 }
