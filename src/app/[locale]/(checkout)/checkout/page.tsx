@@ -172,7 +172,6 @@ const UserForm: React.FC<{
     >
       <div className="font-semibold text-base">Delivery</div>
 
-      {/* Country */}
       <div className="flex flex-col items-start w-full">
         <p className="font-poppins text-sm w-fit">Country*</p>
         <select
@@ -185,7 +184,6 @@ const UserForm: React.FC<{
         </select>
       </div>
 
-      {/* Address */}
       <div className="flex flex-col items-start w-full">
         <p className="text-[#333] text-sm w-fit">Address</p>
         <input
@@ -198,7 +196,6 @@ const UserForm: React.FC<{
         />
       </div>
 
-      {/* Address Type */}
       <div className="flex flex-col items-start w-full">
         <p className="text-[#333] text-sm w-fit">Address Type</p>
         <select
@@ -211,7 +208,6 @@ const UserForm: React.FC<{
         </select>
       </div>
 
-      {/* Phone Number */}
       <div className="flex flex-col items-start w-full">
         <p className="text-[#333] text-sm w-fit">Phone number</p>
         <input
@@ -477,7 +473,6 @@ const CheckoutPage: React.FC = () => {
           onClick={() => setChecked(!checked)}
         >
           <div className="w-6 h-6 relative flex items-center justify-center">
-            {/* checkbox SVGs */}
             <svg
               width="24"
               height="24"
