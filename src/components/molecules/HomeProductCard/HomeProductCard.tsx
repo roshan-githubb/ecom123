@@ -78,7 +78,7 @@ export const HomeProductCard = ({
                     style={{ backgroundColor: "#4444FF" }}
                 >
 
-                    <img src="/images/icons/cart.png" className="w-4 h-4" />
+                    <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4" />
 
                     Add to Cart
                 </button>
