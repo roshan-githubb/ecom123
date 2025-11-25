@@ -1,6 +1,5 @@
 "use client"
 import { cn } from "@/lib/utils"
-
 import { CloseIcon } from "@/icons"
 import { useEffect, useState } from "react"
 import { EyeMini, EyeSlashMini } from "@medusajs/icons"
@@ -24,65 +23,71 @@ export function Input({
 }: InputProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [inputType, setInputType] = useState(props.type)
-  let paddingY = ""
-  if (icon) paddingY += "pl-[46px] "
-  if (clearable) paddingY += "pr-[38px]"
 
   useEffect(() => {
-    if (props.type === "password" && showPassword) {
-      setInputType("text")
-    }
-
-    if (props.type === "password" && !showPassword) {
-      setInputType("password")
+    if (props.type === "password") {
+      setInputType(showPassword ? "text" : "password")
     }
   }, [props.type, showPassword])
 
-  const changeHandler = (value: string) => {
-    if (changeValue) changeValue(value)
+  const changeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    changeValue?.(e.target.value)
   }
 
   const clearHandler = () => {
-    if (changeValue) changeValue("")
+    changeValue?.("")
+  
+    const event = new Event('input', { bubbles: true })
+    document.querySelector('input')?.dispatchEvent(event)
   }
 
   return (
-    <label className=" w-full label-md">
-      {label}
-      <div className="relative mt-2">
+    <label className="w-full label-md">
+      {label && <span className="block mb-2">{label}</span>}
+      <div className="relative">
+        {/* Left Icon */}
         {icon && (
-          <span className="absolute top-0 left-[16px] h-full flex items-center">
-            {icon}
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <span className="text-gray-500">{icon}</span>
           </span>
         )}
 
+        {/* Main Input */}
         <input
-  className={cn(
-    "w-full max-w-[400px] sm:max-w-[285px] md:max-w-[350px] h-10 sm:h-[38px] px-4 sm:px-[16px] py-2 sm:py-[12px] border rounded-md bg-component-secondary focus:border-primary focus:outline-none focus:ring-0",
-    error && "border-negative focus:border-negative",
-    props.disabled && "bg-disabled cursor-not-allowed",
-    paddingY,
-    className
-  )}
-  value={props.value}
-  onChange={(e) => changeHandler(e.target.value)}
-  {...props}
-  type={props.type === "password" ? inputType : props.type}
-/>
+          className={cn(
+            "w-full h-10 sm:h-[38px] px-4 sm:px-[16px] py-2 sm:py-[12px] rounded-md border bg-component-secondary focus:border-primary focus:outline-none focus:ring-0 transition-colors",
+            "placeholder:text-gray-500",
+           
+            icon ? "pl-10" : "pl-4",           
+            
+            clearable || props.type === "password" ? "pr-10" : "pr-4",
+            error && "border-negative focus:border-negative",
+            props.disabled && "bg-disabled cursor-not-allowed opacity-60",
+            className
+          )}
+          value={props.value ?? ""}
+          onChange={changeHandler}
+          type={inputType}
+          {...props}
+        />
 
+        {/* Clear Button */}
         {clearable && props.value && (
-          <span
-            className="absolute h-full flex items-center top-0 right-[16px] cursor-pointer"
+          <button
+            type="button"
             onClick={clearHandler}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
           >
-            <CloseIcon />
-          </span>
+            <CloseIcon className="w-4 h-4" />
+          </button>
         )}
+
+        {/* Password Toggle */}
         {props.type === "password" && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="text-ui-fg-subtle px-4 focus:outline-none transition-all duration-150 outline-none focus:text-ui-fg-base absolute right-0 top-4"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
           >
             {showPassword ? <EyeMini /> : <EyeSlashMini />}
           </button>
