@@ -2,6 +2,8 @@
 
 import React, { useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 interface SelectCircleProps {
   selected: boolean
@@ -82,7 +84,7 @@ const KhaltiButton: React.FC<{ checked: boolean; onClick: () => void }> = ({
       checked ? "bg-[#EEEEEE]" : "bg-white border-[#EFEFEF]"
     }`}
   >
-    <img
+    <Image
       src="/images/icons/khalti.png"
       height={20}
       width={20}
@@ -294,7 +296,7 @@ interface OrderItem {
 const OrderRow: React.FC<{ item: OrderItem }> = ({ item }) => {
   return (
     <div className="flex items-center justify-between gap-2">
-      <img
+      <Image
         className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover"
         src={item.imageUrl}
         alt={item.name}
@@ -377,59 +379,13 @@ const OrderSummarySection: React.FC<{ items: OrderItem[] }> = ({ items }) => {
   )
 }
 
-const PaymentMethodSection: React.FC<{
-  selected: string
-  onSelect: (method: string) => void
-}> = ({ selected, onSelect }) => (
-  <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6">
-    <h2 className="text-lg font-semibold text-[#333333] mb-4">
-      Select Payment Method
-    </h2>
-    <div className="flex justify-start gap-3 mb-4">
-      <BankPaymentButton
-        checked={selected === "bank"}
-        onClick={() => onSelect("bank")}
-      />
-      <KhaltiButton
-        checked={selected === "khalti"}
-        onClick={() => onSelect("khalti")}
-      />
-    </div>
-
-    {selected === "bank" && (
-      <div className="flex flex-col gap-1 mb-4">
-        <label className="text-sm font-medium text-[#444]">
-          Account Number
-        </label>
-        <input
-          type="text"
-          placeholder="001-234-345-2345"
-          className="border border-gray-300 rounded-xs p-2 text-sm font-normal"
-          onFocus={(e) => (e.currentTarget.placeholder = "")}
-        />
-      </div>
-    )}
-
-    {selected === "khalti" && (
-      <div className="flex flex-col gap-1 mb-4">
-        <label className="text-sm font-medium text-[#444]">Khalti Number</label>
-        <input
-          type="text"
-          placeholder="9823435126"
-          className="border border-gray-300 rounded-xs p-2 text-sm font-normal"
-          onFocus={(e) => (e.currentTarget.placeholder = "")}
-        />
-      </div>
-    )}
-  </div>
-)
-
 const CheckoutPage: React.FC = () => {
   const cartItems = useCartStore((state) => state.items)
   const [selectedPayment, setSelectedPayment] = React.useState("bank")
   const [checked, setChecked] = useState(false)
   const [address, setAddress] = useState<Address | null>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const router=useRouter()
 
   const items: OrderItem[] = cartItems.map((i) => ({
     id: i.id,
@@ -443,7 +399,6 @@ const CheckoutPage: React.FC = () => {
 
   if (!items.length)
     return <div className="text-center mt-10">Your cart is empty</div>
-
   return (
     <div className="min-h-screen pb-8 overflow-x-hidden">
       <main className="max-w-md mx-auto relative z-0">
@@ -464,15 +419,12 @@ const CheckoutPage: React.FC = () => {
         )}
 
         <OrderSummarySection items={items} />
-        <PaymentMethodSection
-          selected={selectedPayment}
-          onSelect={setSelectedPayment}
-        />
       </main>
 
       <div className="max-w-md mx-auto mt-4">
         <div
-          className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] flex items-center gap-2 cursor-pointer"
+className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] 
+mx-4 md:mx-0 mt-6 flex items-center gap-2 cursor-pointer"
           onClick={() => setChecked(!checked)}
         >
           <div className="w-6 h-6 relative flex items-center justify-center">
@@ -516,8 +468,8 @@ const CheckoutPage: React.FC = () => {
         </div>
       </div>
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
-        <Button variant="primary" onClick={() => alert("Order Placed!")}>
-          Place Order & Pay
+        <Button variant="primary" onClick={()=>router.push("/in/payment")}>
+          Place Order
         </Button>
       </div>
     </div>

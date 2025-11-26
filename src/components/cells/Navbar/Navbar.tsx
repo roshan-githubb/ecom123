@@ -15,8 +15,13 @@ export default function Navbar({
   const router = useRouter()
   const showCart = ["/recommended", "/products"].some(path => pathname?.includes(path));
   const showBackArrow = pathname !== "/in"
-  const showSearchbar = pathname !== "/in/check"
+  const hiddenPaths = ["/in/check", "/in/payment", "/in/cardinfo", "/in/imepaynow", "/in/imebottombar"];
+  const showSearchbar = !hiddenPaths.includes(pathname);
   const showCheckoutLabel = pathname == "/in/check"
+  const showPaymentMethodLabel = pathname == "/in/payment"
+  const showCardLabel = pathname == "/in/cardinfo"
+  const showImePayNowLabel = pathname == "/in/imepaynow"
+  const showImePayWalletLink = pathname == "/in/imebottombar"
 
   // Get total items in cart from Zustand store
   const totalItems = useCartStore((state) =>
@@ -50,6 +55,39 @@ export default function Navbar({
         {showCheckoutLabel && (
           <span className="text-base font-poppins font-semibold text-white">
             Checkout
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showPaymentMethodLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Select Payment Method
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showCardLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Debit/Credit Card
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showImePayNowLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Khalti by IME
+          </span>
+        )}
+      </div>
+
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showImePayWalletLink && (
+          <span className="text-base font-poppins font-semibold text-white">
+            IME Pay - Wallet Link
           </span>
         )}
       </div>
