@@ -15,13 +15,15 @@ export default function Navbar({
   const router = useRouter()
   const showCart = ["/recommended", "/products"].some(path => pathname?.includes(path));
   const showBackArrow = pathname !== "/in"
-  const hiddenPaths = ["/in/check", "/in/payment", "/in/cardinfo", "/in/imepaynow", "/in/imebottombar"];
+  const hiddenPaths = ["/in/check", "/in/payment", "/in/cardinfo", "/in/imepaynow", "/in/imebottombar", "/in/shippinginfo", "/in/pickupaddress"];
   const showSearchbar = !hiddenPaths.includes(pathname);
   const showCheckoutLabel = pathname == "/in/check"
   const showPaymentMethodLabel = pathname == "/in/payment"
   const showCardLabel = pathname == "/in/cardinfo"
   const showImePayNowLabel = pathname == "/in/imepaynow"
   const showImePayWalletLink = pathname == "/in/imebottombar"
+  const showSelectShippingAddressLabel = pathname == "/in/shippinginfo"
+  const showPickupAddressLabel = pathname == "/in/pickupaddress"
 
   // Get total items in cart from Zustand store
   const totalItems = useCartStore((state) =>
@@ -92,6 +94,22 @@ export default function Navbar({
         )}
       </div>
 
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showSelectShippingAddressLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Select Shipping Address
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showPickupAddressLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Pick up from
+          </span>
+        )}
+      </div>
+
       {showCart && (
         <button className="ml-5 mt-1 relative" onClick={goToCheckoutPage}>
           <Image
@@ -100,7 +118,6 @@ export default function Navbar({
             width={24}
             height={24}
           />
-          {/* Badge showing total items */}
           {totalItems > 0 && (
             <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
               {totalItems}

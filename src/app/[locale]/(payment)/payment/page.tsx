@@ -3,10 +3,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useCartStore } from "@/store/useCartStore"
-import {
-  Info,
-  ChevronRight
-} from "lucide-react"
+import { Info, ChevronRight } from "lucide-react"
 import Image from "next/image"
 
 export default function PaymentPage() {
@@ -14,11 +11,14 @@ export default function PaymentPage() {
   const [selectedSavedMethod, setSelectedSavedMethod] = useState(false)
   const router = useRouter()
 
-  const subtotal = items.reduce((acc, i) => acc + (i.price * (i.quantity ?? 1)), 0)
+  const subtotal = items.reduce(
+    (acc, i) => acc + i.price * (i.quantity ?? 1),
+    0
+  )
   const deliveryCharge = 100
   const serviceFee = 50
   const total = subtotal + deliveryCharge + serviceFee
-  
+
   return (
     <div className="min-h-screen bg-[#eef1f3] font-sans text-[#333] pb-20 max-w-md mx-auto">
       <div className="bg-[#e3eaf5] p-3 flex items-start gap-3 mb-4">
@@ -74,10 +74,11 @@ export default function PaymentPage() {
                 <Image
                   src="/images/icons/esewa.png"
                   alt="esewa logo"
-                  className="w-5 h-5"
+                  width={20} 
+                  height={20}
                 />
               </div>
-              <p className="text-[14px] text-gray-600">Netra *********wari</p>
+              <p className="text-[14px] text-gray-600">Test User</p>
             </div>
             <div>
               {selectedSavedMethod ? (
@@ -94,7 +95,6 @@ export default function PaymentPage() {
             Other Payment Methods
           </h2>
           <div className="space-y-2">
-            {/* Khalti */}
             <div
               className="bg-white p-2 flex items-center justify-between shadow-sm hover:bg-gray-100 active:bg-gray-100 active:scale-95 shadow-sm hover:shadow-md transition-all cursor-pointer"
               onClick={() => router.push("/in/imepaynow")}
@@ -104,7 +104,8 @@ export default function PaymentPage() {
                   <Image
                     src="/images/icons/imekhalti.png"
                     alt="khalti logo"
-                    className="w-5 h-5"
+                    width={20}
+                    height={20}
                   />
                 </div>
                 <div>
@@ -117,14 +118,14 @@ export default function PaymentPage() {
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </div>
 
-            {/* COD */}
             <div className="bg-white p-2 flex items-center justify-between shadow-sm cursor-pointer">
               <div className="flex items-center gap-3">
                 <div>
                   <Image
                     src="/images/icons/cod.png"
                     alt="cod"
-                    className="w-5 h-5"
+                    width={20}
+                    height={20}
                   />
                 </div>
                 <div>
@@ -159,7 +160,9 @@ export default function PaymentPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10 max-w-md mx-auto">
         <div className="flex justify-between items-center mb-1">
           <span className="text-[14px] text-gray-500">Subtotal</span>
-          <span className="text-[14px] font-medium text-gray-900">Rs. {subtotal}</span>
+          <span className="text-[14px] font-medium text-gray-900">
+            Rs. {subtotal}
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-[16px] font-medium text-gray-900">

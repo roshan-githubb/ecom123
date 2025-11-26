@@ -36,7 +36,7 @@ export const useCartStore = create<CartState>()(
           set({
             items: get().items.map((i) =>
               i.id === item.id
-                ? { ...i, quantity: (i.quantity ?? 0) + quantity } // <-- fix here
+                ? { ...i, quantity: (i.quantity ?? 0) + quantity } 
                 : i
             ),
           })
@@ -48,7 +48,7 @@ export const useCartStore = create<CartState>()(
       increase: (id) =>
         set({
           items: get().items.map(
-            (i) => (i.id === id ? { ...i, quantity: (i.quantity ?? 0) + 1 } : i) // <-- fix here
+            (i) => (i.id === id ? { ...i, quantity: (i.quantity ?? 0) + 1 } : i) 
           ),
         }),
 
@@ -57,7 +57,7 @@ export const useCartStore = create<CartState>()(
           items: get()
             .items.map(
               (i) =>
-                i.id === id ? { ...i, quantity: (i.quantity ?? 0) - 1 } : i // <-- fix here
+                i.id === id ? { ...i, quantity: (i.quantity ?? 0) - 1 } : i 
             )
             .filter((i) => (i.quantity ?? 0) > 0),
         }),

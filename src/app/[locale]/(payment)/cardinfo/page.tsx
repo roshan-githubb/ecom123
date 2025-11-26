@@ -34,7 +34,6 @@ export default function CardInfo() {
 
                 <div className="space-y-3">
 
-                    {/* Card Number */}
                     <div className="relative">
                         <div className="absolute top-[-20px] right-0 flex items-center gap-1 mb-1">
                             <span className="text-[10px] font-bold text-blue-800">VISA</span>
@@ -50,7 +49,6 @@ export default function CardInfo() {
                         />
                     </div>
 
-                    {/* Expiry & CVV */}
                     <div className="flex gap-3">
                         <div className="flex-1 relative">
                             <input
@@ -70,7 +68,6 @@ export default function CardInfo() {
                         </div>
                     </div>
 
-                    {/* Name on Card */}
                     <div className="relative">
                         <input
                             type="text"

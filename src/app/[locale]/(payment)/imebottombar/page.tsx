@@ -34,7 +34,6 @@ export default function BottombarIMEPayPage() {
           </h2>
 
           <div className="space-y-4">
-            {/* IME Pay Button */}
             <div className="w-40 h-32 bg-[#e6e6e6] rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-gray-200 transition-colors mx-auto">
               <div className="h-8 flex items-center justify-center mb-1">
                 <span className="text-red-600 font-bold text-2xl italic tracking-tighter">
@@ -77,7 +76,6 @@ export default function BottombarIMEPayPage() {
               </div>
             </div>
 
-            {/* Khalti Button */}
             <div className="w-40 h-32 bg-[#e6e6e6] rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-gray-200 transition-colors mx-auto">
               <div className="h-8 flex items-center justify-center mb-1 relative">
                 <span className="text-red-600 font-bold text-2xl">khalti</span>
