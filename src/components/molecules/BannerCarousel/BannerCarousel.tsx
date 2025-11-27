@@ -51,8 +51,8 @@ export default function CarouselBanner({ images }: CarouselBannerProps) {
                         key={index}
                         onClick={() => setCurrent(index)}
                         className={`h-3 w-3 rounded-full transition-all ${current === index
-                                ? "bg-blue-600 w-5"
-                                : "bg-gray-300"
+                            ? "bg-blue-600 w-5"
+                            : "bg-gray-300"
                             }`}
                     />
                 ))}

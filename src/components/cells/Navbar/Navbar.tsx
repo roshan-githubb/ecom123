@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import { CategoryNavbar, NavbarSearch } from "@/components/molecules"
 import Image from "next/image"
 import { useCartStore } from "@/store/useCartStore"
+import { CartIcon } from "@/icons"
 
 export default function Navbar({
   categories,
@@ -14,11 +15,11 @@ export default function Navbar({
   const pathname = usePathname()
   const router = useRouter()
   const showCart = ["/recommended", "/products"].some(path => pathname?.includes(path));
-  const showBackArrow = pathname !== "/in"
-  const hiddenPaths = ["/in/check", "/in/payment", "/in/cardinfo", "/in/imepaynow", "/in/imebottombar", 
-  "/in/shippinginfo", "/in/pickupaddress","/in/footer/faq","/in/footer/track-order","/in/footer/returns",
-  "/in/footer/delivery","/in/footer/payment","/in/footer/about-us","/in/footer/blog","/in/footer/privacy-policy",
-  "/in/footer/terms-and-conditions"];
+  const showBackArrow = pathname !== "/np"
+  const hiddenPaths = ["/check", "/in/payment", "/in/cardinfo", "/in/imepaynow", "/in/imebottombar",
+    "/in/shippinginfo", "/in/pickupaddress", "/in/footer/faq", "/in/footer/track-order", "/in/footer/returns",
+    "/in/footer/delivery", "/in/footer/payment", "/in/footer/about-us", "/in/footer/blog", "/in/footer/privacy-policy",
+    "/in/footer/terms-and-conditions"];
   const showSearchbar = !hiddenPaths.includes(pathname);
   const showCheckoutLabel = pathname == "/in/check"
   const showPaymentMethodLabel = pathname == "/in/payment"
@@ -45,8 +46,8 @@ export default function Navbar({
 
 
   const goToCheckoutPage = () => {
-  router.push(`/check`);
-};
+    router.push(`/check`);
+  };
 
   return (
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
@@ -63,8 +64,14 @@ export default function Navbar({
           />
         </button>
       )}
+      <div className="flex justify-between w-full">
+        <div className="flex-1">{showSearchbar && <NavbarSearch />}</div>
+        <div className="mt-1">
+          <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} />
+        </div>
+      </div>
 
-      <div className="lg:flex-1">{showSearchbar && <NavbarSearch />}</div>
+
 
       <div className="mt-2 flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
         {showCheckoutLabel && (
@@ -192,21 +199,22 @@ export default function Navbar({
         )}
       </div>
 
-      {showCart && (
-        <button className="ml-5 mt-1 relative" onClick={goToCheckoutPage}>
-          <Image
-            src="/images/icons/cart.png"
-            alt="Cart"
-            width={24}
-            height={24}
-          />
-          {totalItems > 0 && (
-            <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-        </button>
-      )}
+      {/* {showCart && (
+        <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} />
+      )} */}
     </div>
+  )
+}
+
+const CartButton = ({ totalItems, goToCheckoutPage }: { totalItems: number, goToCheckoutPage: () => void }) => {
+  return (
+    <button className="ml-5 mt-1 relative" onClick={goToCheckoutPage}>
+      <CartIcon size={24} color="white" />
+      {totalItems > 0 && (
+        <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+          {totalItems}
+        </span>
+      )}
+    </button>
   )
 }
