@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ProductDetailClient from "../../ProductDetailClient/page";
+import { Review, ReviewListResponse } from "@/types/reviews";
 
 interface Params {
   id: string;
@@ -46,7 +47,21 @@ const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}`
       return notFound();
     }
 
-    return <ProductDetailClient product={product} />;
+
+      const reviewUrl = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}/reviews?limit=10&offset=0`;    const reviewRes = await fetch(reviewUrl, {
+      method: "GET",
+      cache: "no-store",
+      headers,
+    });
+
+    let reviews: Review[] = [];
+
+    if (reviewRes.ok) {
+      const reviewData: ReviewListResponse = await reviewRes.json();
+      reviews = reviewData.reviews || [];
+    } else {
+    }
+    return <ProductDetailClient product={product} reviews={reviews} />;
   } catch (err) {
     
     return notFound();
