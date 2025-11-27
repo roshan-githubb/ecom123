@@ -7,6 +7,7 @@ import { StarRating } from "@/components/atoms"
 import { useCartStore } from "@/store/useCartStore"
 import toast, { Toaster } from "react-hot-toast"
 
+
 interface ProductOptionValue {
   id: string
   value: string
@@ -68,7 +69,7 @@ function StarIcon({ className = "w-6 h-6" }: { className?: string }) {
 
 export default function ProductDetailClient({ product }: { product: Product }) {
   const [index, setIndex] = useState(0)
-  const addToCart = useCartStore((state) => state.addToCart)
+
 
   // --- Colors ---
   const colorOption = product.options?.find(
@@ -199,8 +200,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     const colorLabel = colors.find((c) => c.id === selectedColor)?.label
     const sizeLabel = selectedSize
     const hasColor = colors.length > 0
-    ? v.options?.some((o) => o.value === colorLabel)
-    : true
+      ? v.options?.some((o) => o.value === colorLabel)
+      : true
     const hasSize =
       sizes.length > 0 ? v.options?.some((o) => o.value === sizeLabel) : true
     return hasColor && hasSize
@@ -217,28 +218,27 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "NPR"
 
   // --- Add to cart ---
-  const handleAddToCart = () => {
-    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
-    const sizeLabel = selectedSize
-    const variant = selectedVariant
+const handleAddToCart = async () => {
+  const colorLabel = colors.find((c) => c.id === selectedColor)?.label;
+  const sizeLabel = selectedSize;
+  const variant = selectedVariant;
 
-    if (!variant) {
-      toast.error("Please select a valid variant")
-      console.log("No variant matched", colorLabel, sizeLabel)
-      return
-    }
-
-    addToCart({
-      id: variant.id,
-      title: product.title,
-      price: variant.calculated_price?.calculated_amount ?? 0,
-      image: images[index],
-      quantity: 1,
-      color: colorLabel || "",
-    })
-
-    toast.success("Item added to cart successfully!")
+  if (!variant) {
+    toast.error("Please select a valid variant");
+    return;
   }
+
+  try {
+   
+    await useCartStore.getState().add(variant.id, 1);
+
+    toast.success("Item added to cart!");
+  } catch (e) {
+    console.error("Add to cart failed", e);
+    toast.error("Failed to add item");
+  }
+};
+
 
   return (
     <main className="min-h-screen">
@@ -307,9 +307,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full ${
-                i === index ? "bg-blue-800" : "bg-gray-300"
-              }`}
+              className={`w-2 h-2 rounded-full ${i === index ? "bg-blue-800" : "bg-gray-300"
+                }`}
               aria-label={`View image ${i + 1}`}
             />
           ))}
@@ -319,33 +318,32 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         {/* Color & Size */}
-        
+
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           {colors.length > 0 && (
-  <div>
-    <div className="text-[16px] font-normal text-black mb-2">
-      Color:{" "}
-      <span className="font-semibold text-[16px] text-black">
-        {colors.find((c) => c.id === selectedColor)?.label}
-      </span>
-    </div>
-    <div className="flex items-center gap-3">
-      {colors.map((c) => (
-        <button
-          key={c.id}
-          onClick={() => setSelectedColor(c.id)}
-          className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
-            selectedColor === c.id
-              ? "border-2 border-[#1A315A]"
-              : "border border-gray-300"
-          }`}
-        >
-          <div className={`${c.bg} w-full h-full`} />
-        </button>
-      ))}
-    </div>
-  </div>
-)}
+            <div>
+              <div className="text-[16px] font-normal text-black mb-2">
+                Color:{" "}
+                <span className="font-semibold text-[16px] text-black">
+                  {colors.find((c) => c.id === selectedColor)?.label}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                {colors.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedColor(c.id)}
+                    className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
+                        ? "border-2 border-[#1A315A]"
+                        : "border border-gray-300"
+                      }`}
+                  >
+                    <div className={`${c.bg} w-full h-full`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
 
           {sizes.length > 0 && (
@@ -361,11 +359,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                     <button
                       key={`${s}-${i}`}
                       onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
-                        selectedSize === s
+                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
                           ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
                           : "border border-[#333333] bg-transparent text-[#333333]"
-                      }`}
+                        }`}
                     >
                       {shortLabel}
                     </button>
