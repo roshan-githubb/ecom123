@@ -23,7 +23,6 @@ const optionsAsKeymap = (
       varopt: HttpTypes.StoreProductOptionValue
     ) => {
       acc[varopt.option?.title.toLowerCase() || ""] = varopt.value
-
       return acc
     },
     {}

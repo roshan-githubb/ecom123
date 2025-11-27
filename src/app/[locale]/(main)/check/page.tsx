@@ -1,7 +1,10 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
+import { getCart } from "@/services/cart"
+import { mapCartToOrderSummary } from "@/lib/mapper/cartMapper"
+import { OrderItem, OrderSummary } from "@/components/organisms/CartSummary/CartItemSummary"
 
 interface SelectCircleProps {
   selected: boolean
@@ -63,9 +66,8 @@ const BankPaymentButton: React.FC<{
   >
     <SelectCircle selected={checked} />
     <p
-      className={`font-semibold text-sm ${
-        checked ? "text-black" : "text-gray-500"
-      }`}
+      className={`font-semibold text-sm ${checked ? "text-black" : "text-gray-500"
+        }`}
     >
       Bank Account
     </p>
@@ -78,9 +80,8 @@ const KhaltiButton: React.FC<{ checked: boolean; onClick: () => void }> = ({
 }) => (
   <button
     onClick={onClick}
-    className={`cursor-pointer flex py-0 px-2 justify-center items-center gap-2 rounded-2xl border w-fit h-[25px] ${
-      checked ? "bg-[#EEEEEE]" : "bg-white border-[#EFEFEF]"
-    }`}
+    className={`cursor-pointer flex py-0 px-2 justify-center items-center gap-2 rounded-2xl border w-fit h-[25px] ${checked ? "bg-[#EEEEEE]" : "bg-white border-[#EFEFEF]"
+      }`}
   >
     <img
       src="/images/icons/khalti.png"
@@ -94,49 +95,7 @@ const KhaltiButton: React.FC<{ checked: boolean; onClick: () => void }> = ({
   </button>
 )
 
-const ItemCounter: React.FC<{ productId: string; initial?: number }> = ({
-  productId,
-  initial = 1,
-}) => {
-  const items = useCartStore((state) => state.items)
-  const updateQuantity = useCartStore((state) => state.updateQuantity)
 
-  const product = items.find((i) => i.id === productId)
-  const count = product?.quantity ?? initial
-  const options = product?.options || {}
-
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => updateQuantity(productId, Math.max(count - 1, 0))}
-      >
-        <svg width="6" height="2" viewBox="0 0 6 2" fill="none">
-          <path
-            d="M5.08844 0.000187397V1.41619H0.000437528V0.000187397H5.08844Z"
-            fill="#3E3E3E"
-          />
-        </svg>
-      </button>
-
-      <span className="text-sm font-semibold text-[#0000FF] w-4 text-center">
-        {count}
-      </span>
-
-      <button
-        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => updateQuantity(productId, count + 1)}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M15.061 12.46H12.793V14.788H11.209V12.46H8.94103V10.996H11.209V8.668H12.793V10.996H15.061V12.46Z"
-            fill="#3E3E3E"
-          />
-        </svg>
-      </button>
-    </div>
-  )
-}
 
 interface Address {
   country: string
@@ -280,102 +239,7 @@ const UserDetailsSection: React.FC<{
   )
 }
 
-interface OrderItem {
-  id: string
-  name: string
-  variant: string
-  price: number
-  quantity: number
-  imageUrl: string
-  color?: string
-  options?: Record<string, string>
-}
 
-const OrderRow: React.FC<{ item: OrderItem }> = ({ item }) => {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <img
-        className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover"
-        src={item.imageUrl}
-        alt={item.name}
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-[#444444] font-medium text-[12px] md:text-sm leading-tight truncate">
-          {item.name}
-        </p>
-        {item.color ? (
-          <p className="text-[#888888] text-xs">{item.color}</p>
-        ) : item.variant ? (
-          <p className="text-[#888888] text-xs">{item.variant}</p>
-        ) : null}
-      </div>
-      <div className="mr-5">
-        <ItemCounter productId={item.id} />
-      </div>
-      <span className="text-[#444444] font-semibold text-sm w-20 text-right">
-        Rs {(item.price * item.quantity).toLocaleString()}
-      </span>
-    </div>
-  )
-}
-
-const OrderSummarySection: React.FC<{ items: OrderItem[] }> = ({ items }) => {
-  const subtotal = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  )
-  const deliveryCharge = 100
-  const serviceFee = 50
-  const totalPayable = subtotal + deliveryCharge + serviceFee
-
-  return (
-    <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6">
-      <h2 className="text-lg font-semibold text-[#333333] mb-1">
-        Order Summary
-      </h2>
-      <div className="pb-4 border-b border-gray-100 space-y-2">
-        {items.map((item) => (
-          <OrderRow
-            key={`${item.id}-${JSON.stringify(item.options || {})}`}
-            item={item}
-          />
-        ))}
-      </div>
-      <div className="pt-4 pb-4 border-b border-gray-100">
-        <div className="flex justify-between items-center py-1">
-          <span className="text-sm font-medium text-[#777777]">Subtotal</span>
-          <span className="text-sm font-medium text-[#444444]">
-            Rs {subtotal.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between items-center py-1">
-          <span className="text-sm font-medium text-[#777777]">
-            Delivery Charge
-          </span>
-          <span className="text-sm font-medium text-[#FF0000]">
-            Rs {deliveryCharge.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between items-center py-1">
-          <span className="text-sm font-medium text-[#777777]">
-            Service Fee
-          </span>
-          <span className="text-sm font-medium text-[#444444]">
-            Rs {serviceFee.toLocaleString()}
-          </span>
-        </div>
-      </div>
-      <div className="flex justify-between items-center pt-4">
-        <span className="text-[#222222] font-medium text-base">
-          Total Payable
-        </span>
-        <span className="text-[#222222] font-semibold text-lg">
-          Rs {totalPayable.toLocaleString()}
-        </span>
-      </div>
-    </div>
-  )
-}
 
 const PaymentMethodSection: React.FC<{
   selected: string
@@ -425,24 +289,60 @@ const PaymentMethodSection: React.FC<{
 )
 
 const CheckoutPage: React.FC = () => {
+
+
   const cartItems = useCartStore((state) => state.items)
   const [selectedPayment, setSelectedPayment] = React.useState("bank")
   const [checked, setChecked] = useState(false)
   const [address, setAddress] = useState<Address | null>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const items: OrderItem[] = cartItems.map((i) => ({
-    id: i.id,
-    name: i.title,
-    variant: "",
-    price: i.price,
-    quantity: i.quantity ?? 1,
-    imageUrl: i.image,
-    color: i.color,
-  }))
+  const {
+    cartId,
+    items,
+    subtotal,
+    taxTotal,
+    deliveryFee,
+    serviceFee,
+    totalPayable,
+    currency,
+    fetchCart
+  } = useCartStore();
+  const summary = {
+    currency,
+    subtotal,
+    taxTotal,
+    deliveryFee,
+    serviceFee,
+    totalPayable,
+    items,
+    cartId
+  };
 
-  if (!items.length)
+
+
+  useEffect(() => {
+    async function load() {
+      await fetchCart();
+      setLoading(false);
+    }
+    load();
+  }, [fetchCart]);
+
+  if (loading) return <p className="text-center my-4">Loading cart...</p>;
+  // if (!cart) return <p className="text-center my-4">No cart found.</p>;
+  // const nestedCart = cart?.cart
+  const cartSummary = mapCartToOrderSummary(summary)
+  // console.log('mapper output ', cartSummary)
+  
+
+
+  if (cartSummary && !cartSummary?.items.length){
     return <div className="text-center mt-10">Your cart is empty</div>
+  }
+    
 
   return (
     <div className="min-h-screen pb-8 overflow-x-hidden">
@@ -463,7 +363,7 @@ const CheckoutPage: React.FC = () => {
           />
         )}
 
-        <OrderSummarySection items={items} />
+        <OrderSummary summary={cartSummary} />
         <PaymentMethodSection
           selected={selectedPayment}
           onSelect={setSelectedPayment}

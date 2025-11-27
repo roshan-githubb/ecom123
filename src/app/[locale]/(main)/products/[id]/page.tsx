@@ -10,15 +10,12 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
   const { id, locale } = await params;
 
 
-
-const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}?region_id=${process.env.NEXT_PUBLIC_REGION_ID}`;
+const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}`;
 
 
   try {
     const headers = {
       "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
-      
-     
       "Content-Type": "application/json",
     };
 
@@ -39,7 +36,7 @@ const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}?
     }
 
     const data = await res.json();
-    console.log("Full response from Medusa:", data);
+    // console.log("Full response from Medusa:", data);
 
     const product = data.product;
     console.log("Product object:", product);

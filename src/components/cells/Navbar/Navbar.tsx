@@ -14,9 +14,9 @@ export default function Navbar({
   const pathname = usePathname()
   const router = useRouter()
   const showCart = ["/recommended", "/products"].some(path => pathname?.includes(path));
-  const showBackArrow = pathname !== "/in"
-  const showSearchbar = pathname !== "/in/check"
-  const showCheckoutLabel = pathname == "/in/check"
+  const showBackArrow = pathname !== ""
+  const showSearchbar = pathname !== "/check"
+  const showCheckoutLabel = pathname == "/check"
 
   // Get total items in cart from Zustand store
   const totalItems = useCartStore((state) =>
@@ -25,7 +25,7 @@ export default function Navbar({
 
 
   const goToCheckoutPage = () => {
-  router.push(`/in/check`);
+  router.push(`/check`);
 };
 
   return (

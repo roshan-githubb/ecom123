@@ -99,24 +99,25 @@ const ItemCounter: React.FC<{ productId: string; initial?: number }> = ({
   initial = 1,
 }) => {
   const items = useCartStore((state) => state.items)
-  const updateQuantity = useCartStore((state) => state.updateQuantity)
+  // const updateQuantity = useCartStore((state) => state.updateQuantity)
 
   const product = items.find((i) => i.id === productId)
   const count = product?.quantity ?? initial
-  const options = product?.options || {}
+  // const options = product?.options || {}
 
   return (
     <div className="flex items-center gap-1">
       <button
         className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => updateQuantity(productId, Math.max(count - 1, 0))}
+        onClick={() => {}}
       >
-        <svg width="6" height="2" viewBox="0 0 6 2" fill="none">
+        {/* <svg width="6" height="2" viewBox="0 0 6 2" fill="none">
           <path
             d="M5.08844 0.000187397V1.41619H0.000437528V0.000187397H5.08844Z"
             fill="#3E3E3E"
           />
-        </svg>
+        </svg> */}
+        Increase
       </button>
 
       <span className="text-sm font-semibold text-[#0000FF] w-4 text-center">
@@ -125,7 +126,7 @@ const ItemCounter: React.FC<{ productId: string; initial?: number }> = ({
 
       <button
         className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => updateQuantity(productId, count + 1)}
+        onClick={() => {}}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
@@ -438,7 +439,7 @@ const CheckoutPage: React.FC = () => {
     price: i.price,
     quantity: i.quantity ?? 1,
     imageUrl: i.image,
-    color: i.color,
+    // color: i.color,
   }))
 
   if (!items.length)

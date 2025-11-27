@@ -135,6 +135,7 @@ export default async function HomePage({ params }: { params: Params }) {
           <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
             {flashProducts.map((p) => (
               <HomeProductCard
+                id={p?.id}
                 key={p.id}
                 imageUrl={p.image}
                 title={p.title}
@@ -153,7 +154,7 @@ export default async function HomePage({ params }: { params: Params }) {
           {jsonLdProducts.map((r) => (
             <div key={r.id} className="w-[180px] flex-shrink-0">
 
-              <HomeProductCard imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
+              <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
             </div>
           ))}
         </div>
@@ -174,7 +175,7 @@ export default async function HomePage({ params }: { params: Params }) {
           {jsonLdProducts.map((r) => (
             <div key={r.id} className="w-[180px] flex-shrink-0">
 
-              <HomeProductCard imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
+              <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
             </div>
           ))}
         </HorizontalScroller>
@@ -185,7 +186,7 @@ export default async function HomePage({ params }: { params: Params }) {
           {jsonLdProducts.map((r) => (
             <div key={r.id} className="w-[180px] flex-shrink-0">
 
-              <HomeProductCard imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
+              <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
             </div>
           ))}
         </HorizontalScroller>
