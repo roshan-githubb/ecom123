@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { StarRating } from "@/components/atoms"
 import { HttpTypes } from "@medusajs/types"
-import { useCartStore } from "@/store/useCartStore"
+// import { useCartStore } from "@/store/useCartStore"
 import { toast, Toaster } from "react-hot-toast"
 
 export const ProductCard = ({
@@ -15,7 +15,7 @@ export const ProductCard = ({
   locale: string
 }) => {
 
-   const addToCart = useCartStore((state) => state.addToCart)
+  //  const addToCart = useCartStore((state) => state.addToCart)
 
   if (!api_product || !api_product.variants?.[0]) return null
 
@@ -43,26 +43,26 @@ export const ProductCard = ({
 
 
 const handleAddToCart = () => {
-  const optionsObj: Record<string, string> = {}
+  // const optionsObj: Record<string, string> = {}
 
-  variant.options?.forEach((opt) => {
-    const key = (opt.option_id || "").toLowerCase().trim()
-    const value = (opt.value || "").trim()
-    if (key && value) optionsObj[key] = value
-  })
+  // variant.options?.forEach((opt) => {
+  //   const key = (opt.option_id || "").toLowerCase().trim()
+  //   const value = (opt.value || "").trim()
+  //   if (key && value) optionsObj[key] = value
+  // })
 
-  const normalizedOptions = Object.keys(optionsObj).length > 0 ? optionsObj : null
+  // const normalizedOptions = Object.keys(optionsObj).length > 0 ? optionsObj : null
 
-  addToCart({
-    id: variant.id,
-    title: api_product.title || "Product",
-    price,
-    image: productImage,
-    quantity: 1,
-    color: displayedColor,
-  })
+  // addToCart({
+  //   id: variant.id,
+  //   title: api_product.title || "Product",
+  //   price,
+  //   image: productImage,
+  //   quantity: 1,
+  //   color: displayedColor,
+  // })
 
-  toast.success("Added to cart!")
+  // toast.success("Added to cart!")
 }
 
 
@@ -149,14 +149,14 @@ const handleAddToCart = () => {
            </p>
          
 
-        <button
+        {/* <button
           onClick={handleAddToCart}
           className="w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800 text-[#FFFFFF]"
         >
           <Image src="/images/icons/cart.png" alt="Add to cart logo" className="w-4 h-4" width={16} height={16} />
           Add to Cart
-        </button>
+        </button> */}
       </div>
     </div>
   )

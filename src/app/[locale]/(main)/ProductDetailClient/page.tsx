@@ -8,6 +8,7 @@ import { useCartStore } from "@/store/useCartStore"
 import { Review } from "@/types/reviews"
 import toast, { Toaster } from "react-hot-toast"
 
+
 interface ProductOptionValue {
   id: string
   value: string
@@ -75,7 +76,7 @@ export default function ProductDetailClient({
   reviews: Review[]
 }) {
   const [index, setIndex] = useState(0)
-  const addToCart = useCartStore((state) => state.addToCart)
+
 
   // --- Colors ---
   const colorOption = product.options?.find(
@@ -223,28 +224,27 @@ export default function ProductDetailClient({
     selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "NPR"
 
   // --- Add to cart ---
-  const handleAddToCart = () => {
-    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
-    const sizeLabel = selectedSize
-    const variant = selectedVariant
+const handleAddToCart = async () => {
+  const colorLabel = colors.find((c) => c.id === selectedColor)?.label;
+  const sizeLabel = selectedSize;
+  const variant = selectedVariant;
 
-    if (!variant) {
-      toast.error("Please select a valid variant")
-      console.log("No variant matched", colorLabel, sizeLabel)
-      return
-    }
-
-    addToCart({
-      id: variant.id,
-      title: product.title,
-      price: variant.calculated_price?.calculated_amount ?? 0,
-      image: images[index],
-      quantity: 1,
-      color: colorLabel || "",
-    })
-
-    toast.success("Item added to cart successfully!")
+  if (!variant) {
+    toast.error("Please select a valid variant");
+    return;
   }
+
+  try {
+   
+    await useCartStore.getState().add(variant.id, 1);
+
+    toast.success("Item added to cart!");
+  } catch (e) {
+    console.error("Add to cart failed", e);
+    toast.error("Failed to add item");
+  }
+};
+
 
   return (
     <main className="min-h-screen">
@@ -313,9 +313,8 @@ export default function ProductDetailClient({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full ${
-                i === index ? "bg-blue-800" : "bg-gray-300"
-              }`}
+              className={`w-2 h-2 rounded-full ${i === index ? "bg-blue-800" : "bg-gray-300"
+                }`}
               aria-label={`View image ${i + 1}`}
             />
           ))}
@@ -366,11 +365,10 @@ export default function ProductDetailClient({
                     <button
                       key={`${s}-${i}`}
                       onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
-                        selectedSize === s
+                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
                           ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
                           : "border border-[#333333] bg-transparent text-[#333333]"
-                      }`}
+                        }`}
                     >
                       {shortLabel}
                     </button>

@@ -45,7 +45,7 @@ export default function Navbar({
 
 
   const goToCheckoutPage = () => {
-  router.push(`/in/check`);
+  router.push(`/check`);
 };
 
   return (
