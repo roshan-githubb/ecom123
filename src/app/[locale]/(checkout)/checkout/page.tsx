@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
+import Image from "next/image"
 
 interface SelectCircleProps {
   selected: boolean
@@ -82,7 +83,7 @@ const KhaltiButton: React.FC<{ checked: boolean; onClick: () => void }> = ({
       checked ? "bg-[#EEEEEE]" : "bg-white border-[#EFEFEF]"
     }`}
   >
-    <img
+    <Image
       src="/images/icons/khalti.png"
       height={20}
       width={20}
@@ -172,7 +173,6 @@ const UserForm: React.FC<{
     >
       <div className="font-semibold text-base">Delivery</div>
 
-      {/* Country */}
       <div className="flex flex-col items-start w-full">
         <p className="font-poppins text-sm w-fit">Country*</p>
         <select
@@ -185,7 +185,6 @@ const UserForm: React.FC<{
         </select>
       </div>
 
-      {/* Address */}
       <div className="flex flex-col items-start w-full">
         <p className="text-[#333] text-sm w-fit">Address</p>
         <input
@@ -198,7 +197,6 @@ const UserForm: React.FC<{
         />
       </div>
 
-      {/* Address Type */}
       <div className="flex flex-col items-start w-full">
         <p className="text-[#333] text-sm w-fit">Address Type</p>
         <select
@@ -211,7 +209,6 @@ const UserForm: React.FC<{
         </select>
       </div>
 
-      {/* Phone Number */}
       <div className="flex flex-col items-start w-full">
         <p className="text-[#333] text-sm w-fit">Phone number</p>
         <input
@@ -295,7 +292,7 @@ interface OrderItem {
 const OrderRow: React.FC<{ item: OrderItem }> = ({ item }) => {
   return (
     <div className="flex items-center justify-between gap-2">
-      <img
+      <Image
         className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover"
         src={item.imageUrl}
         alt={item.name}
@@ -477,7 +474,6 @@ const CheckoutPage: React.FC = () => {
           onClick={() => setChecked(!checked)}
         >
           <div className="w-6 h-6 relative flex items-center justify-center">
-            {/* checkbox SVGs */}
             <svg
               width="24"
               height="24"

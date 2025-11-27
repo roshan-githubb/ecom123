@@ -14,9 +14,29 @@ export default function Navbar({
   const pathname = usePathname()
   const router = useRouter()
   const showCart = ["/recommended", "/products"].some(path => pathname?.includes(path));
-  const showBackArrow = pathname !== ""
-  const showSearchbar = pathname !== "/check"
-  const showCheckoutLabel = pathname == "/check"
+  const showBackArrow = pathname !== "/in"
+  const hiddenPaths = ["/in/check", "/in/payment", "/in/cardinfo", "/in/imepaynow", "/in/imebottombar", 
+  "/in/shippinginfo", "/in/pickupaddress","/in/footer/faq","/in/footer/track-order","/in/footer/returns",
+  "/in/footer/delivery","/in/footer/payment","/in/footer/about-us","/in/footer/blog","/in/footer/privacy-policy",
+  "/in/footer/terms-and-conditions"];
+  const showSearchbar = !hiddenPaths.includes(pathname);
+  const showCheckoutLabel = pathname == "/in/check"
+  const showPaymentMethodLabel = pathname == "/in/payment"
+  const showCardLabel = pathname == "/in/cardinfo"
+  const showImePayNowLabel = pathname == "/in/imepaynow"
+  const showImePayWalletLink = pathname == "/in/imebottombar"
+  const showSelectShippingAddressLabel = pathname == "/in/shippinginfo"
+  const showPickupAddressLabel = pathname == "/in/pickupaddress"
+  const showFAQLabel = pathname == "/in/footer/faq"
+  const showTrackOrderLabel = pathname == "/in/footer/track-order"
+  const showReturnsLabel = pathname == "/in/footer/returns"
+  const showDeliveryLabel = pathname == "/in/footer/delivery"
+  const showPaymentLabel = pathname == "/in/footer/payment"
+  const showAboutUsLabel = pathname == "/in/footer/about-us"
+  const showBlogLabel = pathname == "/in/footer/blog"
+  const showPrivacyPolicyLabel = pathname == "/in/footer/privacy-policy"
+  const showTermsAndConditionsLabel = pathname == "/in/footer/terms-and-conditions"
+
 
   // Get total items in cart from Zustand store
   const totalItems = useCartStore((state) =>
@@ -33,7 +53,7 @@ export default function Navbar({
       {showBackArrow && (
         <button
           onClick={() => router.back()}
-          className="mt-2 mr-2 flex items-center justify-center rounded hover:bg-gray-200"
+          className="mt-2 mr-2 flex items-center justify-center rounded"
         >
           <Image
             src="/images/icons/basil_arrow-up-solid.png"
@@ -54,6 +74,124 @@ export default function Navbar({
         )}
       </div>
 
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showPaymentMethodLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Select Payment Method
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showCardLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Debit/Credit Card
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showImePayNowLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Khalti by IME
+          </span>
+        )}
+      </div>
+
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showImePayWalletLink && (
+          <span className="text-base font-poppins font-semibold text-white">
+            IME Pay - Wallet Link
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showSelectShippingAddressLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Select Shipping Address
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showPickupAddressLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Pick up from
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showFAQLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            WeeTok Marketplace FAQ
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showTrackOrderLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Track Order
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showReturnsLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Return Policies
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showDeliveryLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Delivery Info
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showPaymentLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Payment Info
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showAboutUsLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            About WeeTok Marketplace
+          </span>
+        )}
+      </div>
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showBlogLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            WeeTok Blog
+          </span>
+        )}
+      </div>
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showPrivacyPolicyLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            Privacy Policy
+          </span>
+        )}
+      </div>
+      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+        {showTermsAndConditionsLabel && (
+          <span className="text-base font-poppins font-semibold text-white">
+            WeeTok Marketplace T&C
+          </span>
+        )}
+      </div>
+
       {showCart && (
         <button className="ml-5 mt-1 relative" onClick={goToCheckoutPage}>
           <Image
@@ -62,7 +200,6 @@ export default function Navbar({
             width={24}
             height={24}
           />
-          {/* Badge showing total items */}
           {totalItems > 0 && (
             <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
               {totalItems}
