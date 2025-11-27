@@ -41,7 +41,7 @@ interface CartState extends CartSummary {
   add: (variantId: string, quantity?: number) => Promise<void>;
   increase: (lineItemId: string, currentQty: number) => Promise<void>;
   decrease: (lineItemId: string, currentQty: number) => Promise<void>;
-  remove: (lineItemId: string) => Promise<void>;
+  // remove: (lineItemId: string) => Promise<void>;
 
   clearLocal: () => void;
 }
@@ -108,24 +108,49 @@ export const useCartStore = create<CartState>()(
         if (data?.cart) set(mapCart(data.cart));
       },
 
-      decrease: async (lineItemId, currentQty) => {
-        if (currentQty <= 1) {
+      // decrease: async (lineItemId, currentQty) => {
+      //   if (currentQty <= 1) {
+      //     const data = await removeFromCart(lineItemId);
+      //     if (data?.cart) set(mapCart(data.cart));
+      //     return;
+      //   }
+
+      //   const data = await updateCartItemQuantity(lineItemId, currentQty - 1);
+      //   if (data?.cart) set(mapCart(data.cart));
+      // },
+      decrease: async (lineItemId, currentQuantity) => {
+        if (currentQuantity <= 1) {
+          // Remove item
           const data = await removeFromCart(lineItemId);
-          if (data?.cart) set(mapCart(data.cart));
+          if (data?.cart?.items) {
+            set({ items: data.cart.items });
+          } else {
+            // If API returns nothing, manually remove from state
+            set({ items: get().items.filter(i => i.id !== lineItemId) });
+          }
           return;
         }
 
-        const data = await updateCartItemQuantity(lineItemId, currentQty - 1);
-        if (data?.cart) set(mapCart(data.cart));
+        // Decrement quantity
+        const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
+        if (data?.cart) {
+          set(mapCart(data.cart));
+        }
       },
 
-      
-      remove: async (lineItemId) => {
-        const data = await removeFromCart(lineItemId);
-        if (data?.cart) set(mapCart(data.cart));
-      },
+      //      // Decrement quantity
+      // const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
+      // if (data?.cart?.items) {
+      //   set({ items: data.cart.items });
+      // }
 
-      
+
+      // remove: async (lineItemId) => {
+      //   const data = await removeFromCart(lineItemId);
+      //   if (data?.cart) set(mapCart(data.cart));
+      // },
+
+
       clearLocal: () =>
         set({
           items: [],

@@ -57,8 +57,8 @@ export function mapCartToOrderSummary(cart: any): OrderSummaryData {
     const taxTotal = cart?.taxt_total ?? 0;
     const serviceFee = 0;
 
-    console.log('map cart ', cart?.total)
-    const totalPayable = cart?.total ?? 0;
+    // console.log('map cart ', cart?.total)
+    const totalPayable = cart?.totalPayable ?? 0;
 
     const currency = cart?.currency_code ?? "NPR"
 

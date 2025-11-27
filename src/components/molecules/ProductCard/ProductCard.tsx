@@ -149,14 +149,14 @@ const handleAddToCart = () => {
            </p>
          
 
-        <button
+        {/* <button
           onClick={handleAddToCart}
           className="w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800 text-[#FFFFFF]"
         >
           <img src="/images/icons/cart.png" className="w-4 h-4" />
           Add to Cart
-        </button>
+        </button> */}
       </div>
     </div>
   )
