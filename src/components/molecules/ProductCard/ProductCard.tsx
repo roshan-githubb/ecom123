@@ -154,7 +154,7 @@ const handleAddToCart = () => {
           className="w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800 text-[#FFFFFF]"
         >
-          <Image src="/images/icons/cart.png" alt="Add to cart logo" className="w-4 h-4" />
+          <Image src="/images/icons/cart.png" alt="Add to cart logo" className="w-4 h-4" width={16} height={16} />
           Add to Cart
         </button>
       </div>
