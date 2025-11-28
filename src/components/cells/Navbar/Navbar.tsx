@@ -81,9 +81,9 @@ export default function Navbar({
         {/* Left: nav links (desktop only) */}
         <div className="hidden lg:flex">
           <ul className="flex space-x-6">
-      
-              <LocalizedClientLink
-        key="recommended"
+
+            <LocalizedClientLink
+              key="recommended"
               href="np/recommended"
               className={cn(
                 "label-md min-w-[24px] capitalize",
@@ -118,8 +118,9 @@ export default function Navbar({
         </div>
 
         {/* Right: search + cart */}
-        <div className="flex lg:ml-auto items-center space-x-4">
+        <div className="flex w-full justify-between md:justify-end lg:ml-auto items-center space-x-4">
           {showSearchbar && <NavbarSearch />}
+
           <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} />
         </div>
       </div>
