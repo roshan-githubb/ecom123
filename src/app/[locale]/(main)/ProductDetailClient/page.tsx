@@ -2,12 +2,11 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { StarRating } from "@/components/atoms"
 import { useCartStore } from "@/store/useCartStore"
 import { Review } from "@/types/reviews"
 import toast, { Toaster } from "react-hot-toast"
-
 
 interface ProductOptionValue {
   id: string
@@ -55,19 +54,6 @@ interface ColorOption {
   ring: string
 }
 
-function StarIcon({ className = "w-6 h-6" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className={className}
-      aria-hidden
-    >
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.137 3.49a1 1 0 00.95.69h3.665c.969 0 1.371 1.24.588 1.81l-2.965 2.16a1 1 0 00-.364 1.118l1.137 3.49c.3.921-.755 1.688-1.54 1.118l-2.965-2.16a1 1 0 00-1.176 0l-2.965 2.16c-.784.57-1.838-.197-1.54-1.118l1.137-3.49a1 1 0 00-.364-1.118L2.708 9.917c-.783-.57-.38-1.81.588-1.81h3.665a1 1 0 00.95-.69l1.137-3.49z" />
-    </svg>
-  )
-}
-
 export default function ProductDetailClient({
   product,
   reviews,
@@ -77,8 +63,13 @@ export default function ProductDetailClient({
 }) {
   const [index, setIndex] = useState(0)
 
+  const averageRating = useMemo(() => {
+    if (!reviews || reviews.length === 0) return 0
+    return reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+  }, [reviews])
 
-  // --- Colors ---
+  const totalReviews = reviews.length
+
   const colorOption = product.options?.find(
     (opt) => opt.title.toLowerCase() === "color"
   )
@@ -162,7 +153,6 @@ export default function ProductDetailClient({
           ringClass = "ring-rose-300"
           break
         default:
-          // fallback for unknown colors
           bgClass = "bg-gray-200"
           ringClass = "ring-gray-300"
           break
@@ -182,7 +172,6 @@ export default function ProductDetailClient({
     s: "S",
   }
 
-  // --- Sizes ---
   const variantSizes =
     product.variants?.map((v) => {
       const sizeOpt = v.options.find((o) =>
@@ -195,14 +184,12 @@ export default function ProductDetailClient({
 
   const sizes = [...new Set(variantSizes)].filter(Boolean)
 
-  // --- State ---
   const [selectedColor, setSelectedColor] = useState(colors[0]?.id)
   const [selectedSize, setSelectedSize] = useState(sizes[0])
   const images = product.images?.map((img) => img.url).filter((url) => url) || [
     "/images/not-available/not-available.png",
   ]
 
-  // --- Variant selection ---
   const selectedVariant = product.variants?.find((v) => {
     const colorLabel = colors.find((c) => c.id === selectedColor)?.label
     const sizeLabel = selectedSize
@@ -223,34 +210,28 @@ export default function ProductDetailClient({
   const currency =
     selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "NPR"
 
-  // --- Add to cart ---
-const handleAddToCart = async () => {
-  const colorLabel = colors.find((c) => c.id === selectedColor)?.label;
-  const sizeLabel = selectedSize;
-  const variant = selectedVariant;
+  const handleAddToCart = async () => {
+    const colorLabel = colors.find((c) => c.id === selectedColor)?.label
+    const sizeLabel = selectedSize
+    const variant = selectedVariant
 
-  if (!variant) {
-    toast.error("Please select a valid variant");
-    return;
+    if (!variant) {
+      toast.error("Please select a valid variant")
+      return
+    }
+
+    try {
+      await useCartStore.getState().add(variant.id, 1)
+      toast.success("Item added to cart!")
+    } catch (e) {
+      toast.error("Failed to add item")
+    }
   }
-
-  try {
-   
-    await useCartStore.getState().add(variant.id, 1);
-
-    toast.success("Item added to cart!");
-  } catch (e) {
-    console.error("Add to cart failed", e);
-    toast.error("Failed to add item");
-  }
-};
-
 
   return (
     <main className="min-h-screen">
       <Toaster position="top-right" reverseOrder={false} />
 
-      {/* Top Section */}
       <section className="w-full bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto py-4 px-4">
           <div className="flex items-center justify-between gap-3">
@@ -261,13 +242,12 @@ const handleAddToCart = async () => {
               Visit the {product.store?.name || "Store"} store
             </Link>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-contentOrange">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <StarIcon key={i} />
-                ))}
-              </div>
+              <StarRating rate={averageRating} starSize={22} />
               <div className="text-sm font-medium text-[#222222]">
-                {product.review_count || 0}
+                {averageRating.toFixed(1)}
+                {totalReviews > 0 && (
+                  <span className="text-gray-500 ml-1">({totalReviews})</span>
+                )}
               </div>
             </div>
           </div>
@@ -295,7 +275,6 @@ const handleAddToCart = async () => {
         </div>
       </section>
 
-      {/* Image Carousel */}
       <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
         <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
           <div className="w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px] overflow-hidden rounded-[16px] flex items-center justify-center">
@@ -313,8 +292,9 @@ const handleAddToCart = async () => {
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full ${i === index ? "bg-blue-800" : "bg-gray-300"
-                }`}
+              className={`w-2 h-2 rounded-full ${
+                i === index ? "bg-blue-800" : "bg-gray-300"
+              }`}
               aria-label={`View image ${i + 1}`}
             />
           ))}
@@ -322,8 +302,6 @@ const handleAddToCart = async () => {
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
-
-        {/* Color & Size */}
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           {colors.length > 0 && (
@@ -365,10 +343,11 @@ const handleAddToCart = async () => {
                     <button
                       key={`${s}-${i}`}
                       onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
+                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
+                        selectedSize === s
                           ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
                           : "border border-[#333333] bg-transparent text-[#333333]"
-                        }`}
+                      }`}
                     >
                       {shortLabel}
                     </button>
@@ -382,7 +361,6 @@ const handleAddToCart = async () => {
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-        {/* Price & Discount */}
         <div className="mt-3 flex flex-col gap-1">
           <div className="bg-[#F80000] text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
             {discountPercent}% OFF + Cash on Delivery
@@ -416,7 +394,6 @@ const handleAddToCart = async () => {
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-        {/* Product Details */}
         <details className="mt-4">
           <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
             <span>Product Details</span>
@@ -454,7 +431,6 @@ const handleAddToCart = async () => {
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-        {/* Product Specification */}
         <details className="mt-4">
           <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
             <span>Product Specification</span>
@@ -497,30 +473,16 @@ const handleAddToCart = async () => {
           </summary>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <StarRating
-                rate={
-                  reviews.length > 0
-                    ? reviews.reduce((sum, r) => sum + r.rating, 0) /
-                      reviews.length
-                    : 0
-                }
-                starSize={15}
-              />
+              <StarRating rate={averageRating} starSize={18} />
               <span className="text-[14px] text-[#222222] font-medium">
-                {reviews.length > 0
-                  ? Number(
-                      reviews.reduce((sum, r) => sum + r.rating, 0) /
-                        reviews.length
-                    ).toFixed(1)
-                  : "0.0"}{" "}
-                out of 5
+                {averageRating.toFixed(1)} out of 5
               </span>
             </div>
 
             <span className="text-[12px] font-normal">
-              {reviews.length > 0
-                ? `${reviews.length.toLocaleString()} global rating${
-                    reviews.length > 1 ? "s" : ""
+              {totalReviews > 0
+                ? `${totalReviews.toLocaleString()} global rating${
+                    totalReviews !== 1 ? "s" : ""
                   }`
                 : "No reviews yet"}
             </span>
@@ -529,11 +491,15 @@ const handleAddToCart = async () => {
               <p className="text-[14px] text-[#222222] font-medium">
                 Customers say
               </p>
-              <span className="text-[14px] font-normal text-[#666666]">
-                {reviews.length > 0
-                  ? `"${reviews[0].customer_note}"`
-                  : `"No reviews yet."`}
-              </span>
+              {totalReviews > 0 && reviews[0]?.customer_note ? (
+                <span className="text-[14px] font-normal text-[#666666]">
+                  &quot;{reviews[0].customer_note}&quot;
+                </span>
+              ) : (
+                <span className="text-[14px] font-normal text-[#666666]">
+                  &quot;No reviews yet.&quot;
+                </span>
+              )}
             </div>
 
             {reviews.map((review) => (
@@ -554,7 +520,7 @@ const handleAddToCart = async () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-contentOrange text-xs">
+                <div className="flex items-center gap-1">
                   <StarRating rate={review.rating} starSize={15} />
                   <span className="text-[10px] font-normal text-[#FA6308]">
                     Verified Purchase
@@ -577,7 +543,6 @@ const handleAddToCart = async () => {
       <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
       <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-      {/* Sticky Action Bar */}
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
