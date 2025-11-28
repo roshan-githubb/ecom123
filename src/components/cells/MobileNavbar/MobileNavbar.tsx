@@ -3,7 +3,7 @@
 import { HttpTypes } from '@medusajs/types';
 import {
   CategoryNavbar,
-  HeaderCategoryNavbar,
+  // HeaderCategoryNavbar,
 } from '@/components/molecules';
 import { CloseIcon, HamburgerMenuIcon } from '@/icons';
 import { useState } from 'react';
@@ -28,16 +28,16 @@ export const MobileNavbar = ({
       </div>
       {openMenu && (
         <div className='fixed w-full h-full bg-primary p-2 top-0 left-0 z-20'>
-          <div className='flex justify-end'>
+          <div className='flex justify-end mr-4'>
             <div onClick={() => closeMenuHandler()}>
               <CloseIcon size={20} />
             </div>
           </div>
           <div className='border mt-4 rounded-sm'>
-            <HeaderCategoryNavbar
+            {/* <HeaderCategoryNavbar
               onClose={closeMenuHandler}
               categories={parentCategories}
-            />
+            /> */}
             <div className='border-t pt-2'>
               <CategoryNavbar
                 onClose={closeMenuHandler}

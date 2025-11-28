@@ -35,6 +35,8 @@ export const Header = async () => {
     parentCategories: HttpTypes.StoreProductCategory[]
   }
 
+  console.log("categories and parentcategories ", categories, parentCategories)
+
   return (
     <header>
       {/* <div className="flex py-2 lg:px-8 px-4">

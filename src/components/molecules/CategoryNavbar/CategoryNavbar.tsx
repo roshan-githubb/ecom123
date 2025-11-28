@@ -16,7 +16,7 @@ export const CategoryNavbar = ({
 
   return (
     <nav className="flex md:items-center flex-col md:flex-row">
-      <LocalizedClientLink
+      {/* <LocalizedClientLink
         href="/categories"
         onClick={() => (onClose ? onClose(false) : null)}
         className={cn(
@@ -24,7 +24,7 @@ export const CategoryNavbar = ({
         )}
       >
         All Products
-      </LocalizedClientLink>
+      </LocalizedClientLink> */}
       <LocalizedClientLink
         href="/recommended"
         onClick={() => (onClose ? onClose(false) : null)}
@@ -45,7 +45,7 @@ export const CategoryNavbar = ({
           )}
         >
           {name}
-          <CollapseIcon size={18} className="-rotate-90 md:hidden" />
+          {/* <CollapseIcon size={18} className="-rotate-90 md:hidden" /> */}
         </LocalizedClientLink>
       ))}
     </nav>

@@ -6,7 +6,6 @@ import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProd
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
-import { number, string } from "zod";
 
 
 interface CategoryItem {
@@ -141,7 +140,7 @@ export default async function HomePage({ params }: { params: Params }) {
         {/* <SectionHeader title="Categories" actionLabel="See All"  /> */}
         <div className="grid grid-cols-4 gap-4">
           {categories.map((item: any) => (
-            <ItemCategoryCard key={item?.category} imageUrl={item.image || "/images/not-available/not-available.png"} label={item?.category} shape="circle" />
+            <ItemCategoryCard key={item?.category} imageUrl={item.image || "/images/not-available/not-available.png"} label={item?.category} shape="circle" height={70} width={70} />
           ))}
         </div>
         {/* Flash Sale section (dark blue header) */}
@@ -187,7 +186,7 @@ export default async function HomePage({ params }: { params: Params }) {
         <SectionHeader title="Top Brands" actionLabel="See All" />
         <div className="grid grid-cols-4 gap-4">
           {brands.map((brand: any) => (
-            <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={80} width={80} />
+            <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} />
           ))}
         </div>
 

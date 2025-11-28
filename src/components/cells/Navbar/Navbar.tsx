@@ -9,7 +9,6 @@ import { CartIcon } from "@/icons"
 import { MobileNavbar } from "../MobileNavbar/MobileNavbar"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/atoms"
 
 
 export default function Navbar({
@@ -60,7 +59,7 @@ export default function Navbar({
   return (
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
       <MobileNavbar
-        parentCategories={parentCategories}
+        parentCategories={[]}
         childrenCategories={categories}
       />
 
@@ -82,23 +81,39 @@ export default function Navbar({
         {/* Left: nav links (desktop only) */}
         <div className="hidden lg:flex">
           <ul className="flex space-x-6">
-            {["All Products", "Recommended", "Sandals", "Boots", "New Arrivals", "Sale"].map((link) => (
+      
               <LocalizedClientLink
-                key={link}
-                href={`/${link}.tolowercase()`}
-                // onClick={() => (onClose ? onClose(false) : null)}
-                className={cn("label-md uppercase min-w-[24px] text-white")}
-              >
-                {link}
-              </LocalizedClientLink>
+        key="recommended"
+              href="np/recommended"
+              className={cn(
+                "label-md min-w-[24px] capitalize",
+                pathname === "/recommended"
+                  ? "text-white font-semibold"
+                  : "text-gray-300 hover:text-gray-300"
+              )}
+            >
+              recommended
+            </LocalizedClientLink>
 
-              // <li
-              //   key={link}
-              //   className="text-white font-medium hover:underline cursor-pointer"
-              // >
-              //   {link}
-              // </li>
-            ))}
+            {categories.map((category) => {
+              const categoryHref = `/categories/${category?.handle}`
+              // console.log('pathname and categoryHref', pathname, `/np${categoryHref}`)
+
+              return (
+                <LocalizedClientLink
+                  key={category.handle}
+                  href={categoryHref}
+                  className={cn(
+                    "label-md min-w-[24px] capitalize",
+                    pathname === `/np${categoryHref}`
+                      ? "text-white  font-semibold"
+                      : "text-gray-300 hover:text-gray-300"
+                  )}
+                >
+                  {category?.name}
+                </LocalizedClientLink>
+              )
+            })}
           </ul>
         </div>
 
