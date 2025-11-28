@@ -6,6 +6,8 @@ import { StarRating } from "@/components/atoms"
 import { HttpTypes } from "@medusajs/types"
 // import { useCartStore } from "@/store/useCartStore"
 import { toast, Toaster } from "react-hot-toast"
+import { useState } from "react"
+import { AddVariantModal } from "../AddVariantModal/AddVariantModal"
 
 export const ProductCard = ({
   api_product,
@@ -14,6 +16,9 @@ export const ProductCard = ({
   api_product: HttpTypes.StoreProduct | null
   locale: string
 }) => {
+  
+
+  const [showModal, setShowModal] = useState(false)
 
   //  const addToCart = useCartStore((state) => state.addToCart)
 
@@ -23,7 +28,7 @@ export const ProductCard = ({
   const calculatedPrice = variant.calculated_price
   if (!calculatedPrice) return <div>Price not available</div>
 
- 
+
 
   const price = Number(calculatedPrice.calculated_amount)
   const originalPrice = Number(calculatedPrice.original_amount)
@@ -38,32 +43,32 @@ export const ProductCard = ({
     api_product?.images?.[0]?.url || "/images/not-available/not-available.png"
 
 
- const colorOption = api_product.options?.find(opt => opt.title.toLowerCase() === "color");
- const displayedColor = colorOption?.values?.[0]?.value;
+  const colorOption = api_product.options?.find(opt => opt.title.toLowerCase() === "color");
+  const displayedColor = colorOption?.values?.[0]?.value;
 
 
-const handleAddToCart = () => {
-  // const optionsObj: Record<string, string> = {}
+  const handleAddToCart = () => {
+    // const optionsObj: Record<string, string> = {}
 
-  // variant.options?.forEach((opt) => {
-  //   const key = (opt.option_id || "").toLowerCase().trim()
-  //   const value = (opt.value || "").trim()
-  //   if (key && value) optionsObj[key] = value
-  // })
+    // variant.options?.forEach((opt) => {
+    //   const key = (opt.option_id || "").toLowerCase().trim()
+    //   const value = (opt.value || "").trim()
+    //   if (key && value) optionsObj[key] = value
+    // })
 
-  // const normalizedOptions = Object.keys(optionsObj).length > 0 ? optionsObj : null
+    // const normalizedOptions = Object.keys(optionsObj).length > 0 ? optionsObj : null
 
-  // addToCart({
-  //   id: variant.id,
-  //   title: api_product.title || "Product",
-  //   price,
-  //   image: productImage,
-  //   quantity: 1,
-  //   color: displayedColor,
-  // })
+    // addToCart({
+    //   id: variant.id,
+    //   title: api_product.title || "Product",
+    //   price,
+    //   image: productImage,
+    //   quantity: 1,
+    //   color: displayedColor,
+    // })
 
-  // toast.success("Added to cart!")
-}
+    // toast.success("Added to cart!")
+  }
 
 
 
@@ -125,38 +130,47 @@ const handleAddToCart = () => {
           </div>
 
           {/* {hasDiscount && ( */}
-            <div className="w-[83px] h-[32px] bg-[#F80000] text-white text-[clamp(12px,1.5vw,16px)] font-medium rounded flex items-center justify-center mt-1">
-              {discountPercent}% off
-            </div>
+          <div className="w-[83px] h-[32px] bg-[#F80000] text-white text-[clamp(12px,1.5vw,16px)] font-medium rounded flex items-center justify-center mt-1">
+            {discountPercent}% off
+          </div>
           {/* )} */}
         </div>
 
         <p className="text-sm font-bold mt-1 flex items-center">
-             <span className="bg-green-100 text-[clamp(10px,1vw,12px)] font-medium text-[#008000] rounded">
-               Savings
-             </span>
-             <span className="text-[#777777] text-[clamp(10px,1vw,12px)] font-normal ml-2">
-               Buy one, get one free
-             </span>
-           </p>
+          <span className="bg-green-100 text-[clamp(10px,1vw,12px)] font-medium text-[#008000] rounded">
+            Savings
+          </span>
+          <span className="text-[#777777] text-[clamp(10px,1vw,12px)] font-normal ml-2">
+            Buy one, get one free
+          </span>
+        </p>
 
-           <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#FF0000] mt-1">
-             Only 4 left in stock — order soon
-           </p>
+        <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#FF0000] mt-1">
+          Only 4 left in stock — order soon
+        </p>
 
-           <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
-             FREE delivery on <strong>Sat, 27 Sept</strong> for members
-           </p>
-         
+        <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
+          FREE delivery on <strong>Sat, 27 Sept</strong> for members
+        </p>
 
-        {/* <button
-          onClick={handleAddToCart}
+
+        <button
+          // onClick={handleAddToCart}
+          onClick={() => setShowModal(true)}
           className="w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800 text-[#FFFFFF]"
         >
           <Image src="/images/icons/cart.png" alt="Add to cart logo" className="w-4 h-4" width={16} height={16} />
           Add to Cart
-        </button> */}
+        </button>
+
+        {showModal && (
+          <AddVariantModal
+            product={api_product}
+            onClose={() => setShowModal(false)}
+          />
+        )}
+
       </div>
     </div>
   )

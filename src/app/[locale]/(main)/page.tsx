@@ -27,9 +27,32 @@ const bannerSlides = [
 ];
 
 const flashProducts = [
-  { id: "p1", image: "/images/product/cotton-Tshirt.jpg", title: "Classic T shirt", currentPrice: 3000, oldPrice: 3500, discount: "45% OFF", description: "Stunning white T shirt" },
-  { id: "p2", image: "/images/product/cotton-Tshirt.jpg", title: "Denim Jacket", currentPrice: 4200, oldPrice: 5200, discount: "20% OFF", description: "Stylish denim jacket" },
+  { id: "p1", image: "/images/product/white-vase.png", title: "White Vase", currentPrice: 3000, oldPrice: 3500, discount: "45% OFF", description: "Stunning white T shirt" },
+  { id: "p2", image: "/images/product/white-vase.png", title: "Indoor Plant", currentPrice: 4200, oldPrice: 5200, discount: "20% OFF", description: "Stylish denim jacket" },
 ];
+
+const brands = [
+  { name: "Nike", image: "/images/brands/Nike.png" },
+  { name: "Maybeline", image: "/images/brands/Maybeline.png" },
+  { name: "Dell", image: "/images/brands/Dell.png" },
+  { name: "Adidas", image: "/images/brands/Adidas.png" },
+  { name: "Gucci", image: "/images/brands/Gucci.png" },
+  { name: "H&M", image: "/images/brands/H&M.png" },
+  { name: "Prada", image: "/images/brands/Prada.png" },
+  { name: "Philips", image: "/images/brands/Philips.png" },
+];
+
+const categories = [
+  { category: "Kitchen Essentials", image: "/images/categories/kitchen-essentials.png" },
+  { category: "Decor", image: "/images/categories/decor.png" },
+  { category: "Lighting Lamps", image: "/images/categories/lighting-lamps.png" },
+  { category: "Bags & Wallets", image: "/images/categories/bags-&-wallets.png" },
+  { category: "Makeup", image: "/images/categories/makeup.png" },
+  { category: "Clothing", image: "/images/categories/clothing.png" },
+  { category: "Skincare", image: "/images/categories/skincare.png" },
+  { category: "Electronics", image: "/images/categories/electronics.png" },
+];
+
 
 
 const recommended = new Array(8).fill(0).map((_, i) => ({
@@ -103,90 +126,91 @@ export default async function HomePage({ params }: { params: Params }) {
         </HorizontalScroller>
 
         {/* Large banner carousel */}
-        <div className="pt-2">
+        <div className="pt-0">
           {/* <CarouselBanner slides={bannerSlides} /> */}
           <CarouselBanner
             images={[
-              "/images/banner-section/sale-banner.webp",
+              "/images/banner-section/banner.png",
               "/images/banner-section/sale-banner-1.avif",
               "/images/banner-section/sale-banner.webp",
             ]}
           />
-
         </div>
 
         {/* Circular categories (grid) */}
-        {/* <SectionHeader title="Categories" actionLabel="See all"  /> */}
+        {/* <SectionHeader title="Categories" actionLabel="See All"  /> */}
         <div className="grid grid-cols-4 gap-4">
-          {data.product_categories.map((c: CategoryItem) => (
-            <ItemCategoryCard key={c.id} imageUrl={"/images/product/cotton-Tshirt.jpg"} label={c.name} shape="circle" />
+          {categories.map((item: any) => (
+            <ItemCategoryCard key={item?.category} imageUrl={item.image || "/images/not-available/not-available.png"} label={item?.category} shape="circle" />
           ))}
         </div>
         {/* Flash Sale section (dark blue header) */}
         <div>
           <div className="flex items-center justify-between ">
             <h2 className="text-[20px] font-medium" style={{ color: "#32425A" }}>Flash Sale</h2>
-            <button className="text-[14px] font-medium" style={{ color: "#144293" }}>See all</button>
+            <button className="text-[14px] font-medium" style={{ color: "#144293" }}>See All</button>
           </div>
 
-          <div className="my-5"></div>
+          <div className="my-2"></div>
           {/* two cards side-by-side */}
           {/* <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3"> */}
           <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-            {flashProducts.map((p) => (
-              <HomeProductCard
-                id={p?.id}
-                key={p.id}
-                imageUrl={p.image}
-                title={p.title}
-                currentPrice={p.currentPrice}
-                oldPrice={p.oldPrice}
-                discount={p.discount}
-                description={p.description}
-              />
+            {jsonLdProducts.map((r) => (
+              <div key={r.id} className="w-[180px] flex-shrink-0 ">
+                <HomeProductCard
+                  api_product={r}
+                  hasOfferSticker={true}
+                />
+
+                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
+              </div>
             ))}
           </div>
         </div>
 
         {/* Recommended for you — horizontal, hidden scrollbar */}
-        <SectionHeader title="Recommended for you" actionLabel="See all" />
-        <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
+        <SectionHeader title="Recommended for you" actionLabel="See All" />
+        <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
           {jsonLdProducts.map((r) => (
-            <div key={r.id} className="w-[180px] flex-shrink-0">
+            <div key={r.id} className="w-[180px] flex-shrink-0 ">
+              <HomeProductCard
+                api_product={r}
+                // hasOfferSticker={true}
+              />
 
-              <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
+              {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
             </div>
           ))}
         </div>
 
         {/* Top brands (use item category card circular) */}
-        <SectionHeader title="Top Brands" actionLabel="See all" />
-        <HorizontalScroller className="no-scrollbar">
-          {data.product_categories.map((c: CategoryItem) => (
-            <div key={c.id} className="w-[100px] flex-shrink-0">
-              <ItemCategoryCard imageUrl={"/images/product/cotton-Tshirt.jpg"} label={c.name} shape="circle" />
-            </div>
+        <SectionHeader title="Top Brands" actionLabel="See All" />
+        <div className="grid grid-cols-4 gap-4">
+          {brands.map((brand: any) => (
+            <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={80} width={80} />
           ))}
-        </HorizontalScroller>
+        </div>
 
         {/* Best deals */}
-        <SectionHeader title="Best Deals" actionLabel="See all" />
-        <HorizontalScroller className="no-scrollbar">
+        <SectionHeader title="Best Deals" actionLabel="See All" />
+        <HorizontalScroller className="no-scrollbar !mt-1">
           {jsonLdProducts.map((r) => (
             <div key={r.id} className="w-[180px] flex-shrink-0">
+              <HomeProductCard api_product={r} />
 
-              <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
+              {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
             </div>
           ))}
         </HorizontalScroller>
 
         {/* Most Popular */}
-        <SectionHeader title="Most Popular" actionLabel="See all" />
-        <HorizontalScroller className="no-scrollbar">
+        <SectionHeader title="Most Popular" actionLabel="See All" />
+        <HorizontalScroller className="no-scrollbar !mt-1">
           {jsonLdProducts.map((r) => (
             <div key={r.id} className="w-[180px] flex-shrink-0">
+              <HomeProductCard api_product={r} />
 
-              <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} />
+              {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
             </div>
           ))}
         </HorizontalScroller>
