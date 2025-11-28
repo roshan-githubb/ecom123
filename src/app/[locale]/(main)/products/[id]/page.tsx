@@ -11,7 +11,7 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
   const { id, locale } = await params;
 
 
-const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}`;
+const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}?region_id=${process.env.NEXT_PUBLIC_REGION_ID}`;
 
 
   try {

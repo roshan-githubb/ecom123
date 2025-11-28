@@ -7,6 +7,8 @@ import { headers } from "next/headers"
 import isBot from "@/lib/helpers/isBot"
 import type { Metadata } from "next"
 import { HttpTypes } from "@medusajs/types"
+import { fetchProductRatingSummary } from "@/lib/api/reviews"
+import { RatingSummary } from "@/types/reviews"
 
 
 export const revalidate = 60
@@ -55,6 +57,13 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
         queryParams: { limit: 30, order: "created_at" },
     })
 
+    const ratingsMap: Record<string, RatingSummary> = await Promise.all(
+        recommendedProducts.map(async (product: any) => {
+            const summary = await fetchProductRatingSummary(product.id)
+            return [product.id, summary] as const
+        })
+    ).then(Object.fromEntries)
+
     return (
         <main className="container py-6">
             <h2 className="text-[#32425A] text-base font-semibold mb-4">Recommended For You</h2>
@@ -62,7 +71,12 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
             <Suspense fallback={<ProductListingSkeleton />}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                     {recommendedProducts.map((product: HttpTypes.StoreProduct) => (
-                        <ProductCard key={product.id} api_product={product} locale={locale}/>
+                        <ProductCard
+                            key={product.id}
+                            api_product={product}
+                            locale={locale}
+                            ratingSummary={ratingsMap[product.id]}
+                        />
                     ))}
                 </div>
             </Suspense>
