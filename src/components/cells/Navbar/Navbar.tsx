@@ -6,11 +6,19 @@ import { CategoryNavbar, NavbarSearch } from "@/components/molecules"
 import Image from "next/image"
 import { useCartStore } from "@/store/useCartStore"
 import { CartIcon } from "@/icons"
+import { MobileNavbar } from "../MobileNavbar/MobileNavbar"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/atoms"
+
 
 export default function Navbar({
   categories,
+  parentCategories
 }: {
-  categories: HttpTypes.StoreProductCategory[]
+  categories: HttpTypes.StoreProductCategory[],
+  parentCategories: HttpTypes.StoreProductCategory[]
+
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -51,7 +59,13 @@ export default function Navbar({
 
   return (
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
-      {showBackArrow && (
+      <MobileNavbar
+        parentCategories={parentCategories}
+        childrenCategories={categories}
+      />
+
+      <div className="mr-2 lg:mr-0"></div>
+      {/* {showBackArrow && (
         <button
           onClick={() => router.back()}
           className="mt-2 mr-2 flex items-center justify-center rounded"
@@ -63,13 +77,38 @@ export default function Navbar({
             height={24}
           />
         </button>
-      )}
-      <div className="flex justify-between w-full">
-        <div className="flex-1">{showSearchbar && <NavbarSearch />}</div>
-        <div className="mt-1">
+      )} */}
+      <div className="flex items-center w-full">
+        {/* Left: nav links (desktop only) */}
+        <div className="hidden lg:flex">
+          <ul className="flex space-x-6">
+            {["All Products", "Recommended", "Sandals", "Boots", "New Arrivals", "Sale"].map((link) => (
+              <LocalizedClientLink
+                key={link}
+                href={`/${link}.tolowercase()`}
+                // onClick={() => (onClose ? onClose(false) : null)}
+                className={cn("label-md uppercase min-w-[24px] text-white")}
+              >
+                {link}
+              </LocalizedClientLink>
+
+              // <li
+              //   key={link}
+              //   className="text-white font-medium hover:underline cursor-pointer"
+              // >
+              //   {link}
+              // </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right: search + cart */}
+        <div className="flex lg:ml-auto items-center space-x-4">
+          {showSearchbar && <NavbarSearch />}
           <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} />
         </div>
       </div>
+
 
 
 

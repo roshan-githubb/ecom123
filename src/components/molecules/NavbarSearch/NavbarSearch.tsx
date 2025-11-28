@@ -18,7 +18,7 @@ export function NavbarSearch() {
 
   return (
     <form
-      className="flex items-center flex-1 min-w-0 max-w-full"
+      className="flex items-center flex-1 min-w-0 max-w-[420px]"
       method="POST"
       onSubmit={submitHandler}
     >

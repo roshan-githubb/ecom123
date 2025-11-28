@@ -24,7 +24,7 @@ export const MobileNavbar = ({
   return (
     <div className='lg:hidden'>
       <div onClick={() => setOpenMenu(true)}>
-        <HamburgerMenuIcon />
+        <HamburgerMenuIcon color='white' />
       </div>
       {openMenu && (
         <div className='fixed w-full h-full bg-primary p-2 top-0 left-0 z-20'>
