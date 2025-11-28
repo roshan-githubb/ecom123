@@ -8,13 +8,17 @@ import { HttpTypes } from "@medusajs/types"
 import { toast, Toaster } from "react-hot-toast"
 import { useState } from "react"
 import { AddVariantModal } from "../AddVariantModal/AddVariantModal"
+import { RatingSummary } from "@/types/reviews"
+import { useEffect } from "react"
 
 export const ProductCard = ({
   api_product,
-  locale
+  locale,
+  ratingSummary = { average_rating: 0, total_reviews: 0 },
 }: {
   api_product: HttpTypes.StoreProduct | null
   locale: string
+  ratingSummary?: RatingSummary
 }) => {
   
 
@@ -42,9 +46,15 @@ export const ProductCard = ({
   const productImage =
     api_product?.images?.[0]?.url || "/images/not-available/not-available.png"
 
+  const colorOption = api_product.options?.find(
+    (opt) => opt.title.toLowerCase() === "color"
+  )
+  const displayedColor = colorOption?.values?.[0]?.value
 
-  const colorOption = api_product.options?.find(opt => opt.title.toLowerCase() === "color");
-  const displayedColor = colorOption?.values?.[0]?.value;
+  const { average_rating, total_reviews } = ratingSummary
+
+
+
 
 
   const handleAddToCart = () => {
@@ -99,17 +109,24 @@ export const ProductCard = ({
             </h2>
           </Link>
 
-          <div className="flex items-center gap-1 mt-1">
-            <span className="font-bold text-[#222222]">4.5</span>
-            <StarRating rate={4.5} starSize={12} />
+          {total_reviews > 0 ? (
+            <>
+              <span className="font-bold text-[#222222]">
+                {average_rating.toFixed(1)}
+              </span>
+              <StarRating rate={average_rating} starSize={12} />
+              <span className="text-[#777777] text-[clamp(10px,1.2vw,14px)]">
+                ({total_reviews} {total_reviews === 1 ? "review" : "reviews"})
+              </span>
+            </>
+          ) : (
             <span className="text-[#777777] text-[clamp(10px,1.2vw,14px)]">
-              (15 reviews)
+              No reviews yet
             </span>
-          </div>
-
+          )}
 
           <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#777777]">
-            4K+ bought last month
+            {ratingSummary.last_month_sales ? `${ratingSummary.last_month_sales}+ bought last month` : ""}
           </p>
 
           <div className="flex items-start gap-2 mt-2">
@@ -133,6 +150,7 @@ export const ProductCard = ({
           <div className="w-[83px] h-[32px] bg-[#F80000] text-white text-[clamp(12px,1.5vw,16px)] font-medium rounded flex items-center justify-center mt-1">
             {discountPercent}% off
           </div>
+         
           {/* )} */}
         </div>
 
@@ -144,10 +162,13 @@ export const ProductCard = ({
             Buy one, get one free
           </span>
         </p>
+        
+        
 
         <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#FF0000] mt-1">
           Only 4 left in stock — order soon
         </p>
+        
 
         <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
           FREE delivery on <strong>Sat, 27 Sept</strong> for members

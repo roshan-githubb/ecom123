@@ -84,7 +84,7 @@ export default function Navbar({
 
             <LocalizedClientLink
               key="recommended"
-              href="np/recommended"
+              href="/recommended"
               className={cn(
                 "label-md min-w-[24px] capitalize",
                 pathname === "/recommended"
@@ -97,7 +97,7 @@ export default function Navbar({
 
             {categories.map((category) => {
               const categoryHref = `/categories/${category?.handle}`
-              // console.log('pathname and categoryHref', pathname, `/np${categoryHref}`)
+              // console.log('pathname and categoryHref', pathname, `${categoryHref}`)
 
               return (
                 <LocalizedClientLink
