@@ -45,7 +45,7 @@ export const ItemCategoryCard = ({
                 />
             </div>
 
-            <p className="text-md font-medium text-center text-black dark:text-white">
+            <p className="text-[14px] font-medium text-center text-gray-600  dark:text-white">
                 {label}
             </p>
         </Card>

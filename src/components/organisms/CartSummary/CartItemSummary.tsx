@@ -3,6 +3,7 @@
 import React from "react"
 import { useCartStore } from "@/store/useCartStore"
 import { OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
+import Image from "next/image";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -24,14 +25,14 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string }> = ({
   quantity,
   lineItemId
 }) => {
-  
+
   const increase = useCartStore((s) => s.increase)
   const decrease = useCartStore((s) => s.decrease)
 
   return (
     <div className="flex items-center gap-1">
 
-      
+
       <button
         className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
         onClick={() => decrease(lineItemId, quantity)}
@@ -70,7 +71,9 @@ export default ItemCounter
 const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
   return (
     <div className="flex items-center justify-between gap-2">
-      <img
+      <Image
+        height={50}
+        width={35}
         className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover"
         src={item.thumbnail || "/images/not-available/not-available.png"}
         alt={item.title}
@@ -80,7 +83,7 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
           {item.title}
         </p>
         <p className="text-[#888888] text-xs">{item?.variantTitle}</p>
-        
+
       </div>
       <div className="mr-5">
         <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} />
@@ -92,8 +95,8 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
   )
 }
 
-export function OrderSummary({ summary }: OrderSummaryProps) { 
-    console.log('order summary prop received ', summary)
+export function OrderSummary({ summary }: OrderSummaryProps) {
+  console.log('order summary prop received ', summary)
 
   // const subtotal = items.reduce(
   //   (acc, item) => acc + item.price * item.quantity,

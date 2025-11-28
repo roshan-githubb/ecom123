@@ -22,7 +22,7 @@ export const Modal = ({
             <CloseIcon size={20} />
           </div>
         </div>
-        <div className="pt-5">{children}</div>
+        <div className="pt-5 px-5">{children}</div>
       </div>
     </div>
   )
