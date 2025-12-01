@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { CAROUSEL_AUTO_SLIDE_INTERVAL } from "@/lib/constants";
+
 
 interface CarouselBannerProps {
   images: string[];
@@ -9,6 +11,25 @@ interface CarouselBannerProps {
 
 export default function CarouselBanner({ images }: CarouselBannerProps) {
   const [current, setCurrent] = useState(0);
+
+  const slideInterval = useRef<NodeJS.Timeout | null>(null);
+
+useEffect(() => {
+  startAutoSlide();
+  return () => stopAutoSlide();
+}, [current]);
+
+const startAutoSlide = () => {
+  stopAutoSlide(); 
+  slideInterval.current = setTimeout(() => {
+    nextSlide();
+  }, CAROUSEL_AUTO_SLIDE_INTERVAL);
+};
+
+const stopAutoSlide = () => {
+  if (slideInterval.current) clearTimeout(slideInterval.current);
+};
+
 
   const nextSlide = () => {
     setCurrent((prev) => (prev + 1) % images.length);

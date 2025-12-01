@@ -66,3 +66,6 @@ export const noDivisionCurrencies = [
   "xdr",
   "xau",
 ]
+
+export const CAROUSEL_AUTO_SLIDE_INTERVAL = 4000; 
+
