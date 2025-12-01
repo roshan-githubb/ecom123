@@ -156,9 +156,9 @@ async function Category({
           }),
         }}
       />
-      <div className="hidden md:block mb-2">
+      {/* <div className="hidden md:block mb-2">
         <Breadcrumbs items={breadcrumbsItems} />
-      </div>
+      </div> */}
 
       <h1 className="heading-xl uppercase">{category.name}</h1>
 

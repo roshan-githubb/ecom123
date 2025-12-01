@@ -5,6 +5,7 @@ import { useCartStore } from "@/store/useCartStore"
 import { getCart } from "@/services/cart"
 import { mapCartToOrderSummary } from "@/lib/mapper/cartMapper"
 import { OrderItem, OrderSummary } from "@/components/organisms/CartSummary/CartItemSummary"
+import Image from "next/image"
 
 interface SelectCircleProps {
   selected: boolean
@@ -84,7 +85,7 @@ const KhaltiButton: React.FC<{ checked: boolean; onClick: () => void }> = ({
     className={`cursor-pointer flex py-0 px-2 justify-center items-center gap-2 rounded-2xl border w-fit h-[25px] ${checked ? "bg-[#EEEEEE]" : "bg-white border-[#EFEFEF]"
       }`}
   >
-    <img
+    <Image
       src="/images/icons/khalti.png"
       height={20}
       width={20}

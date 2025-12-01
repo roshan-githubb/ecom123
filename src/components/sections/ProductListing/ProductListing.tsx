@@ -9,6 +9,7 @@ import { PRODUCT_LIMIT } from "@/const"
 import { listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"  
 
+
 export const ProductListing = async ({
   category_id,
   collection_id,
@@ -29,6 +30,7 @@ export const ProductListing = async ({
   const { response } = await listProducts({
     pageParam: 1,
     queryParams: {
+      q: '',
       limit: PRODUCT_LIMIT,
       category_id,
       collection_id,
@@ -43,9 +45,9 @@ export const ProductListing = async ({
   return (
     <div className="py-4">
       <ProductListingHeader total={count} />
-      <div className="hidden md:block">
+      {/* <div className="hidden md:block">
         <ProductListingActiveFilters />
-      </div>
+      </div> */}
       <div className="grid grid-cols-1 md:grid-cols-4 mt-6 gap-4">
         {showSidebar && <ProductSidebar />}
         <section className={showSidebar ? "col-span-3" : "col-span-4"}>

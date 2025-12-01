@@ -1,7 +1,6 @@
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { Suspense } from "react"
 
-import { Breadcrumbs } from "@/components/atoms"
 import { AlgoliaProductsListing, ProductListing } from "@/components/sections"
 import { getRegion } from "@/lib/data/regions"
 import isBot from "@/lib/helpers/isBot"
@@ -137,15 +136,15 @@ async function AllCategories({
           }),
         }}
       />
-      <div className="hidden md:block mb-2">
+      {/* <div className="hidden md:block mb-2">
         <Breadcrumbs items={breadcrumbsItems} />
-      </div>
+      </div> */}
 
       <h1 className="heading-xl uppercase">All Products</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
         {bot || !ALGOLIA_ID || !ALGOLIA_SEARCH_KEY ? (
-          <ProductListing showSidebar locale={locale} />
+          <ProductListing  locale={locale} />
         ) : (
           <AlgoliaProductsListing
             locale={locale}
