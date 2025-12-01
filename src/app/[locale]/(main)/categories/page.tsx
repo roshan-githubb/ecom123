@@ -140,7 +140,7 @@ async function AllCategories({
         <Breadcrumbs items={breadcrumbsItems} />
       </div> */}
 
-      <h1 className="heading-xl uppercase">All Products</h1>
+      <h1 className="heading-md uppercase">All Products</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
         {bot || !ALGOLIA_ID || !ALGOLIA_SEARCH_KEY ? (

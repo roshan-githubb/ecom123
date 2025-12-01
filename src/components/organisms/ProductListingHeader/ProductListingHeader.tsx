@@ -4,9 +4,8 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useRouter } from "next/navigation"
 
 const selectOptions = [
-  { label: "Newest", value: "-created_at" },
-  { label: "Date: Newest first", value: "-created_at" },
-  { label: "Date: Oldest first", value: "created_at" },
+  { label: "Newest first", value: "-created_at" },
+  { label: "Oldest first", value: "created_at" },
 ]
 
 export const ProductListingHeader = ({ total }: { total: number }) => {

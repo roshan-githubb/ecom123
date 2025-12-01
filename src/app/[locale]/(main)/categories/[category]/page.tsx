@@ -160,7 +160,7 @@ async function Category({
         <Breadcrumbs items={breadcrumbsItems} />
       </div> */}
 
-      <h1 className="heading-xl uppercase">{category.name}</h1>
+      <h1 className="heading-md uppercase">{category.name}</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
         {bot || !ALGOLIA_ID || !ALGOLIA_SEARCH_KEY ? (
