@@ -34,6 +34,7 @@ export default async function RootLayout({
     <>
       <Session appId={APP_ID} userId={user.id}>
         <Header />
+        <div className="pt-64"></div>
         {children}
         <Footer />
       </Session>

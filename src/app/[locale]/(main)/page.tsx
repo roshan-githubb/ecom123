@@ -118,7 +118,7 @@ export default async function HomePage({ params }: { params: Params }) {
     // console.log("Full categories response from Medusa:", data.product_categories);
 
     return (
-      <div className="space-y-6 px-4 lg:px-8 py-4">
+      <div className="space-y-6 px-4 lg:px-8 py-4 pt-[90px] ">
         {/* Top horizontal category scroller (item category cards) with visible arrows */}
         <HorizontalScroller >
           {data.product_categories.map((c: CategoryItem) => (
@@ -225,12 +225,5 @@ export default async function HomePage({ params }: { params: Params }) {
 
     return notFound();
   }
-
-
-
-
-
-
-
 
 }
