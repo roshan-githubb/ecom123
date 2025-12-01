@@ -8,8 +8,10 @@ export const Card = ({
   children: React.ReactNode
 } & React.ComponentPropsWithoutRef<"div">) => {
   return (
-    <div className={cn("border rounded-sm py-4 px-2", className)} {...props}>
+    <>
+    {/* <div className={cn("border rounded-sm py-4 px-2", className)} {...props}> */}
       {children}
-    </div>
+    {/* </div> */}
+    </>
   )
 }
