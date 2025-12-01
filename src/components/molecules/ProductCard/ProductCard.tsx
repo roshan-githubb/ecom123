@@ -9,7 +9,6 @@ import { toast, Toaster } from "react-hot-toast"
 import { useState } from "react"
 import { AddVariantModal } from "../AddVariantModal/AddVariantModal"
 import { RatingSummary } from "@/types/reviews"
-import { useEffect } from "react"
 
 export const ProductCard = ({
   api_product,

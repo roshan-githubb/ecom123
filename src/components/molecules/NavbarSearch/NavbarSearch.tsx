@@ -13,7 +13,7 @@ export function NavbarSearch() {
 
   const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    router.push(search ? `/categories?query=${search}` : `/categories`)
+    router.push(search ? `/products?query=${search}` : `/products`)
   }
 
   return (

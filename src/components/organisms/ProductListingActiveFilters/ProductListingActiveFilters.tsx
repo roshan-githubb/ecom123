@@ -5,6 +5,7 @@ import useGetAllSearchParams from "@/hooks/useGetAllSearchParams"
 
 export const ProductListingActiveFilters = () => {
   const { allSearchParams } = useGetAllSearchParams()
+  // console.log("all search params ", allSearchParams)
   const filters = Object.entries(allSearchParams).filter(
     (element) =>
       element[0] !== "sortBy" &&
