@@ -8,6 +8,9 @@ import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 
 
+interface CategoryItemMetadata{
+    thumbnail_url: string;
+  }
 interface CategoryItem {
   created_at: string;
   description: string;
@@ -17,6 +20,7 @@ interface CategoryItem {
   parent_category_id: number;
   rank: number;
   updated_at: string;
+  metadata: CategoryItemMetadata;
 }
 
 const bannerSlides = [
@@ -86,7 +90,7 @@ export default async function HomePage({ params }: { params: Params }) {
     name: p.title,
   }))
 
-  console.log("item list and origianl list ", itemList, jsonLdProducts)
+  // console.log("item list and origianl list ", itemList, jsonLdProducts)
   const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
 
   try {
@@ -119,7 +123,7 @@ export default async function HomePage({ params }: { params: Params }) {
         <HorizontalScroller >
           {data.product_categories.map((c: CategoryItem) => (
             <div key={c.id} className=" flex-shrink-0">
-              <ItemCategoryCard imageUrl={"/images/product/cotton-Tshirt.jpg"} label={c.name} shape="rounded" height={100} width={100} />
+              <ItemCategoryCard imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} label={c.name} shape="rounded" height={100} width={100} />
             </div>
           ))}
         </HorizontalScroller>
