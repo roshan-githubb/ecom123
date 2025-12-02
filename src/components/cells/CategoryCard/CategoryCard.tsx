@@ -20,34 +20,36 @@ export const ItemCategoryCard = ({
     ...props
 }: ItemCategoryCardProps) => {
     return (
-        <Card
-            className={cn(
-                "border-none shadow-none flex flex-col items-center gap-2 p-0 bg-transparent",
-                className
-            )}
-            {...props}
-        >
-            <div
+        <div className="flex-col justify-center items-center">
+            <Card
                 className={cn(
-                    "overflow-hidden",
-                    shape === "circle"
-                        ? "rounded-full"
-                        : "rounded-xl" // slightly rounded edges
+                    "border-none shadow-none flex flex-col items-center gap-2 p-0 bg-transparent",
+                    className
                 )}
-                style={{ width: height?? 80, height: height?? 80 }}
+                {...props}
             >
-                <Image
-                    src={imageUrl}
-                    alt={label}
-                    width={height?? 80}
-                    height={height?? 80}
-                    className="object-cover"
-                />
-            </div>
+                <div
+                    className={cn(
+                        "overflow-hidden mx-auto",
+                        shape === "circle"
+                            ? "rounded-full"
+                            : "rounded-xl" // slightly rounded edges
+                    )}
+                    style={{ width: height ?? 80, height: height ?? 80 }}
+                >
+                    <Image
+                        src={imageUrl}
+                        alt={label}
+                        width={height ?? 80}
+                        height={height ?? 80}
+                        className="object-cover"
+                    />
+                </div>
 
-            <p className="text-[14px] font-medium text-center text-gray-600  dark:text-white">
-                {label}
-            </p>
-        </Card>
+                <p className="text-[14px] pt-2 font-medium text-center text-gray-600  dark:text-white">
+                    {label}
+                </p>
+            </Card>
+        </div>
     )
 }

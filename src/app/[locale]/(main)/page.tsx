@@ -8,9 +8,9 @@ import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 
 
-interface CategoryItemMetadata{
-    thumbnail_url: string;
-  }
+interface CategoryItemMetadata {
+  thumbnail_url: string;
+}
 interface CategoryItem {
   created_at: string;
   description: string;
@@ -178,7 +178,7 @@ export default async function HomePage({ params }: { params: Params }) {
             <div key={r.id} className="w-[180px] flex-shrink-0 ">
               <HomeProductCard
                 api_product={r}
-                // hasOfferSticker={true}
+              // hasOfferSticker={true}
               />
 
               {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
@@ -189,9 +189,12 @@ export default async function HomePage({ params }: { params: Params }) {
         {/* Top brands (use item category card circular) */}
         <SectionHeader title="Top Brands" actionLabel="See All" />
         <div className="grid grid-cols-4 gap-4">
-          {brands.map((brand: any) => (
-            <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} />
-          ))}
+          <>
+            {brands.map((brand: any) => (
+              // <div>
+                <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} />
+              // </div>
+            ))}</>
         </div>
 
         {/* Best deals */}
