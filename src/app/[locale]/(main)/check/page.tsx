@@ -6,6 +6,7 @@ import { getCart } from "@/services/cart"
 import { mapCartToOrderSummary } from "@/lib/mapper/cartMapper"
 import { OrderItem, OrderSummary } from "@/components/organisms/CartSummary/CartItemSummary"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 interface SelectCircleProps {
   selected: boolean
@@ -196,6 +197,8 @@ const UserDetailsSection: React.FC<{
   onChange: () => void
   onAdd: () => void
 }> = ({ address, onChange, onAdd }) => {
+  const router = useRouter()
+
   const displayValue = (val: string, missingText: string) => val || missingText
 
   return (
@@ -229,7 +232,9 @@ const UserDetailsSection: React.FC<{
           ) : (
             <Button
               variant="primary"
-              onClick={onAdd}
+              // onClick={onAdd}
+              onClick={() => router.push("/in/shippinginfo")}
+
               className="w-full sm:w-auto min-w-[120px] rounded-md px-4 py-2 text-sm sm:text-base shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap text-center"
             >
               Add Address
@@ -252,6 +257,8 @@ const CheckoutPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter()
+
 
   const {
     cartId,
@@ -290,13 +297,13 @@ const CheckoutPage: React.FC = () => {
   // const nestedCart = cart?.cart
   const cartSummary = mapCartToOrderSummary(summary)
   // console.log('mapper output ', cartSummary)
-  
 
 
-  if (cartSummary && !cartSummary?.items.length){
+
+  if (cartSummary && !cartSummary?.items.length) {
     return <div className="text-center mt-10">Your cart is empty</div>
   }
-    
+
 
   return (
     <div className="min-h-screen pb-8 overflow-x-hidden">
@@ -324,27 +331,27 @@ const CheckoutPage: React.FC = () => {
         /> */}
       </main>
 
-<div className="max-w-md mx-auto mt-4">
-  <label
-    className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] 
+      <div className="max-w-md mx-auto mt-4">
+        <label
+          className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] 
     mx-4 md:mx-0 mt-6 flex items-center gap-3 cursor-pointer"
-  >
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={(e) => setChecked(e.target.checked)}
-      className="w-6 h-6 accent-blue-600 rounded border-gray-300"
-    />
-    <span className="text-[#555] font-poppins text-sm font-normal leading-[1.4em]">
-      Save my information for a faster checkout
-    </span>
-  </label>
-</div>
+        >
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            className="w-6 h-6 accent-blue-600 rounded border-gray-300"
+          />
+          <span className="text-[#555] font-poppins text-sm font-normal leading-[1.4em]">
+            Save my information for a faster checkout
+          </span>
+        </label>
+      </div>
 
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
-        <Button variant="primary" onClick={() => {}}>
-          Place Order & Pay
+        <Button variant="primary" onClick={() => router.push("/in/payment")}>
+          Place Order
         </Button>
       </div>
     </div>

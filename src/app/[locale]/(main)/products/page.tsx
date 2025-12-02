@@ -49,7 +49,7 @@ if (searchMode) {
 
 
   return (
-    <main className="container py-4">
+    <main className="container pb-4 ">
       <h1 className="heading-md uppercase">
         {searchMode ? `Results for "${query}"` : "All Products"}
       </h1>
