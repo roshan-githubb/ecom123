@@ -233,7 +233,7 @@ const UserDetailsSection: React.FC<{
             <Button
               variant="primary"
               // onClick={onAdd}
-              onClick={() => router.push("/in/shippinginfo")}
+              onClick={() => router.push("/shippinginfo")}
 
               className="w-full sm:w-auto min-w-[120px] rounded-md px-4 py-2 text-sm sm:text-base shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap text-center"
             >
@@ -350,7 +350,7 @@ const CheckoutPage: React.FC = () => {
 
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
-        <Button variant="primary" onClick={() => router.push("/in/payment")}>
+        <Button variant="primary" onClick={() => router.push("/np/payment")}>
           Place Order
         </Button>
       </div>

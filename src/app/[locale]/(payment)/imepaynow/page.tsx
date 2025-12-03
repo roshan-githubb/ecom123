@@ -76,7 +76,7 @@ export default function IMEPayPaynowPage() {
         <button
           type="button"
           className="w-full bg-myBlue text-white font-medium text-[14px] py-3 rounded-[4px] shadow-sm hover:bg-blue-700 active:bg-blue-800 active:scale-95 transition-all uppercase"
-          onClick={() => router.push("/in/imebottombar")}
+          onClick={() => router.push("/np/imebottombar")}
         >
           Pay Now
         </button>

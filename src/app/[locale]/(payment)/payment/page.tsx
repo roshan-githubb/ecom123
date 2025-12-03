@@ -36,7 +36,7 @@ export default function PaymentPage() {
           </h2>
           <div
             className="bg-white p-2 flex items-center justify-between shadow-sm hover:bg-gray-100 active:bg-blue-800 active:scale-95 shadow-sm hover:shadow-md transition-all cursor-pointer"
-            onClick={() => router.push("/in/cardinfo")}
+            onClick={() => router.push("/np/cardinfo")}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-6 bg-blue-500 rounded-sm flex items-center justify-center relative overflow-hidden">
@@ -97,7 +97,7 @@ export default function PaymentPage() {
           <div className="space-y-2">
             <div
               className="bg-white p-2 flex items-center justify-between shadow-sm hover:bg-gray-100 active:bg-gray-100 active:scale-95 shadow-sm hover:shadow-md transition-all cursor-pointer"
-              onClick={() => router.push("/in/imepaynow")}
+              onClick={() => router.push("/np/imepaynow")}
             >
               <div className="flex items-center gap-3">
                 <div>
