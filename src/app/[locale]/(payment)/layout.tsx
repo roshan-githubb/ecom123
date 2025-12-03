@@ -25,6 +25,7 @@ export default async function RootLayout({
     return (
       <>
         <Header />
+        <div className="!pt-[68px]"></div>
         {children}
         <Footer />
       </>
@@ -33,6 +34,8 @@ export default async function RootLayout({
   return (
     <>
       <Session appId={APP_ID} userId={user.id}>
+        <div className="!pt-[68px]"></div>
+
         <Header />
         {children}
         <Footer />
