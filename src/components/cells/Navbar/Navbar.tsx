@@ -9,6 +9,8 @@ import { CartIcon } from "@/icons"
 import { MobileNavbar } from "../MobileNavbar/MobileNavbar"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cn } from "@/lib/utils"
+import { useFlutterBridge } from "@/hooks/useFlutterBridge"
+import { isFlutterWebView } from "@/lib/env/isFlutterWebView"
 
 
 export default function Navbar({
@@ -169,9 +171,9 @@ export default function Navbar({
         )}
       </div>
 
-      <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+      <div className="mt-2 flex flex-1  justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
         {showSelectShippingAddressLabel && (
-          <span className="text-base font-poppins font-semibold text-white">
+          <span className="flex-1 text-base font-poppins font-semibold text-white">
             Select Shipping Address
           </span>
         )}
@@ -253,17 +255,23 @@ export default function Navbar({
           </span>
         )}
       </div>
-
-      {/* {showCart && (
-        <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} />
-      )} */}
     </div>
   )
 }
 
 const CartButton = ({ totalItems, goToCheckoutPage }: { totalItems: number, goToCheckoutPage: () => void }) => {
+  const { goCheck } = useFlutterBridge();
   return (
-    <button className="ml-5 mt-1 relative" onClick={goToCheckoutPage}>
+    <button className="ml-5 mt-1 relative"
+      // onClick={goToCheckoutPage}
+      onClick={(e) => {
+        e.preventDefault();
+        if (isFlutterWebView()) { goCheck() }
+        else {
+          console.log("Not in Flutter WebView, navigating using router.");
+           goToCheckoutPage() }
+      }}
+    >
       <CartIcon size={24} color="white" />
       {totalItems > 0 && (
         <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
