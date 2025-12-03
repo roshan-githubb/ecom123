@@ -42,7 +42,7 @@ export default function ShippingAddress() {
             className="bg-white p-4 flex items-start gap-3 cursor-pointer hover:bg-gray-50"
             onClick={() => {
               selectAddress(i);
-              router.push("/in/check"); 
+              router.push("/np/check"); 
             }}
           >
             <div className="mt-1">
