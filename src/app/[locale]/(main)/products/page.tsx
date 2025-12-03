@@ -7,45 +7,50 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 import { HttpTypes } from "@medusajs/types"
 import { SearchProductListing } from "@/components/sections/SearchProductListing/SearchProductListing"
 
-type ProductsPageProps = {
+type ProductsPageProps = { 
   params: {
     locale: string
-  }
-  searchParams: Record<string, string | string[] | undefined>
+  } | Promise<{ locale: string }>
+  searchParams: Record<string, string | string[] | undefined> 
+    | Promise<Record<string, string | string[] | undefined>>
 }
 
 export const revalidate = 0
 
-export default async function ProductsPage({ searchParams, params }: ProductsPageProps) {
-const { locale } = params
-const query = searchParams?.query || ""
-const order = searchParams?.order || "-created_at"   // default: newest first
+export default async function ProductsPage(props: ProductsPageProps) {
+  
+  const params = await props.params
+  const searchParams = await props.searchParams
 
-const region = await getRegion(locale)
+  const { locale } = params
 
-// If user typed something, search mode
-const searchMode = query.length > 0
+  
+  const query = searchParams?.query || ""
+  const order = searchParams?.order || "-created_at"
 
-let response
+  const min_price = searchParams?.min_price || undefined
+  const max_price = searchParams?.max_price || undefined
+  const color = searchParams?.color || undefined
 
-if (searchMode) {
-  response = await listProducts({
-    queryParams: {
-      q: query,
-      limit: 50,
-      order,        
-    },
-    
-  })
-} else {
-  response = await listProducts({
-    queryParams: {
-      limit: 50,
-      order,        
-    },
-    
-  })
-}
+  const region = await getRegion(locale)
+
+  const searchMode = !!(
+    query &&
+    ((typeof query === "string" && query.length > 0) ||
+      (Array.isArray(query) && query.length > 0))
+  )
+
+  const queryParams: any = {
+    limit: 50,
+    order,
+  }
+
+  if (searchMode) queryParams.q = query
+  if (min_price) queryParams.min_price = min_price
+  if (max_price) queryParams.max_price = max_price
+  if (color) queryParams.color = color
+
+  const response = await listProducts({ queryParams })
 
 
   return (
