@@ -63,7 +63,7 @@ export default function Navbar({
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
       {showBackArrow && (
         <button
-          onClick={() => router.back()}
+          onClick={() => window.history.state && window.history.state.idx > 0 ? router.back() : router.push('/')}
           className="mt-2 mr-2 flex items-center justify-center rounded"
         >
           <Image
