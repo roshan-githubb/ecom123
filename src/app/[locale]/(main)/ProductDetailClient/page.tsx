@@ -241,15 +241,15 @@ export default function ProductDetailClient({
             >
               Visit the {product.store?.name || "Store"} store
             </Link>
-            <div className="flex items-center gap-3">
-              <StarRating rate={averageRating} starSize={22} />
-              <div className="text-sm font-medium text-[#222222]">
-                {averageRating.toFixed(1)}
-                {totalReviews > 0 && (
+            {totalReviews > 0 && (
+              <div className="flex items-center gap-3">
+                <StarRating rate={averageRating} starSize={22} />
+                <div className="text-sm font-medium text-[#222222]">
+                  {averageRating.toFixed(1)}
                   <span className="text-gray-500 ml-1">({totalReviews})</span>
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
             <div className="flex-1">
@@ -378,6 +378,7 @@ export default function ProductDetailClient({
               </span>
             </div>
           </div>
+
           <div className="flex items-center gap-3">
             <div className="text-normal font-base text-gray-600">
               M.R.P.:{" "}
@@ -472,20 +473,20 @@ export default function ProductDetailClient({
             />
           </summary>
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <StarRating rate={averageRating} starSize={18} />
-              <span className="text-[14px] text-[#222222] font-medium">
-                {averageRating.toFixed(1)} out of 5
-              </span>
-            </div>
-
-            <span className="text-[12px] font-normal">
-              {totalReviews > 0
-                ? `${totalReviews.toLocaleString()} global rating${
-                    totalReviews !== 1 ? "s" : ""
-                  }`
-                : "No reviews yet"}
-            </span>
+            {totalReviews > 0 ? (
+              <div className="flex items-center gap-2">
+                <StarRating rate={averageRating} starSize={18} />
+                <span className="text-[14px] text-[#222222] font-medium">
+                  {averageRating.toFixed(1)} out of 5
+                </span>
+                <span className="text-[12px] font-normal ml-1">
+                  ({totalReviews.toLocaleString()} review
+                  {totalReviews !== 1 ? "s" : ""})
+                </span>
+              </div>
+            ) : (
+              <span className="text-[12px] font-normal">No reviews yet</span>
+            )}
 
             <div>
               <p className="text-[14px] text-[#222222] font-medium">

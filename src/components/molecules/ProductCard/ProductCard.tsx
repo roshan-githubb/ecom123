@@ -19,8 +19,6 @@ export const ProductCard = ({
   locale: string
   ratingSummary?: RatingSummary
 }) => {
-  
-
   const [showModal, setShowModal] = useState(false)
 
   //  const addToCart = useCartStore((state) => state.addToCart)
@@ -30,8 +28,6 @@ export const ProductCard = ({
   const variant = api_product.variants[0]
   const calculatedPrice = variant.calculated_price
   if (!calculatedPrice) return <div>Price not available</div>
-
-
 
   const price = Number(calculatedPrice.calculated_amount)
   const originalPrice = Number(calculatedPrice.original_amount)
@@ -52,21 +48,14 @@ export const ProductCard = ({
 
   const { average_rating, total_reviews } = ratingSummary
 
-
-
-
-
   const handleAddToCart = () => {
     // const optionsObj: Record<string, string> = {}
-
     // variant.options?.forEach((opt) => {
     //   const key = (opt.option_id || "").toLowerCase().trim()
     //   const value = (opt.value || "").trim()
     //   if (key && value) optionsObj[key] = value
     // })
-
     // const normalizedOptions = Object.keys(optionsObj).length > 0 ? optionsObj : null
-
     // addToCart({
     //   id: variant.id,
     //   title: api_product.title || "Product",
@@ -75,11 +64,8 @@ export const ProductCard = ({
     //   quantity: 1,
     //   color: displayedColor,
     // })
-
     // toast.success("Added to cart!")
   }
-
-
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-row md:flex-col gap-3 relative">
@@ -109,15 +95,17 @@ export const ProductCard = ({
           </Link>
 
           {total_reviews > 0 ? (
-            <>
+            <div className="flex items-center gap-1">
               <span className="font-bold text-[#222222]">
                 {average_rating.toFixed(1)}
               </span>
+
               <StarRating rate={average_rating} starSize={12} />
+
               <span className="text-[#777777] text-[clamp(10px,1.2vw,14px)]">
                 ({total_reviews} {total_reviews === 1 ? "review" : "reviews"})
               </span>
-            </>
+            </div>
           ) : (
             <span className="text-[#777777] text-[clamp(10px,1.2vw,14px)]">
               No reviews yet
@@ -125,7 +113,9 @@ export const ProductCard = ({
           )}
 
           <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#777777]">
-            {ratingSummary.last_month_sales ? `${ratingSummary.last_month_sales}+ bought last month` : ""}
+            {ratingSummary.last_month_sales
+              ? `${ratingSummary.last_month_sales}+ bought last month`
+              : ""}
           </p>
 
           <div className="flex items-start gap-2 mt-2">
@@ -145,12 +135,11 @@ export const ProductCard = ({
             )}
           </div>
 
-          {/* {hasDiscount && ( */}
-          <div className="w-[83px] h-[32px] bg-[#F80000] text-white text-[clamp(12px,1.5vw,16px)] font-medium rounded flex items-center justify-center mt-1">
-            {discountPercent}% off
-          </div>
-         
-          {/* )} */}
+          {hasDiscount && (
+            <div className="w-[83px] h-[32px] bg-[#F80000] text-white text-[clamp(12px,1.5vw,16px)] font-medium rounded flex items-center justify-center mt-1">
+              {discountPercent}% off
+            </div>
+          )}
         </div>
 
         <p className="text-sm font-bold mt-1 flex items-center">
@@ -161,18 +150,14 @@ export const ProductCard = ({
             Buy one, get one free
           </span>
         </p>
-        
-        
 
         <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#FF0000] mt-1">
           Only 4 left in stock — order soon
         </p>
-        
 
         <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
           FREE delivery on <strong>Sat, 27 Sept</strong> for members
         </p>
-
 
         <button
           // onClick={handleAddToCart}
@@ -180,7 +165,13 @@ export const ProductCard = ({
           className="w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800 text-[#FFFFFF]"
         >
-          <Image src="/images/icons/cart.png" alt="Add to cart logo" className="w-4 h-4" width={16} height={16} />
+          <Image
+            src="/images/icons/cart.png"
+            alt="Add to cart logo"
+            className="w-4 h-4"
+            width={16}
+            height={16}
+          />
           Add to Cart
         </button>
 
@@ -190,7 +181,6 @@ export const ProductCard = ({
             onClose={() => setShowModal(false)}
           />
         )}
-
       </div>
     </div>
   )
