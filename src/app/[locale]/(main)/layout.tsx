@@ -17,6 +17,7 @@ export default async function RootLayout({
   const user = await retrieveCustomer()
   const regionCheck = await checkRegion(locale)
 
+
   if (!regionCheck) {
     return redirect("/")
   }

@@ -79,7 +79,8 @@ export const ProductCard = ({
           height={300}
           className={`rounded-sm object-contain md:object-cover bg-[#F8F8F8] border border-[#999999]
             ${hasDiscount ? "h-[319px]" : "h-[300px]"}
-            w-[196px] md:w-full`}
+            w-[196px]
+             md:w-full`}
         />
       </div>
 

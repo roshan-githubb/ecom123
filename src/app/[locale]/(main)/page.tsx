@@ -135,10 +135,10 @@ export default async function HomePage({ params }: { params: Params }) {
         <div className="pt-0">
           {/* <CarouselBanner slides={bannerSlides} /> */}
           <CarouselBanner
-            images={[
-              "/images/banner-section/banner.png",
-              "/images/banner-section/sale-banner-1.avif",
-              "/images/banner-section/sale-banner.webp",
+            bannerCarousel={[
+              { image: "/images/banner-section/banner.png", link: "/coming-soon" },
+              { image: "/images/banner-section/sale-banner-1.avif", link: "/coming-soon" },
+              { image: "/images/banner-section/sale-banner.webp", link: "/coming-soon" },
             ]}
           />
         </div>
@@ -171,7 +171,7 @@ export default async function HomePage({ params }: { params: Params }) {
               See All
             </button>
           </div> */}
-        <SectionHeader title="Flash sale" actionLabel="See All" />
+          <SectionHeader title="Flash sale" actionLabel="See All" />
 
 
           <div className="my-2"></div>

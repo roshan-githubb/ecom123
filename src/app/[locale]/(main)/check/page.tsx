@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
-import { getCart } from "@/services/cart"
+// import { getCart } from "@/services/cart"
 import { mapCartToOrderSummary } from "@/lib/mapper/cartMapper"
 import { OrderItem, OrderSummary } from "@/components/organisms/CartSummary/CartItemSummary"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 
 interface SelectCircleProps {
   selected: boolean
@@ -292,7 +293,7 @@ const CheckoutPage: React.FC = () => {
     load();
   }, [fetchCart]);
 
-  if (loading) return <p className="text-center my-4">Loading cart...</p>;
+  if (loading) return <CheckoutSkeleton/>
   // if (!cart) return <p className="text-center my-4">No cart found.</p>;
   // const nestedCart = cart?.cart
   const cartSummary = mapCartToOrderSummary(summary)
