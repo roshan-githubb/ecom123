@@ -1,4 +1,3 @@
-
 import { SectionHeader } from "@/components/atoms/SectionHeader/SectionHeader";
 import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard";
 import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel";
@@ -23,11 +22,6 @@ interface CategoryItem {
   metadata: CategoryItemMetadata;
 }
 
-const bannerSlides = [
-  { id: "b1", image: "/images/banner-section/sale-banner.webp" },
-  { id: "b2", image: "/images/banner-section/sale-banner-1.avif" },
-  { id: "b3", image: "/images/banner-section/sale-banner.webp" },
-];
 
 const flashProducts = [
   { id: "p1", image: "/images/product/white-vase.png", title: "White Vase", currentPrice: 3000, oldPrice: 3500, discount: "45% OFF", description: "Stunning white T shirt" },
@@ -44,6 +38,13 @@ const brands = [
   { name: "Prada", image: "/images/brands/Prada.png" },
   { name: "Philips", image: "/images/brands/Philips.png" },
 ];
+
+const topSectionProducts = [
+  { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png" },
+  { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
+  { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
+  { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
+]
 
 const categories = [
   { category: "Kitchen Essentials", image: "/images/categories/kitchen-essentials.png" },
@@ -121,12 +122,14 @@ export default async function HomePage({ params }: { params: Params }) {
       <div className="space-y-6 px-4 lg:px-8 py-4 ">
         {/* Top horizontal category scroller (item category cards) with visible arrows */}
         <HorizontalScroller >
-          {data.product_categories.map((c: CategoryItem) => (
-            <div key={c.id} className=" flex-shrink-0">
-              <ItemCategoryCard imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} label={c.name} shape="rounded" height={100} width={100} />
+          {topSectionProducts.map((c: any) => (
+            <div key={c.name} className=" flex-shrink-0">
+              <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link="/coming-soon" />
             </div>
           ))}
         </HorizontalScroller>
+
+
 
         {/* Large banner carousel */}
         <div className="pt-0">
@@ -142,17 +145,34 @@ export default async function HomePage({ params }: { params: Params }) {
 
         {/* Circular categories (grid) */}
         {/* <SectionHeader title="Categories" actionLabel="See All"  /> */}
-        <div className="grid grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-4 gap-4">
           {categories.map((item: any) => (
             <ItemCategoryCard key={item?.category} imageUrl={item.image || "/images/not-available/not-available.png"} label={item?.category} shape="circle" height={70} width={70} />
           ))}
+        </div> */}
+        {/* <HorizontalScroller > */}
+        <div className="grid grid-cols-4 gap-4">
+          {data.product_categories.slice(0, 8).map((c: CategoryItem) => (
+            <div key={c.id} className=" flex-shrink-0">
+              <ItemCategoryCard imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} label={c.name} shape="circle" height={70} width={70} link={`/categories/${c?.handle}`} />
+            </div>
+          ))}
         </div>
+        {/* </HorizontalScroller> */}
         {/* Flash Sale section (dark blue header) */}
         <div>
-          <div className="flex items-center justify-between ">
+          {/* <div className="flex items-center justify-between ">
             <h2 className="text-[20px] font-medium" style={{ color: "#32425A" }}>Flash Sale</h2>
-            <button className="text-[14px] font-medium" style={{ color: "#144293" }}>See All</button>
-          </div>
+            <button
+              onClick={() => router.push("/coming-soon")}
+              className="text-[14px] font-medium"
+              style={{ color: "#144293" }}
+            >
+              See All
+            </button>
+          </div> */}
+        <SectionHeader title="Flash sale" actionLabel="See All" />
+
 
           <div className="my-2"></div>
           {/* two cards side-by-side */}
@@ -172,7 +192,7 @@ export default async function HomePage({ params }: { params: Params }) {
         </div>
 
         {/* Recommended for you — horizontal, hidden scrollbar */}
-        <SectionHeader title="Recommended for you" actionLabel="See All" />
+        <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
         <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
           {jsonLdProducts.map((r) => (
             <div key={r.id} className="w-[180px] flex-shrink-0 ">
@@ -192,7 +212,7 @@ export default async function HomePage({ params }: { params: Params }) {
           <>
             {brands.map((brand: any) => (
               // <div>
-                <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} />
+              <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} link="/coming-soon" />
               // </div>
             ))}</>
         </div>
@@ -220,7 +240,7 @@ export default async function HomePage({ params }: { params: Params }) {
             </div>
           ))}
         </HorizontalScroller>
-      </div>
+      </div >
     );
 
     // return <ProductDetailClient product={product} />;

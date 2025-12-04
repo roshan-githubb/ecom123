@@ -37,7 +37,7 @@ export default function Navbar({
   const showImePayWalletLink = pathname == "/np/imebottombar"
   const showSelectShippingAddressLabel = pathname == "/np/shippinginfo"
   const showPickupAddressLabel = pathname == "/np/pickupaddress"
-  const showFAQLabel = pathname == "/np/footer/faq"
+const showFAQLabel = pathname == "/np/footer/faq"
   const showTrackOrderLabel = pathname == "/np/footer/track-order"
   const showReturnsLabel = pathname == "/np/footer/returns"
   const showDeliveryLabel = pathname == "/np/footer/delivery"
