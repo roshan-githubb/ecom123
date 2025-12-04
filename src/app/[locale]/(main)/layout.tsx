@@ -1,4 +1,4 @@
-import { Footer, Header } from "@/components/organisms"
+import { Footer, Header, StickyCartBar } from "@/components/organisms"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { checkRegion } from "@/lib/helpers/check-region"
 import { Session } from "@talkjs/react"
@@ -28,6 +28,7 @@ export default async function RootLayout({
         <div className="!pt-[68px]"></div>
         {children}
         <Footer />
+        <StickyCartBar />
       </>
     )
 
@@ -38,6 +39,7 @@ export default async function RootLayout({
         <div className="!pt-[68px]"></div>
         {children}
         <Footer />
+        <StickyCartBar />
       </Session>
     </>
   )
