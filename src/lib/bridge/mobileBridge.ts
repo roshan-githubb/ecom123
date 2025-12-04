@@ -12,7 +12,7 @@ export function sendToFlutter(target: FlutterTarget): void {
     try {
 
         //checking if it's flutter view
-        if (isFlutterWebView()) return;
+        if (!isFlutterWebView()) return;
         const flutter = (window as any).flutter_inappwebview;
  
         if (flutter?.callHandler) {
