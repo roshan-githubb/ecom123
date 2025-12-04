@@ -1,8 +1,10 @@
 import { Card } from "@/components/atoms"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import Link from "next/link"
 
 interface ItemCategoryCardProps extends React.ComponentPropsWithoutRef<"div"> {
+    link?: string
     imageUrl: string
     label: string
     shape?: "circle" | "rounded"
@@ -11,6 +13,7 @@ interface ItemCategoryCardProps extends React.ComponentPropsWithoutRef<"div"> {
 }
 
 export const ItemCategoryCard = ({
+    link,
     imageUrl,
     label,
     shape = "rounded",
@@ -19,11 +22,13 @@ export const ItemCategoryCard = ({
     className,
     ...props
 }: ItemCategoryCardProps) => {
+    const Wrapper = link ? Link : "div"
+
     return (
-        <div className="flex-col justify-center items-center">
+        <Wrapper href={link ?? "#"} className="flex-col justify-center items-center">
             <Card
                 className={cn(
-                    "border-none shadow-none flex flex-col items-center gap-2 p-0 bg-transparent",
+                    "border-none shadow-none flex flex-col items-center gap-2 p-0 bg-transparent cursor-pointer",
                     className
                 )}
                 {...props}
@@ -31,9 +36,7 @@ export const ItemCategoryCard = ({
                 <div
                     className={cn(
                         "overflow-hidden mx-auto",
-                        shape === "circle"
-                            ? "rounded-full"
-                            : "rounded-xl" // slightly rounded edges
+                        shape === "circle" ? "rounded-full" : "rounded-xl"
                     )}
                     style={{ width: height ?? 80, height: height ?? 80 }}
                 >
@@ -46,10 +49,10 @@ export const ItemCategoryCard = ({
                     />
                 </div>
 
-                <p className="text-[14px] pt-2 font-medium text-center text-gray-600  dark:text-white">
+                <p className="text-[14px] pt-2 font-medium text-center text-gray-600 dark:text-white">
                     {label}
                 </p>
             </Card>
-        </div>
+        </Wrapper>
     )
 }

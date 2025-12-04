@@ -126,7 +126,7 @@ export const HomeProductCard = ({
 
                 >
 
-                    <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4" height={16} width={16} />
+                    <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} />
 
                     Add to Cart
                 </button>
