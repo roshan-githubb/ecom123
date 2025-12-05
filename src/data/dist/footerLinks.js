@@ -9,15 +9,10 @@ var links = {
         { label: 'Payment', path: '/footer/payment' },
     ],
     about: [
-        { label: 'About us', path: '/footer/aboutus' },
+        { label: 'About us', path: '/footer/about-us' },
         { label: 'Blog', path: '/footer/blog' },
-        { label: 'Privacy Policy', path: '/footer/privacypolicy' },
-        { label: 'Terms & Conditions', path: '/footer/termsandconditions' },
-    ],
-    connect: [
-        { label: 'Facebook', path: 'https://facebook.com' },
-        { label: 'Instagram', path: 'https://instagram.com' },
-        { label: 'LinekdIn', path: 'https://linkedin.com' },
+        { label: 'Privacy Policy', path: '/footer/privacy-policy' },
+        { label: 'Terms & Conditions', path: '/footer/terms-and-conditions' },
     ]
 };
 exports["default"] = links;

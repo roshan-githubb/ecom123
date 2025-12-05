@@ -39,25 +39,6 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Connect Column */}
-        <div className="p-6 border rounded-sm">
-          <h2 className="heading-sm text-primary mb-3 uppercase">connect</h2>
-          <nav className="space-y-3" aria-label="Social media navigation">
-            {footerLinks.connect.map(({ label, path }) => (
-              <a
-                aria-label={`Go to ${label} page`}
-                title={`Go to ${label} page`}
-                key={label}
-                href={path}
-                className="block label-md"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-        </div>
       </div>
 
       <div className="py-6 border rounded-sm ">
