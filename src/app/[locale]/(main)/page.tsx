@@ -3,8 +3,10 @@ import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard";
 import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel";
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard";
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
+import HomePageSkeleton from "@/components/organisms/HomepageSkeleton/HomepageSkeleton";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 
 interface CategoryItemMetadata {
@@ -119,49 +121,50 @@ export default async function HomePage({ params }: { params: Params }) {
     // console.log("Full categories response from Medusa:", data.product_categories);
 
     return (
-      <div className="space-y-6 px-4 lg:px-8 py-4 ">
-        {/* Top horizontal category scroller (item category cards) with visible arrows */}
-        <HorizontalScroller >
-          {topSectionProducts.map((c: any) => (
-            <div key={c.name} className=" flex-shrink-0">
-              <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link="/coming-soon" />
-            </div>
-          ))}
-        </HorizontalScroller>
+      <Suspense fallback={<HomePageSkeleton />}>
+        <div className="space-y-6 px-4 lg:px-8 py-4 ">
+          {/* Top horizontal category scroller (item category cards) with visible arrows */}
+          <HorizontalScroller >
+            {topSectionProducts.map((c: any) => (
+              <div key={c.name} className=" flex-shrink-0">
+                <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link="/coming-soon" />
+              </div>
+            ))}
+          </HorizontalScroller>
 
 
 
-        {/* Large banner carousel */}
-        <div className="pt-0">
-          {/* <CarouselBanner slides={bannerSlides} /> */}
-          <CarouselBanner
-            bannerCarousel={[
-              { image: "/images/banner-section/banner.png", link: "/coming-soon" },
-              { image: "/images/banner-section/sale-banner-1.avif", link: "/coming-soon" },
-              { image: "/images/banner-section/sale-banner.webp", link: "/coming-soon" },
-            ]}
-          />
-        </div>
+          {/* Large banner carousel */}
+          <div className="pt-0">
+            {/* <CarouselBanner slides={bannerSlides} /> */}
+            <CarouselBanner
+              bannerCarousel={[
+                { image: "/images/banner-section/banner.png", link: "/coming-soon" },
+                { image: "/images/banner-section/sale-banner-1.avif", link: "/coming-soon" },
+                { image: "/images/banner-section/sale-banner.webp", link: "/coming-soon" },
+              ]}
+            />
+          </div>
 
-        {/* Circular categories (grid) */}
-        {/* <SectionHeader title="Categories" actionLabel="See All"  /> */}
-        {/* <div className="grid grid-cols-4 gap-4">
+          {/* Circular categories (grid) */}
+          {/* <SectionHeader title="Categories" actionLabel="See All"  /> */}
+          {/* <div className="grid grid-cols-4 gap-4">
           {categories.map((item: any) => (
             <ItemCategoryCard key={item?.category} imageUrl={item.image || "/images/not-available/not-available.png"} label={item?.category} shape="circle" height={70} width={70} />
           ))}
         </div> */}
-        {/* <HorizontalScroller > */}
-        <div className="grid grid-cols-4 gap-4">
-          {data.product_categories.slice(0, 8).map((c: CategoryItem) => (
-            <div key={c.id} className=" flex-shrink-0">
-              <ItemCategoryCard imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} label={c.name} shape="circle" height={70} width={70} link={`/categories/${c?.handle}`} />
-            </div>
-          ))}
-        </div>
-        {/* </HorizontalScroller> */}
-        {/* Flash Sale section (dark blue header) */}
-        <div>
-          {/* <div className="flex items-center justify-between ">
+          {/* <HorizontalScroller > */}
+          <div className="grid grid-cols-4 gap-4">
+            {data.product_categories.slice(0, 8).map((c: CategoryItem) => (
+              <div key={c.id} className=" flex-shrink-0">
+                <ItemCategoryCard imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} label={c.name} shape="circle" height={70} width={70} link={`/categories/${c?.handle}`} />
+              </div>
+            ))}
+          </div>
+          {/* </HorizontalScroller> */}
+          {/* Flash Sale section (dark blue header) */}
+          <div>
+            {/* <div className="flex items-center justify-between ">
             <h2 className="text-[20px] font-medium" style={{ color: "#32425A" }}>Flash Sale</h2>
             <button
               onClick={() => router.push("/coming-soon")}
@@ -171,76 +174,78 @@ export default async function HomePage({ params }: { params: Params }) {
               See All
             </button>
           </div> */}
-          <SectionHeader title="Flash sale" actionLabel="See All" />
+            <SectionHeader title="Flash sale" actionLabel="See All" />
 
 
-          <div className="my-2"></div>
-          {/* two cards side-by-side */}
-          {/* <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3"> */}
-          <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
+            <div className="my-2"></div>
+            {/* two cards side-by-side */}
+            {/* <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3"> */}
+            <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
+              {jsonLdProducts.map((r) => (
+                <div key={r.id} className="w-[180px] flex-shrink-0 ">
+                  <HomeProductCard
+                    api_product={r}
+                    hasOfferSticker={true}
+                  />
+
+                  {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommended for you — horizontal, hidden scrollbar */}
+          <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
+          <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
             {jsonLdProducts.map((r) => (
               <div key={r.id} className="w-[180px] flex-shrink-0 ">
                 <HomeProductCard
                   api_product={r}
-                  hasOfferSticker={true}
+                // hasOfferSticker={true}
                 />
 
                 {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Recommended for you — horizontal, hidden scrollbar */}
-        <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
-        <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
-          {jsonLdProducts.map((r) => (
-            <div key={r.id} className="w-[180px] flex-shrink-0 ">
-              <HomeProductCard
-                api_product={r}
-              // hasOfferSticker={true}
-              />
+          {/* Top brands (use item category card circular) */}
+          <SectionHeader title="Top Brands" actionLabel="See All" />
+          <div className="grid grid-cols-4 gap-4">
+            <>
+              {brands.map((brand: any) => (
+                // <div>
+                <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} link="/coming-soon" />
+                // </div>
+              ))}</>
+          </div>
 
-              {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-            </div>
-          ))}
-        </div>
+          {/* Best deals */}
+          <SectionHeader title="Best Deals" actionLabel="See All" />
+          <HorizontalScroller className="no-scrollbar !mt-1">
+            {jsonLdProducts.map((r) => (
+              <div key={r.id} className="w-[180px] flex-shrink-0">
+                <HomeProductCard api_product={r} />
 
-        {/* Top brands (use item category card circular) */}
-        <SectionHeader title="Top Brands" actionLabel="See All" />
-        <div className="grid grid-cols-4 gap-4">
-          <>
-            {brands.map((brand: any) => (
-              // <div>
-              <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} link="/coming-soon" />
-              // </div>
-            ))}</>
-        </div>
+                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
+              </div>
+            ))}
+          </HorizontalScroller>
 
-        {/* Best deals */}
-        <SectionHeader title="Best Deals" actionLabel="See All" />
-        <HorizontalScroller className="no-scrollbar !mt-1">
-          {jsonLdProducts.map((r) => (
-            <div key={r.id} className="w-[180px] flex-shrink-0">
-              <HomeProductCard api_product={r} />
+          {/* Most Popular */}
+          <SectionHeader title="Most Popular" actionLabel="See All" />
+          <HorizontalScroller className="no-scrollbar !mt-1">
+            {jsonLdProducts.map((r) => (
+              <div key={r.id} className="w-[180px] flex-shrink-0">
+                <HomeProductCard api_product={r} />
 
-              {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-            </div>
-          ))}
-        </HorizontalScroller>
+                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
+              </div>
+            ))}
+          </HorizontalScroller>
+        </div >
+      </Suspense>
 
-        {/* Most Popular */}
-        <SectionHeader title="Most Popular" actionLabel="See All" />
-        <HorizontalScroller className="no-scrollbar !mt-1">
-          {jsonLdProducts.map((r) => (
-            <div key={r.id} className="w-[180px] flex-shrink-0">
-              <HomeProductCard api_product={r} />
-
-              {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-            </div>
-          ))}
-        </HorizontalScroller>
-      </div >
     );
 
     // return <ProductDetailClient product={product} />;
