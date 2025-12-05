@@ -2,13 +2,19 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { CAROUSEL_AUTO_SLIDE_INTERVAL } from "@/lib/constants"
 
-interface CarouselBannerProps {
-  images: string[]
+interface BannerItem {
+  image: string
+  link: string
 }
 
-export default function CarouselBanner({ images }: CarouselBannerProps) {
+interface CarouselBannerProps {
+  bannerCarousel?: BannerItem[]
+}
+
+export default function CarouselBanner({ bannerCarousel = [] }: CarouselBannerProps) {
   const [current, setCurrent] = useState(0)
 
   const slideInterval = useRef<NodeJS.Timeout | null>(null)
@@ -18,12 +24,14 @@ export default function CarouselBanner({ images }: CarouselBannerProps) {
   }, [])
 
   const nextSlide = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % images.length)
-  }, [images.length])
+    if (bannerCarousel.length === 0) return
+    setCurrent((prev) => (prev + 1) % bannerCarousel.length)
+  }, [bannerCarousel.length])
 
   const prevSlide = useCallback(() => {
-    setCurrent((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-  }, [images.length])
+    if (bannerCarousel.length === 0) return
+    setCurrent((prev) => (prev === 0 ? bannerCarousel.length - 1 : prev - 1))
+  }, [bannerCarousel.length])
 
   const startAutoSlide = useCallback(() => {
     stopAutoSlide()
@@ -81,44 +89,49 @@ export default function CarouselBanner({ images }: CarouselBannerProps) {
 
   return (
     <div className="w-full flex flex-col items-center select-none">
-      <div
-        className="
-      relative 
-      w-full 
-      h-52 sm:h-64 
-      rounded-2xl 
-      bg-gray-100 
-      overflow-hidden
-      shadow-[0_8px_20px_rgba(0,0,0,0.15)]
-    "
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
-      >
-        <Image
-          src={images[current]}
-          alt="banner"
-          fill
-          className="object-cover pointer-events-none"
-        />
-      </div>
+      {bannerCarousel.length > 0 && (
+        <>
+          <div
+            className="
+          relative 
+          w-full 
+          h-52 sm:h-64 
+          rounded-2xl 
+          bg-gray-100 
+          overflow-hidden
+          shadow-[0_8px_20px_rgba(0,0,0,0.15)]
+        "
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseUp}
+          >
+            <Link href={bannerCarousel[current]?.link || "#"}>
+              <Image
+                src={bannerCarousel[current]?.image || "/images/not-available/not-available.png"}
+                alt="banner"
+                fill
+                className="object-cover pointer-events-none"
+              />
+            </Link>
+          </div>
 
-      {/* dots */}
-      <div className="flex gap-2 mt-3">
-        {images.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            className={`h-3 w-3 rounded-full transition-all ${
-              current === index ? "bg-blue-600 w-5" : "bg-gray-300"
-            }`}
-          />
-        ))}
-      </div>
+          {/* dots */}
+          <div className="flex gap-2 mt-3">
+            {bannerCarousel.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrent(index)}
+                className={`h-3 w-3 rounded-full transition-all ${current === index ? "bg-blue-600 w-5" : "bg-gray-300"
+                  }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
