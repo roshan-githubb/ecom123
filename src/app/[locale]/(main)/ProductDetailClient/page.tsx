@@ -236,10 +236,10 @@ export default function ProductDetailClient({
         <div className="max-w-4xl mx-auto py-4 px-4">
           <div className="flex items-center justify-between gap-3">
             <Link
-              href={product.store?.url || "#"}
+              href={product.store?.url || "/coming-soon"}
               className="inline-flex mt-2 items-end w-full max-w-[163px] h-[21px] text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit the {product.store?.name || "Store"} store
+              Visit  {product.store?.name || "Store"}
             </Link>
             {totalReviews > 0 && (
               <div className="flex items-center gap-3">

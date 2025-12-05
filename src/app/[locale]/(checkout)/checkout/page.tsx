@@ -293,6 +293,8 @@ const OrderRow: React.FC<{ item: OrderItem }> = ({ item }) => {
   return (
     <div className="flex items-center justify-between gap-2">
       <Image
+      width={55}
+      height={45}
         className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover"
         src={item.imageUrl}
         alt={item.name}
