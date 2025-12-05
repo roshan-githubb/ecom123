@@ -12,11 +12,6 @@ const links = {
     { label: 'Privacy Policy', path: '/footer/privacy-policy' },
     { label: 'Terms & Conditions', path: '/footer/terms-and-conditions' },
   ],
-  connect: [
-    { label: 'Facebook', path: 'https://facebook.com' },
-    { label: 'Instagram', path: 'https://instagram.com' },
-    { label: 'LinekdIn', path: 'https://linkedin.com' },
-  ],
 };
 
 export default links;

@@ -22,6 +22,7 @@ export type SellerProps = {
   products?: Product[]
 }
 
+
 export interface Product {
   id: string
   title: string
@@ -34,8 +35,8 @@ export interface Product {
   originalPrice: number
   currency: string
   attribute_values?: AdditionalAttributeProps[]
-  seller?: SellerProps
-  created_at?: string   
+  seller?: SellerProps | null
+  created_at?: string
 }
 
 

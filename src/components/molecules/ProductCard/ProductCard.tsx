@@ -1,14 +1,19 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import { StarRating } from "@/components/atoms"
 import { HttpTypes } from "@medusajs/types"
-// import { useCartStore } from "@/store/useCartStore"
+import { useCartStore } from "@/store/useCartStore"
 import { toast, Toaster } from "react-hot-toast"
-import { useState } from "react"
-import { AddVariantModal } from "../AddVariantModal/AddVariantModal"
+import { useState, useRef } from "react"
+import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { RatingSummary } from "@/types/reviews"
+import { motion } from "framer-motion"
+
+
+interface AddVariantSheetProps {
+  product: HttpTypes.StoreProduct
+}
 
 export const ProductCard = ({
   api_product,
@@ -20,8 +25,10 @@ export const ProductCard = ({
   ratingSummary?: RatingSummary
 }) => {
   const [showModal, setShowModal] = useState(false)
-
-  //  const addToCart = useCartStore((state) => state.addToCart)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
+  const cardRef = useRef<HTMLDivElement>(null)
+  const addToCart = useCartStore((state) => state.add)
 
   if (!api_product || !api_product.variants?.[0]) return null
 
@@ -41,37 +48,47 @@ export const ProductCard = ({
   const productImage =
     api_product?.images?.[0]?.url || "/images/not-available/not-available.png"
 
-  const colorOption = api_product.options?.find(
-    (opt) => opt.title.toLowerCase() === "color"
-  )
-  const displayedColor = colorOption?.values?.[0]?.value
-
   const { average_rating, total_reviews } = ratingSummary
 
-  const handleAddToCart = () => {
-    // const optionsObj: Record<string, string> = {}
-    // variant.options?.forEach((opt) => {
-    //   const key = (opt.option_id || "").toLowerCase().trim()
-    //   const value = (opt.value || "").trim()
-    //   if (key && value) optionsObj[key] = value
-    // })
-    // const normalizedOptions = Object.keys(optionsObj).length > 0 ? optionsObj : null
-    // addToCart({
-    //   id: variant.id,
-    //   title: api_product.title || "Product",
-    //   price,
-    //   image: productImage,
-    //   quantity: 1,
-    //   color: displayedColor,
-    // })
-    // toast.success("Added to cart!")
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isAddingToCart || !variant.id) return
+
+    setIsAddingToCart(true)
+    try {
+      await addToCart(variant.id, 1)
+      toast.success("Added to cart!")
+    } catch (error) {
+      toast.error("Failed to add to cart")
+      console.error("Add to cart error:", error)
+    } finally {
+      setIsAddingToCart(false)
+    }
+  }
+
+  const handleOpenModal = (e: React.MouseEvent) => {
+    const target = e.currentTarget as HTMLElement
+    const rect = target.getBoundingClientRect()
+    setCardPos({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    })
+    setShowModal(true)
   }
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-row md:flex-col gap-3 relative">
+    <div ref={cardRef} className="w-full max-w-md mx-auto flex flex-row md:flex-col gap-3 relative">
       <Toaster position="top-right" reverseOrder={false} />
 
-      <div className="w-[45%] md:w-full flex-shrink-0">
+      <motion.div
+        className="w-[45%] md:w-full flex-shrink-0 cursor-pointer"
+        onClick={handleOpenModal}
+        whileTap={{ scale: 0.95, opacity: 0.8 }}
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      >
         <Image
           src={productImage}
           alt={api_product.title}
@@ -82,18 +99,16 @@ export const ProductCard = ({
             w-[196px]
              md:w-full`}
         />
-      </div>
+      </motion.div>
 
       <div className="w-[55%] md:w-full flex flex-col justify-between h-full">
         <div className="flex flex-col gap-1">
-          <Link
-            href={`/${locale}/products/${api_product.id}`}
-            className="block hover:underline"
+          <h2
+            onClick={handleOpenModal}
+            className="text-[clamp(14px,2vw,18px)] font-normal text-[#111111] cursor-pointer hover:underline"
           >
-            <h2 className="text-[clamp(14px,2vw,18px)] font-normal text-[#111111]">
-              {api_product.title}
-            </h2>
-          </Link>
+            {api_product.title}
+          </h2>
 
           {total_reviews > 0 ? (
             <div className="flex items-center gap-1">
@@ -160,11 +175,16 @@ export const ProductCard = ({
           FREE delivery on <strong>Sat, 27 Sept</strong> for members
         </p>
 
-        <button
-          // onClick={handleAddToCart}
-          onClick={() => setShowModal(true)}
-          className="w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
-            bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800 text-[#FFFFFF]"
+        <motion.button
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          className={`w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
+            ${isAddingToCart
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
+            } text-[#FFFFFF]`}
         >
           <Image
             src="/images/icons/cart.png"
@@ -173,12 +193,14 @@ export const ProductCard = ({
             width={16}
             height={16}
           />
-          Add to Cart
-        </button>
+          {isAddingToCart ? "Adding..." : "Add to Cart"}
+        </motion.button>
 
         {showModal && (
-          <AddVariantModal
+          <AddVariantSheet
             product={api_product}
+            ratingSummary={ratingSummary}
+            cardPos={cardPos}
             onClose={() => setShowModal(false)}
           />
         )}

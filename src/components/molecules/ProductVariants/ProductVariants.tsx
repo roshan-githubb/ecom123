@@ -9,15 +9,21 @@ import { BaseHit, Hit } from "instantsearch.js"
 export const ProductVariants = ({
   product,
   selectedVariant,
+  onVariantChange,
 }: {
   product: HttpTypes.StoreProduct
   selectedVariant: Record<string, string>
+  onVariantChange?: (optionId: string, value: string) => void
 }) => {
   const updateSearchParams = useUpdateSearchParams()
 
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
-    if (value) updateSearchParams(optionId, value)
+    if (onVariantChange) {
+      onVariantChange(optionId, value)
+    } else if (value) {
+      updateSearchParams(optionId, value)
+    }
   }
 
   return (

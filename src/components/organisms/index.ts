@@ -26,6 +26,7 @@ import { ReviewsWritten } from "./Reviews/ReviewsWritten"
 import { CartEmpty } from "./CartEmpty/CartEmpty"
 import StickyCartBar from "./StickyCartBar/StickyCartBar"
 
+
 export {
   ProductCard,
   BrandCard,
