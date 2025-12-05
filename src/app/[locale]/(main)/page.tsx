@@ -3,6 +3,7 @@ import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard";
 import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel";
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard";
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
+import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
 import HomePageSkeleton from "@/components/organisms/HomepageSkeleton/HomepageSkeleton";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
@@ -231,6 +232,9 @@ export default async function HomePage({ params }: { params: Params }) {
               </div>
             ))}
           </HorizontalScroller>
+
+          {/* Advert video section */}
+          <HeroVideo videoSrc="/videos/watch-time.mp4" />
 
           {/* Most Popular */}
           <SectionHeader title="Most Popular" actionLabel="See All" />
