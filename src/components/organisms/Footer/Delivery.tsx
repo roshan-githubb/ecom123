@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react';
+import Image from 'next/image';
 import { Truck, MapPin, Clock, Zap } from 'lucide-react';
 
 const Delivery = () => {
@@ -36,9 +37,11 @@ const Delivery = () => {
                     <div className="bg-pink-50 rounded-3xl p-8 md:p-12 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
                         <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                        <img
+                        <Image
                             src="https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=1600&q=80"
                             alt="Delivery Van"
+                            width={800}
+                            height={533}
                             className="relative rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500"
                         />
                     </div>
@@ -46,9 +49,11 @@ const Delivery = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div className="order-2 md:order-1 bg-blue-50 rounded-3xl p-8 md:p-12">
-                        <img
+                        <Image
                             src="https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=1600&q=80"
                             alt="Seller Packing"
+                            width={800}
+                            height={533}
                             className="rounded-2xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500"
                         />
                     </div>

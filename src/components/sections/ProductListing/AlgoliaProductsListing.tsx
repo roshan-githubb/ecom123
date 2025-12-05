@@ -14,7 +14,7 @@ import { useSearchParams } from "next/navigation"
 import { getFacedFilters } from "@/lib/helpers/get-faced-filters"
 import { PRODUCT_LIMIT } from "@/const"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { listProducts } from "@/lib/data/products"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 
@@ -75,33 +75,36 @@ const ProductsListing = ({
   const { items, results } = useHits()
   const searchParams = useSearchParams() // fixed typo
 
-  async function handleSetProducts() {
-    try {
-      setApiProducts(null)
-      const { response } = await listProducts({
-        countryCode: locale,
-        queryParams: {
-          fields:
-            "*variants.calculated_price,*seller.reviews,-thumbnail,-images,-type,-tags,-variants.options,-options,-collection,-collection_id",
-          handle: items.map((item) => item.handle),
-          limit: items.length,
-        },
-      })
+  const handleSetProducts = useCallback(async () => {
+  try {
+    setApiProducts(null)
 
-      setApiProducts(
-        response.products.filter((prod) => {
-          const { cheapestPrice } = getProductPrice({ product: prod })
-          return Boolean(cheapestPrice)
-        })
-      )
-    } catch (error) {
-      setApiProducts(null)
-    }
+    const { response } = await listProducts({
+      countryCode: locale,
+      queryParams: {
+        fields:
+          "*variants.calculated_price,*seller.reviews,-thumbnail,-images,-type,-tags,-variants.options,-options,-collection,-collection_id",
+        handle: items.map((item) => item.handle),
+        limit: items.length,
+      },
+    })
+
+    setApiProducts(
+      response.products.filter((prod) => {
+        const { cheapestPrice } = getProductPrice({ product: prod })
+        return Boolean(cheapestPrice)
+      })
+    )
+  } catch {
+    setApiProducts(null)
   }
+}, [items, locale])
+
 
   useEffect(() => {
-    handleSetProducts()
-}, [items, locale, handleSetProducts])
+  handleSetProducts()
+}, [handleSetProducts])
+
 
   if (!results?.processingTimeMS) return <ProductListingSkeleton />
 
