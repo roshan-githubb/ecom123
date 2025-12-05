@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useCartStore } from "@/store/useCartStore"
 import { convertToLocale } from "@/lib/helpers/money"
 import Image from "next/image"
+import StickyCartBarSkeleton from "../StickyCartBarSkeleton/StickyCartBarSkeleton"
 
 const shouldHideStickyBar = (pathname: string) => {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "")
@@ -31,6 +32,10 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
   const decrease = useCartStore((s) => s.decrease)
   const totalPayable = useCartStore((s) => s.totalPayable)
   const currency = useCartStore((s) => s.currency)
+
+  const isLoading = items === undefined;
+
+
 
   const itemCount = useMemo(
     () => items.reduce((sum, i) => sum + (i.quantity || 0), 0),
@@ -83,6 +88,10 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
 
   const firstItemImage = items[0]?.image || "/product-placeholder.png"
   const totalSavings = 3266
+
+  if (isLoading) {
+    return <StickyCartBarSkeleton />;
+  }
 
   return (
     <>
@@ -248,10 +257,10 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
                     />
                   </svg>
                 </div>
-                  <span className="text-xs text-gray-500 font-semibold">
-                    Add more to save more
-                  </span>
-              
+                <span className="text-xs text-gray-500 font-semibold">
+                  Add more to save more
+                </span>
+
               </div>
             </div>
           </button>

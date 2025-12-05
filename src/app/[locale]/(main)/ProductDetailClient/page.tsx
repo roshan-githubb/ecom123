@@ -236,10 +236,10 @@ export default function ProductDetailClient({
         <div className="max-w-4xl mx-auto py-4 px-4">
           <div className="flex items-center justify-between gap-3">
             <Link
-              href={product.store?.url || "#"}
+              href={product.store?.url || "/coming-soon"}
               className="inline-flex mt-2 items-end w-full max-w-[163px] h-[21px] text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit the {product.store?.name || "Store"} store
+              Visit  {product.store?.name || "Store"}
             </Link>
             {totalReviews > 0 && (
               <div className="flex items-center gap-3">
@@ -260,9 +260,10 @@ export default function ProductDetailClient({
                 <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
                   #Best Seller
                 </span>
-                <span className="text-md font-medium mt-1 text-contentBlue">
+                <Link
+                  href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
                   in {product?.collection?.title}
-                </span>
+                </Link>
               </div>
               <div className="mt-2 text-[#222222] text-sm">
                 <span className="font-semibold">
@@ -292,9 +293,8 @@ export default function ProductDetailClient({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full ${
-                i === index ? "bg-blue-800" : "bg-gray-300"
-              }`}
+              className={`w-2 h-2 rounded-full ${i === index ? "bg-blue-800" : "bg-gray-300"
+                }`}
               aria-label={`View image ${i + 1}`}
             />
           ))}
@@ -317,11 +317,10 @@ export default function ProductDetailClient({
                   <button
                     key={c.id}
                     onClick={() => setSelectedColor(c.id)}
-                    className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
-                      selectedColor === c.id
+                    className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
                         ? "border-2 border-[#1A315A]"
                         : "border border-gray-300"
-                    }`}
+                      }`}
                   >
                     <div className={`${c.bg} w-full h-full`} />
                   </button>
@@ -343,11 +342,10 @@ export default function ProductDetailClient({
                     <button
                       key={`${s}-${i}`}
                       onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
-                        selectedSize === s
+                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
                           ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
                           : "border border-[#333333] bg-transparent text-[#333333]"
-                      }`}
+                        }`}
                     >
                       {shortLabel}
                     </button>
