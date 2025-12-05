@@ -84,10 +84,11 @@ const Blog = () => {
               className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col h-full group"
             >
               <div className="relative h-56 overflow-hidden">
-                <img
+                <Image
                   src={post.image}
                   alt={post.title}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  fill
+                  className="object-cover transform group-hover:scale-110 transition-transform duration-500"
                 />
                 <div
                   className={`absolute top-4 left-4 ${post.color} text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide`}

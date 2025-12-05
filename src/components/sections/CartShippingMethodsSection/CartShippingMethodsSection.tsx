@@ -43,15 +43,15 @@ type ShippingProps = {
     items?: CartItem[]
   }
   availableShippingMethods:
-    | (StoreCardShippingMethod &
-        {
-          rules: any
-          seller_id: string
-          price_type: string
-          id: string
-          amount?: number
-        }[])
-    | null
+  | (StoreCardShippingMethod &
+    {
+      rules: any
+      seller_id: string
+      price_type: string
+      id: string
+      amount?: number
+    }[])
+  | null
 }
 
 const CartShippingMethodsSection: React.FC<ShippingProps> = ({
@@ -99,32 +99,33 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     if (missingSellerIds.length > 0 && !cart.shipping_methods?.length) {
       setMissingModal(true)
     }
-  }, [cart])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, _shippingMethods])
 
-useEffect(() => {
-  if (_shippingMethods?.length) {
-    setIsLoadingPrices(true) 
-    const promises = _shippingMethods
-      .filter((sm) => sm.price_type === "calculated")
-      .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
+  useEffect(() => {
+    if (_shippingMethods?.length) {
+      setIsLoadingPrices(true)
+      const promises = _shippingMethods
+        .filter((sm) => sm.price_type === "calculated")
+        .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
 
-    if (promises.length) {
-      Promise.allSettled(promises).then((res) => {
-        const pricesMap: Record<string, number> = {}
-        res
-          .filter((r) => r.status === "fulfilled")
-          .forEach((p: any) => {
-            if (p.status === "fulfilled" && p.value) {
-              pricesMap[p.value.id] = p.value.amount
-            }
-          })
+      if (promises.length) {
+        Promise.allSettled(promises).then((res) => {
+          const pricesMap: Record<string, number> = {}
+          res
+            .filter((r) => r.status === "fulfilled")
+            .forEach((p: any) => {
+              if (p.status === "fulfilled" && p.value) {
+                pricesMap[p.value.id] = p.value.amount
+              }
+            })
 
-        setCalculatedPricesMap(pricesMap)
-        setIsLoadingPrices(false)
-      })
+          setCalculatedPricesMap(pricesMap)
+          setIsLoadingPrices(false)
+        })
+      }
     }
-  }
-}, [_shippingMethods, cart.id])
+  }, [_shippingMethods, cart.id])
 
 
   const handleSubmit = () => {
@@ -149,7 +150,7 @@ useEffect(() => {
     } catch (error: any) {
       setError(
         error?.message?.replace("Error setting up the request: ", "") ||
-          "An error occurred"
+        "An error occurred"
       )
     } finally {
       setIsLoadingPrices(false)

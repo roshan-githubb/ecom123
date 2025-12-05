@@ -1,7 +1,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { Container } from "@medusajs/ui"
 import { mapKeys } from "lodash"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { Input } from "@/components/atoms"
 import AddressSelect from "@/components/cells/AddressSelect/AddressSelect"
 import CountrySelect from "@/components/cells/CountrySelect/CountrySelect"
@@ -37,14 +37,14 @@ const ShippingAddress = ({
 
   // check if customer has saved addresses that are in the current region
   const addressesInRegion = useMemo(
-  () =>
-    customer?.addresses.filter(
-      (a) => a.country_code && a.country_code === locale
-    ),
-  [customer?.addresses, locale]
-)
+    () =>
+      customer?.addresses.filter(
+        (a) => a.country_code && a.country_code === locale
+      ),
+    [customer?.addresses, locale]
+  )
 
-  const setFormAddress = (
+  const setFormAddress = useCallback((
     address?: HttpTypes.StoreCartAddress,
     email?: string
   ) => {
@@ -67,17 +67,17 @@ const ShippingAddress = ({
         ...prevState,
         email: email,
       }))
-  }
+  }, [locale])
 
   useEffect(() => {
-  if (cart && cart.shipping_address) {
-    setFormAddress(cart?.shipping_address, cart?.email)
-  }
+    if (cart && cart.shipping_address) {
+      setFormAddress(cart?.shipping_address, cart?.email)
+    }
 
-  if (cart && !cart.email && customer?.email) {
-    setFormAddress(undefined, customer.email)
-  }
-}, [cart, customer?.email, setFormAddress])
+    if (cart && !cart.email && customer?.email) {
+      setFormAddress(undefined, customer.email)
+    }
+  }, [cart, customer?.email, setFormAddress])
 
 
   const handleChange = (
