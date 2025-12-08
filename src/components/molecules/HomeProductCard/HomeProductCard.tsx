@@ -6,6 +6,9 @@ import { useState } from "react"
 import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
+import { useCartStore } from "@/store/useCartStore"
+import toast, { Toaster } from "react-hot-toast"
+
 
 
 interface HomeProductCardProps {
@@ -22,6 +25,8 @@ export const HomeProductCard = ({
 
     const [showModal, setShowModal] = useState(false)
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
+    const [isAddingToCart, setIsAddingToCart] = useState(false)
+    const addToCart = useCartStore((state) => state.add)
 
     // --- Extract fields from the Medusa product ---
     const id = api_product.id
@@ -43,6 +48,22 @@ export const HomeProductCard = ({
             height: rect.height,
         })
         setShowModal(true)
+    }
+
+    const handleAddToCart = async (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (isAddingToCart || !api_product.variants?.[0]?.id) return
+
+        setIsAddingToCart(true)
+        try {
+            await addToCart(api_product.variants[0].id, 1)
+            toast.success("Added to cart!")
+        } catch (error) {
+            toast.error("Failed to add to cart")
+            console.error("Add to cart error:", error)
+        } finally {
+            setIsAddingToCart(false)
+        }
     }
 
     return (
@@ -100,12 +121,13 @@ export const HomeProductCard = ({
                 </p>
 
                 <button
-                    className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium"
+                    className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: "#4444FF" }}
-                    onClick={handleOpenModal}
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart}
                 >
                     <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} />
-                    Add to Cart
+                    {isAddingToCart ? "Adding..." : "Add to Cart"}
                 </button>
 
                 {showModal && (
@@ -116,6 +138,7 @@ export const HomeProductCard = ({
                     />
                 )}
             </div>
+            <Toaster position="top-right" reverseOrder={false} />
         </div>
     )
 }
