@@ -4,6 +4,7 @@ import React from "react"
 import { useCartStore } from "@/store/useCartStore"
 import { OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
 import Image from "next/image";
+import Link from "next/link";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -21,7 +22,7 @@ export interface OrderItem {
 }
 
 
-const ItemCounter: React.FC<{ quantity: number; lineItemId: string }> = ({
+const ItemCounter: React.FC<{ quantity: number; lineItemId: string; }> = ({
   quantity,
   lineItemId
 }) => {
@@ -79,10 +80,14 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
         alt={item.title}
       />
       <div className="flex-1 min-w-0">
-        <p className="text-[#444444] font-medium text-[12px] md:text-sm leading-tight truncate">
-          {item.title}
+        <Link href={`/products/${item.productId}`}>
+          <p className="text-[#222222] font-medium text-sm truncate">
+            {item.title}
+          </p>
+        </Link>
+        <p className="text-xs text-gray-500">
+          {item.quantity} {item.quantity === 1 ? "Item" : "Items"}
         </p>
-        <p className="text-[#888888] text-xs">{item?.variantTitle}</p>
 
       </div>
       <div className="mr-5">
@@ -96,7 +101,7 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
 }
 
 export function OrderSummary({ summary }: OrderSummaryProps) {
-  console.log('order summary prop received ', summary)
+  // console.log('order summary prop received ', summary)
 
   // const subtotal = items.reduce(
   //   (acc, item) => acc + item.price * item.quantity,

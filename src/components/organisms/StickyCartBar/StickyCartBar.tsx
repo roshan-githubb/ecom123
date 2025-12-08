@@ -151,9 +151,15 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
                     </div>
 
                     <div className="flex-1 min-w-0">
+        <button 
+        onClick={() => {
+          router.push(`/products/${item.productId}`);
+          setIsExpanded(false)}}
+        >
                       <h4 className="text-[13px] font-medium line-clamp-2 leading-tight mb-0.5">
                         {item.title}
                       </h4>
+                      </button>
                       <p className="text-xs text-gray-500">
                         {item.quantity} {item.quantity === 1 ? "Item" : "Items"}
                       </p>
