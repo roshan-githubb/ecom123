@@ -5,8 +5,8 @@ import React from 'react'
 
 export default async function TopProducts() {
 
-    const flashProducts = await getTopProducts({})
-    console.log("top sale products: ", flashProducts);
+    const topProducts = await getTopProducts({limit:8})
+    // console.log("top sale products: ", topProducts );
 
     return (
         <>
@@ -14,11 +14,10 @@ export default async function TopProducts() {
                 <SectionHeader title="Top products" actionLabel="See All" />
                 <div className="my-2"></div>
                 <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-                    {flashProducts?.products?.map((r: any) => (
+                    {topProducts?.products?.map((r: any) => (
                         <div key={r.id} className="w-[180px] flex-shrink-0 ">
                             <HomeProductCard
                                 api_product={r}
-                                hasOfferSticker={true}
                             />
 
                         </div>

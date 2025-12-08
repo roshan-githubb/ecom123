@@ -1,5 +1,6 @@
 export async function getFlashSaleProducts({
-    min_discount = 5,
+    // min_discount = 5,
+    min_discount,
     max_discount,
     region_id,
     currency_code = 'npr',
