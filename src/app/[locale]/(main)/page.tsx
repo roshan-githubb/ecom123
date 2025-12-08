@@ -6,6 +6,7 @@ import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/Ho
 import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
 import HomePageSkeleton from "@/components/organisms/HomepageSkeleton/HomepageSkeleton";
 import FlashItems from "@/components/sections/FlashItems/FlashItems";
+import TopProducts from "@/components/sections/TopProducts/TopProducts";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -203,16 +204,7 @@ export default async function HomePage({ params }: { params: Params }) {
           <HeroVideo videoSrc="/videos/watch-time.mp4" />
 
           {/* Most Popular */}
-          <SectionHeader title="Most Popular" actionLabel="See All" />
-          <HorizontalScroller className="no-scrollbar !mt-1">
-            {jsonLdProducts.map((r) => (
-              <div key={r.id} className="w-[180px] flex-shrink-0">
-                <HomeProductCard api_product={r} />
-
-                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-              </div>
-            ))}
-          </HorizontalScroller>
+          <TopProducts/>
         </div >
       </Suspense>
 

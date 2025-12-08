@@ -33,7 +33,7 @@ export const HomeProductCard = ({
     const title = api_product.title
     const description = api_product.description
 
-    const imageUrl = api_product.images?.[0]?.url || "/images/not-available.png"
+    const imageUrl = api_product.images?.[0]?.url || "/images/not-available/not-available.png"
 
     const currentPrice =
         api_product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0

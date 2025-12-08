@@ -19,8 +19,6 @@ export default async function FlashItems() {
         <>
             <div>
                 <SectionHeader title="Flash sale" actionLabel="See All" />
-
-
                 <div className="my-2"></div>
                 <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
                     {jsonLdProducts.map((r) => (
