@@ -73,7 +73,7 @@ exports.listProducts = function (_a) {
                         console.warn("No region_id - prices will be missing!");
                     }
                     return [4 /*yield*/, config_1.publicProductClient.store.product.list(__assign({ limit: limit,
-                            offset: offset, region_id: regionId, fields: "+variants.calculated_price.*" }, queryParams))
+                            offset: offset, region_id: regionId, fields: ["*variants.calculated_price", "+variants.inventory_quantity", "*seller", "*variants", "*seller.products", "*seller.reviews", "*seller.reviews.customer",].join(",") }, queryParams))
                         // Filter out products with no price
                     ];
                 case 3:
