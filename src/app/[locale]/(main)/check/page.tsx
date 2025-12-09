@@ -2,18 +2,18 @@
 
 import React, { useEffect, useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
-// import { getCart } from "@/services/cart"
 import { mapCartToOrderSummary } from "@/lib/mapper/cartMapper"
 import { OrderItem, OrderSummary } from "@/components/organisms/CartSummary/CartItemSummary"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
+import { useAddressStore } from "@/store/addressStore"
+import { MapPin, ChevronRight } from "lucide-react"
 
 interface SelectCircleProps {
   selected: boolean
 }
 
-// Reusable Button
 const Button: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
     variant: "primary" | "ghost"
@@ -108,145 +108,87 @@ interface Address {
   phone: string
 }
 
-const UserForm: React.FC<{
-  onSave: (address: Address) => void
-  initialData?: Address
-}> = ({ onSave, initialData }) => {
-  const [address, setAddress] = useState(initialData?.address || "")
-  const [label, setLabel] = useState(initialData?.label || "Home")
-  const [phone, setPhone] = useState(initialData?.phone || "")
-  const [country, setCountry] = useState(initialData?.country || "Nepal")
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave({
-      country,
-      address,
-      label,
-      phone,
-    })
-  }
-
-  return (
-    <form
-      className="flex flex-col gap-4 bg-white p-4 rounded-lg border border-gray-300 mx-4 md:mx-0 mt-4"
-      onSubmit={handleSubmit}
-    >
-      <div className="font-semibold text-base">Delivery</div>
-
-      {/* Country */}
-      <div className="flex flex-col items-start w-full">
-        <p className="font-poppins text-sm w-fit">Country*</p>
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="flex p-2.5 rounded-[5px] border border-[#606060] w-full h-10 text-xs"
-        >
-          <option value="Nepal">Nepal</option>
-          <option value="India">India</option>
-        </select>
-      </div>
-
-      {/* Address */}
-      <div className="flex flex-col items-start w-full">
-        <p className="text-[#333] text-sm w-fit">Address</p>
-        <input
-          type="text"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="Enter your address"
-          className="flex p-2.5 rounded-[5px] border border-[#606060] w-full h-10 text-xs"
-          required
-        />
-      </div>
-
-      {/* Address Type */}
-      <div className="flex flex-col items-start w-full">
-        <p className="text-[#333] text-sm w-fit">Address Type</p>
-        <select
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          className="flex p-2.5 rounded-[5px] border border-[#606060] w-full h-10 text-xs"
-        >
-          <option value="Home">Home</option>
-          <option value="Work">Work</option>
-        </select>
-      </div>
-
-      {/* Phone Number */}
-      <div className="flex flex-col items-start w-full">
-        <p className="text-[#333] text-sm w-fit">Phone number</p>
-        <input
-          type="text"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="9801234567"
-          className="flex p-2.5 rounded-[5px] border border-[#606060] w-full h-10 text-xs"
-          required
-        />
-      </div>
-
-      <Button variant="primary" type="submit">
-        Save
-      </Button>
-    </form>
-  )
-}
-
-const UserDetailsSection: React.FC<{
-  address: Address | null
-  onChange: () => void
-  onAdd: () => void
-}> = ({ address, onChange, onAdd }) => {
+const UserDetailsSection: React.FC = () => {
   const router = useRouter()
-
-  const displayValue = (val: string, missingText: string) => val || missingText
+  const addresses = useAddressStore((state) => state.addresses)
+  const selectedIndex = useAddressStore((state) => state.selectedAddressIndex)
+  const addr = selectedIndex !== undefined ? addresses[selectedIndex] : null
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] flex flex-col gap-3 mx-4 md:mx-0 mt-4">
-      <div className="flex justify-between items-start gap-[54px]">
-        <div className="flex flex-col gap-2 w-[178px]">
-          <h2 className="text-lg leading-[25px] font-semibold text-[#333333]">
-            Your Details
-          </h2>
-          <p className="text-sm leading-[20px] font-medium text-[#444]">
-            Sabina Pandit
-          </p>
-          <p className="text-sm leading-[20px] font-normal text-[#777]">
-            {displayValue(address?.country || "", "Country is missing")}
-          </p>
-          <p className="text-sm leading-[20px] font-normal text-[#777]">
-            {displayValue(address?.address || "", "Address is missing")}
-          </p>
-          <p className="text-sm leading-[20px] font-normal text-[#777]">
-            {displayValue(address?.label || "", "Address Type is missing")}
-          </p>
-          <p className="text-sm leading-[20px] font-normal text-[#777]">
-            {displayValue(address?.phone || "", "Phone number is missing")}
-          </p>
-        </div>
-        <div className="ml-auto flex flex-col gap-2">
-          {address ? (
-            <Button variant="ghost" onClick={onChange}>
-              Change
-            </Button>
-          ) : (
-            <Button
-              variant="primary"
-              // onClick={onAdd}
-              onClick={() => router.push("/shippinginfo")}
-
-              className="w-full sm:w-auto min-w-[120px] rounded-md px-4 py-2 text-sm sm:text-base shadow-sm hover:shadow-md transition-all duration-200 whitespace-nowrap text-center"
+      {addr ? (
+        <div>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 flex-shrink-0">
+              <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]"></div>
+                <MapPin className="w-5 h-5 text-[#2b5bf7] fill-[#2b5bf7] relative z-10" />
+              </div>
+            </div>
+            <div
+              className="flex-1 cursor-pointer"
+              onClick={() => router.push("/in/shippinginfo")}
             >
-              Add Address
-            </Button>
-          )}
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-sm text-gray-900">
+                    {addr.name}
+                  </span>
+                  <span className="text-gray-400 text-[13px]">
+                    {addr.phone}
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 mt-8 flex-shrink-0" />
+              </div>
+              <div className="leading-snug">
+                <span className="inline-block bg-[#2b5bf7] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] mr-1 align-middle">
+                  {addr.label.toUpperCase()}
+                </span>
+                <span className="text-[13px] text-gray-600">
+                  {`${addr.line1}${addr.line2 ? ", " + addr.line2 : ""}, ${
+                    addr.district
+                  }, ${addr.province}${
+                    addr.landmark ? ", Near " + addr.landmark : ""
+                  }`}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div
+            className="flex items-start gap-3 pl-[52px]"
+            onClick={() => router.push("/in/pickupaddress")}
+          >
+            <div className="flex-1 border-t border-gray-50 pt-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[13px] text-black font-medium leading-tight mb-0.5">
+                    Collect your parcels from a nearby location at a minimal
+                    delivery fee.
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    9 suggested collection point(s) nearby
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex justify-between">
+          <span className="text-gray-500 text-sm">Address not added</span>
+          <Button
+            variant="primary"
+            className="px-4 py-2 w-auto min-w-[100px] text-sm"
+            onClick={() => router.push("/in/shippinginfo")}
+          >
+            Add Address
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
-
 
 
 const CheckoutPage: React.FC = () => {
@@ -309,21 +251,7 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="min-h-screen pb-8 overflow-x-hidden">
       <main className="max-w-md mx-auto relative z-0">
-        {isEditing ? (
-          <UserForm
-            initialData={address || undefined}
-            onSave={(addr) => {
-              setAddress(addr)
-              setIsEditing(false)
-            }}
-          />
-        ) : (
-          <UserDetailsSection
-            address={address}
-            onChange={() => setIsEditing(true)}
-            onAdd={() => setIsEditing(true)}
-          />
-        )}
+       <UserDetailsSection />
 
         <OrderSummary summary={cartSummary} />
         {/* <PaymentMethodSection

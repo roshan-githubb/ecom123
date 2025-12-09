@@ -357,11 +357,13 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
     }
-    const cartId = getCartId()
+    const cartId = await getCartId()
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }
 
+    const currentCart = await retrieveCart(cartId)
+    
     const data = {
       shipping_address: {
         first_name: formData.get("shipping_address.first_name"),
@@ -375,8 +377,15 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         province: formData.get("shipping_address.province"),
         phone: formData.get("shipping_address.phone"),
       },
-      email: formData.get("email"),
     } as any
+
+    const emailFromForm = formData.get("email")
+    if (!currentCart?.email && emailFromForm) {
+      data.email = emailFromForm
+      console.log("Setting email on cart:", emailFromForm)
+    } else {
+      console.log("Skipping email update. Current cart email:", currentCart?.email, "Form email:", emailFromForm)
+    }
 
     // const sameAsBilling = formData.get("same_as_billing")
     // if (sameAsBilling === "on") data.billing_address = data.shipping_address

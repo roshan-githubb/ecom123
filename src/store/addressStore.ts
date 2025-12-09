@@ -10,6 +10,9 @@ export interface Address {
   landmark?: string;
   label: string;
   isDefault: boolean;
+  email: string;
+  postalCode: string;
+  countryCode: string;
 }
 
 interface AddressStore {
@@ -24,82 +27,93 @@ interface AddressStore {
 }
 
 export const useAddressStore = create<AddressStore>((set, get) => ({
-  addresses: [], 
+  addresses: [],
   selectedAddressIndex: undefined,
 
   loadFromStorage: () => {
     if (typeof window === "undefined") return;
+    try {
+      const addresses = JSON.parse(localStorage.getItem("addresses") || "[]");
+      const selectedIndex = JSON.parse(
+        localStorage.getItem("selectedAddressIndex") || "null"
+      );
 
-    const storedAddresses = JSON.parse(localStorage.getItem("addresses") || "[]") || [];
-    const storedIndex = JSON.parse(localStorage.getItem("selectedAddressIndex") || "null");
-    set({
-      addresses: storedAddresses,
-      selectedAddressIndex: storedIndex,
-    });
+      set({
+        addresses,
+        selectedAddressIndex: selectedIndex ?? undefined,
+      });
+    } catch {
+      localStorage.removeItem("addresses");
+      localStorage.removeItem("selectedAddressIndex");
+    }
   },
 
   addAddress: (addr) =>
     set((state) => {
-      const newAddresses = addr.isDefault
+      const addresses = addr.isDefault
         ? state.addresses.map((a) => ({ ...a, isDefault: false }))
-        : state.addresses;
-      const updated = [...newAddresses, addr];
+        : [...state.addresses];
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem("addresses", JSON.stringify(updated));
-        if (addr.isDefault) localStorage.setItem("selectedAddressIndex", JSON.stringify(updated.length - 1));
+      const updated = [...addresses, addr];
+      const selectedIndex = addr.isDefault ? updated.length - 1 : state.selectedAddressIndex;
+
+      localStorage.setItem("addresses", JSON.stringify(updated));
+      if (selectedIndex !== undefined) {
+        localStorage.setItem("selectedAddressIndex", JSON.stringify(selectedIndex));
       }
 
-      return { addresses: updated };
+      return { addresses: updated, selectedAddressIndex: selectedIndex };
     }),
 
   updateAddress: (index, addr) =>
     set((state) => {
-      const updated = [...state.addresses];
-      if (addr.isDefault) updated.forEach((a, i) => i !== index && (a.isDefault = false));
-      updated[index] = addr;
+      const updated = state.addresses.map((a, i) =>
+        i === index ? addr : addr.isDefault ? { ...a, isDefault: false } : a
+      );
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem("addresses", JSON.stringify(updated));
-        if (addr.isDefault) localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
+      const selectedIndex = addr.isDefault ? index : state.selectedAddressIndex;
+
+      localStorage.setItem("addresses", JSON.stringify(updated));
+      if (selectedIndex !== undefined) {
+        localStorage.setItem("selectedAddressIndex", JSON.stringify(selectedIndex));
       }
 
-      return { addresses: updated };
+      return { addresses: updated, selectedAddressIndex: selectedIndex };
     }),
 
   deleteAddress: (index) =>
     set((state) => {
       const updated = state.addresses.filter((_, i) => i !== index);
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem("addresses", JSON.stringify(updated));
-        // If the deleted address was selected, reset selection
-        const selectedIndex = get().selectedAddressIndex;
-        if (selectedIndex === index) {
-          localStorage.removeItem("selectedAddressIndex");
-        }
-      }
+      let selectedIndex = state.selectedAddressIndex;
+      if (selectedIndex === index) selectedIndex = undefined;
+      else if (selectedIndex && selectedIndex > index) selectedIndex--;
 
-      return { addresses: updated };
+      localStorage.setItem("addresses", JSON.stringify(updated));
+      if (selectedIndex === undefined)
+        localStorage.removeItem("selectedAddressIndex");
+      else
+        localStorage.setItem("selectedAddressIndex", JSON.stringify(selectedIndex));
+
+      return { addresses: updated, selectedAddressIndex: selectedIndex };
     }),
 
   setDefault: (index) =>
     set((state) => {
-      const updated = state.addresses.map((a, i) => ({ ...a, isDefault: i === index }));
+      const updated = state.addresses.map((a, i) => ({
+        ...a,
+        isDefault: i === index,
+      }));
 
-      if (typeof window !== "undefined") {
-        localStorage.setItem("addresses", JSON.stringify(updated));
-        localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
-      }
+      localStorage.setItem("addresses", JSON.stringify(updated));
+      localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
 
-      return { addresses: updated };
+      return { addresses: updated, selectedAddressIndex: index };
     }),
 
   selectAddress: (index) =>
     set(() => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
-      }
+      localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
       return { selectedAddressIndex: index };
     }),
 }));
