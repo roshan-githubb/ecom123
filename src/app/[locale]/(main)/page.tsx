@@ -81,7 +81,17 @@ export default async function HomePage({ params }: { params: Params }) {
     response: { products: jsonLdProducts },
   } = await listProducts({
     countryCode: locale,
-    queryParams: { limit: 8, order: "created_at" },
+    queryParams: { limit: 8, order: "created_at",
+      fields: [
+      "*variants.calculated_price",
+      "+variants.inventory_quantity",
+      "*seller",
+      "*variants",
+      "*seller.products",
+      "*seller.reviews",
+      "*seller.reviews.customer",
+    ].join(","),
+    },
   })
 
   const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
