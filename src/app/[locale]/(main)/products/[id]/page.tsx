@@ -43,7 +43,7 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
     // console.log("Full response from Medusa:", data);
 
     const product = data.product;
-    console.log("Product object:", product);
+    // console.log("Product object:", product);
 
     if (!product) {
 

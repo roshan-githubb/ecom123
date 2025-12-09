@@ -5,6 +5,8 @@ import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProd
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
 import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
 import HomePageSkeleton from "@/components/organisms/HomepageSkeleton/HomepageSkeleton";
+import FlashItems from "@/components/sections/FlashItems/FlashItems";
+import TopProducts from "@/components/sections/TopProducts/TopProducts";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -25,11 +27,6 @@ interface CategoryItem {
   metadata: CategoryItemMetadata;
 }
 
-
-const flashProducts = [
-  { id: "p1", image: "/images/product/white-vase.png", title: "White Vase", currentPrice: 3000, oldPrice: 3500, discount: "45% OFF", description: "Stunning white T shirt" },
-  { id: "p2", image: "/images/product/white-vase.png", title: "Indoor Plant", currentPrice: 4200, oldPrice: 5200, discount: "20% OFF", description: "Stylish denim jacket" },
-];
 
 const brands = [
   { name: "Nike", image: "/images/brands/Nike.png" },
@@ -162,38 +159,8 @@ export default async function HomePage({ params }: { params: Params }) {
               </div>
             ))}
           </div>
-          {/* </HorizontalScroller> */}
-          {/* Flash Sale section (dark blue header) */}
-          <div>
-            {/* <div className="flex items-center justify-between ">
-            <h2 className="text-[20px] font-medium" style={{ color: "#32425A" }}>Flash Sale</h2>
-            <button
-              onClick={() => router.push("/coming-soon")}
-              className="text-[14px] font-medium"
-              style={{ color: "#144293" }}
-            >
-              See All
-            </button>
-          </div> */}
-            <SectionHeader title="Flash sale" actionLabel="See All" />
-
-
-            <div className="my-2"></div>
-            {/* two cards side-by-side */}
-            {/* <div className="grid grid-cols-2 gap-4 gap-x-2 mt-3"> */}
-            <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-              {jsonLdProducts.map((r) => (
-                <div key={r.id} className="w-[180px] flex-shrink-0 ">
-                  <HomeProductCard
-                    api_product={r}
-                    hasOfferSticker={true}
-                  />
-
-                  {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-                </div>
-              ))}
-            </div>
-          </div>
+          <FlashItems/>
+         
 
           {/* Recommended for you — horizontal, hidden scrollbar */}
           <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
@@ -237,16 +204,7 @@ export default async function HomePage({ params }: { params: Params }) {
           <HeroVideo videoSrc="/videos/watch-time.mp4" />
 
           {/* Most Popular */}
-          <SectionHeader title="Most Popular" actionLabel="See All" />
-          <HorizontalScroller className="no-scrollbar !mt-1">
-            {jsonLdProducts.map((r) => (
-              <div key={r.id} className="w-[180px] flex-shrink-0">
-                <HomeProductCard api_product={r} />
-
-                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-              </div>
-            ))}
-          </HorizontalScroller>
+          <TopProducts/>
         </div >
       </Suspense>
 
