@@ -7,6 +7,8 @@ import { StarRating } from "@/components/atoms"
 import { useCartStore } from "@/store/useCartStore"
 import { Review } from "@/types/reviews"
 import toast, { Toaster } from "react-hot-toast"
+import { motion } from "framer-motion"
+
 
 interface ProductOptionValue {
   id: string
@@ -241,14 +243,14 @@ export default function ProductDetailClient({
     setIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
   }
 
- const handleSwipe = () => {
-  const diff = endX.current - startX.current
+  const handleSwipe = () => {
+    const diff = endX.current - startX.current
 
-  if (Math.abs(diff) < 50) return  // ignore tiny drag
+    if (Math.abs(diff) < 50) return  // ignore tiny drag
 
-  if (diff < 0) next()             // swipe left → next
-  else prev()                      // swipe right → prev
-}
+    if (diff < 0) next()             // swipe left → next
+    else prev()                      // swipe right → prev
+  }
 
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     isDragging.current = false
@@ -344,27 +346,37 @@ export default function ProductDetailClient({
             isDragging.current = false
           }}
 
-          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
 
-            endX.current = startX.current
-
-            const rect = e.currentTarget.getBoundingClientRect()
-            const clickX = e.clientX - rect.left
-            const mid = rect.width / 2
-
-            if (clickX > mid) next()
-            else prev()
-          }}
         >
 
           <div className="w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px] overflow-hidden rounded-[16px] flex items-center justify-center">
-            <Image
-              src={images[index] || "/images/not-available/not-available.png"}
-              alt={"Product image"}
-              width={296}
-              height={320}
-              className="object-cover w-full h-full rounded-[16px] pointer-events-none"
-            />
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.1}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -50 && index < images.length - 1) {
+                  setIndex(index + 1)
+                } else if (info.offset.x > 50 && index > 0) {
+                  setIndex(index - 1)
+                }
+              }}
+              className="w-full h-full"
+            >
+              <Image
+                src={images[index] || "/images/not-available/not-available.png"}
+                alt={"Product image"}
+                width={296}
+                height={320}
+                className="object-cover w-full h-full rounded-[16px] pointer-events-none"
+              />
+            </motion.div>
+
           </div>
         </div>
 

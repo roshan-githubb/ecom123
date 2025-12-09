@@ -254,6 +254,56 @@ export function AddVariantSheet({
             return { id: v.id, label: v.value, bg: bgClass, ring: ringClass }
         }) || []
 
+    const startX = useRef(0)
+    const endX = useRef(0)
+    const isDragging = useRef(false)
+    const minDistance = 40
+
+    const next = () => {
+        setIndex((prev) => (prev + 1) % images.length)
+    }
+
+    const prev = () => {
+        setIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+    }
+
+    const handleSwipe = () => {
+        const diff = endX.current - startX.current
+
+        if (Math.abs(diff) < 50) return  // ignore tiny drag
+
+        if (diff < 0) next()             // swipe left → next
+        else prev()                      // swipe right → prev
+    }
+
+    const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        isDragging.current = false
+        startX.current = e.touches[0].clientX
+    }
+    const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        endX.current = e.touches[0].clientX
+        isDragging.current = true
+    }
+    const onTouchEnd = () => {
+        if (isDragging.current) handleSwipe()
+    }
+
+    const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        isDragging.current = true
+        startX.current = e.clientX
+    }
+
+    const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging.current) return
+        endX.current = e.clientX
+    }
+
+    const onMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging.current) return
+        isDragging.current = false
+        handleSwipe()
+    }
+
     const sizeShortMap: Record<string, string> = {
         small: "S",
         medium: "M",
@@ -463,16 +513,22 @@ export function AddVariantSheet({
                             </section>
 
                             <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
-                                <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
+                                <div
+                                    /* touch event */
+                                    onTouchStart={onTouchStart}
+                                    onTouchMove={onTouchMove}
+                                    onTouchEnd={onTouchEnd}
+
+                                    /* mouse event */
+                                    onMouseDown={onMouseDown}
+                                    onMouseMove={onMouseMove}
+                                    onMouseUp={onMouseUp}
+                                    onMouseLeave={() => {
+                                        isDragging.current = false
+                                    }}
+                                    className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
                                     <div className="relative w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] overflow-hidden rounded-[16px]">
-                                        {images.length > 1 && index > 0 && (
-                                            <button
-                                                onClick={() => setIndex(Math.max(0, index - 1))}
-                                                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/80 rounded-full shadow-md flex items-center justify-center hover:bg-white"
-                                            >
-                                                <span className="text-lg">‹</span>
-                                            </button>
-                                        )}
+
 
 
                                         <div className="h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px]">
@@ -506,14 +562,7 @@ export function AddVariantSheet({
                                         </div>
 
 
-                                        {images.length > 1 && index < images.length - 1 && (
-                                            <button
-                                                onClick={() => setIndex(Math.min(images.length - 1, index + 1))}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/80 rounded-full shadow-md flex items-center justify-center hover:bg-white"
-                                            >
-                                                <span className="text-lg">›</span>
-                                            </button>
-                                        )}
+
                                     </div>
                                 </div>
 
