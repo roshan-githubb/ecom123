@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useMemo } from "react"
+import React, { useState, useMemo, useRef } from "react"
 import { StarRating } from "@/components/atoms"
 import { useCartStore } from "@/store/useCartStore"
 import { Review } from "@/types/reviews"
@@ -228,6 +228,57 @@ export default function ProductDetailClient({
     }
   }
 
+  const startX = useRef(0)
+  const endX = useRef(0)
+  const isDragging = useRef(false)
+  const minDistance = 40
+
+  const next = () => {
+    setIndex((prev) => (prev + 1) % images.length)
+  }
+
+  const prev = () => {
+    setIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+  }
+
+ const handleSwipe = () => {
+  const diff = endX.current - startX.current
+
+  if (Math.abs(diff) < 50) return  // ignore tiny drag
+
+  if (diff < 0) next()             // swipe left → next
+  else prev()                      // swipe right → prev
+}
+
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    isDragging.current = false
+    startX.current = e.touches[0].clientX
+  }
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    endX.current = e.touches[0].clientX
+    isDragging.current = true
+  }
+  const onTouchEnd = () => {
+    if (isDragging.current) handleSwipe()
+  }
+
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    isDragging.current = true
+    startX.current = e.clientX
+  }
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return
+    endX.current = e.clientX
+  }
+
+  const onMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return
+    isDragging.current = false
+    handleSwipe()
+  }
+
+
   return (
     <main className="min-h-screen">
       <Toaster position="top-right" reverseOrder={false} />
@@ -277,17 +328,46 @@ export default function ProductDetailClient({
       </section>
 
       <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
-        <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
+        <div
+          className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4 select-none"
+
+          /* touch event */
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+
+          /* mouse event */
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={() => {
+            isDragging.current = false
+          }}
+
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+
+            endX.current = startX.current
+
+            const rect = e.currentTarget.getBoundingClientRect()
+            const clickX = e.clientX - rect.left
+            const mid = rect.width / 2
+
+            if (clickX > mid) next()
+            else prev()
+          }}
+        >
+
           <div className="w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px] overflow-hidden rounded-[16px] flex items-center justify-center">
             <Image
               src={images[index] || "/images/not-available/not-available.png"}
-              alt={product.title + " image"}
+              alt={"Product image"}
               width={296}
               height={320}
-              className="object-cover w-full h-full rounded-[16px]"
+              className="object-cover w-full h-full rounded-[16px] pointer-events-none"
             />
           </div>
         </div>
+
         <div className="mt-4 flex items-center justify-center gap-2">
           {images.map((_, i) => (
             <button
@@ -299,6 +379,7 @@ export default function ProductDetailClient({
             />
           ))}
         </div>
+
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
@@ -318,8 +399,8 @@ export default function ProductDetailClient({
                     key={c.id}
                     onClick={() => setSelectedColor(c.id)}
                     className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
-                        ? "border-2 border-[#1A315A]"
-                        : "border border-gray-300"
+                      ? "border-2 border-[#1A315A]"
+                      : "border border-gray-300"
                       }`}
                   >
                     <div className={`${c.bg} w-full h-full`} />
@@ -343,8 +424,8 @@ export default function ProductDetailClient({
                       key={`${s}-${i}`}
                       onClick={() => setSelectedSize(s)}
                       className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
-                          ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
-                          : "border border-[#333333] bg-transparent text-[#333333]"
+                        ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
+                        : "border border-[#333333] bg-transparent text-[#333333]"
                         }`}
                     >
                       {shortLabel}
