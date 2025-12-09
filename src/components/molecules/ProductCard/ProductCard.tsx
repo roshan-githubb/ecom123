@@ -107,7 +107,7 @@ export const ProductCard = ({
             onClick={handleOpenModal}
             className="text-[clamp(14px,2vw,18px)] font-normal text-[#111111] cursor-pointer hover:underline"
           >
-            {api_product.title}
+            {api_product.title} 
           </h2>
 
           {total_reviews > 0 ? (

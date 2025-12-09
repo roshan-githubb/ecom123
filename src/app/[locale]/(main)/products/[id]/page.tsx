@@ -27,6 +27,7 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
       cache: "no-store",
       headers,
     });
+    // console.log("Fetch product detail response status:", res);
 
 
 
@@ -50,7 +51,8 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
     }
 
 
-    const reviewUrl = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}/reviews?limit=10&offset=0`; const reviewRes = await fetch(reviewUrl, {
+    const reviewUrl = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}/reviews?limit=10&offset=0`; 
+    const reviewRes = await fetch(reviewUrl, {
       method: "GET",
       cache: "no-store",
       headers,
@@ -67,6 +69,7 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
       <ProductDetailClient product={product} reviews={reviews} />
     </Suspense>
   } catch (err) {
+    console.error("Error fetching product detail data:", err);
 
     return notFound();
   }
