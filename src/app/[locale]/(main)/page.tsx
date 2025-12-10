@@ -59,15 +59,7 @@ const categories = [
 
 
 
-const recommended = new Array(8).fill(0).map((_, i) => ({
-  id: String(i),
-  image: "/images/product/cotton-Tshirt.jpg",
-  title: `Product ${i + 1}`,
-  currentPrice: 2000 + i * 100,
-  oldPrice: 2400 + i * 120,
-  discount: i % 2 === 0 ? "10% OFF" : "25% OFF",
-  description: "Short description",
-}));
+
 
 
 interface Params {

@@ -11,6 +11,8 @@ import toast, { Toaster } from "react-hot-toast"
 import { StarRating } from "@/components/atoms"
 import { Review } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
+// import SellerProducts from "../SellerProducts/SellerProducts"
+// import TopProducts from "@/components/sections/TopProducts/TopProducts"
 
 interface ProductOptionValue {
   id: string
@@ -41,6 +43,7 @@ interface ProductVariant {
 interface Product {
   id: string
   title: string
+  description?: string
   store?: { name: string; url: string }
   collection?: { title: string }
   soldLastMonth?: number
@@ -88,6 +91,7 @@ export function AddVariantSheet({
   const cartItems = useCartStore((state) => state.items)
   const hasCartItems = cartItems.length > 0
   const y = useMotionValue(cardPos.top)
+  // console.log('product in addvariantsheet ', product?.description)
 
   const smoothClose = useCallback(() => {
     animate(y, window.innerHeight, {
@@ -478,7 +482,7 @@ export function AddVariantSheet({
               <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
                 <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
                   <div className="relative w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] overflow-hidden rounded-[16px]">
-                    
+
                     <div className="h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px]">
                       <motion.div
                         key={index}
@@ -508,7 +512,7 @@ export function AddVariantSheet({
                         />
                       </motion.div>
                     </div>
-                    
+
                   </div>
                 </div>
 
@@ -518,9 +522,8 @@ export function AddVariantSheet({
                       <button
                         key={i}
                         onClick={() => setIndex(i)}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          i === index ? "bg-blue-800 w-4" : "bg-gray-300"
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-all ${i === index ? "bg-blue-800 w-4" : "bg-gray-300"
+                          }`}
                         aria-label={`View image ${i + 1}`}
                       />
                     ))}
@@ -544,11 +547,10 @@ export function AddVariantSheet({
                           <button
                             key={c.id}
                             onClick={() => setSelectedColor(c.id)}
-                            className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${
-                              selectedColor === c.id
-                                ? "border-2 border-[#1A315A]"
-                                : "border border-gray-300"
-                            }`}
+                            className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
+                              ? "border-2 border-[#1A315A]"
+                              : "border border-gray-300"
+                              }`}
                           >
                             <div className={`${c.bg} w-full h-full`} />
                           </button>
@@ -569,11 +571,10 @@ export function AddVariantSheet({
                             <button
                               key={`${s}-${i}`}
                               onClick={() => setSelectedSize(s)}
-                              className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${
-                                selectedSize === s
-                                  ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
-                                  : "border border-[#333333] bg-transparent text-[#333333]"
-                              }`}
+                              className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
+                                ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
+                                : "border border-[#333333] bg-transparent text-[#333333]"
+                                }`}
                             >
                               {shortLabel}
                             </button>
@@ -648,6 +649,23 @@ export function AddVariantSheet({
 
                 <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
                 <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+                <details className="mt-4">
+                  <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+                    <span>Product Description</span>
+                    <Image src="/images/icons/arrow.png" alt="arrow" width={16} height={16} />
+                  </summary>
+
+                  <div className="mt-2">
+                    <p className="text-[16px] font-normal text-[#222222] leading-relaxed">
+                      {product?.description}
+                    </p>
+                  </div>
+                </details>
+
+                <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+                <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
 
                 <details className="mt-4">
                   <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
@@ -744,6 +762,7 @@ export function AddVariantSheet({
                   </div>
                 </details>
               </section>
+             {/* <SellerProducts sellerId={(product as any).seller?.id} /> */}
 
               <div className={`w-full px-4 pt-6 ${hasCartItems ? "pb-24" : "pb-4"}`}>
                 <div className="flex gap-3">
