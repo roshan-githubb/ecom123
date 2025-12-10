@@ -40,7 +40,7 @@ const brands = [
 ];
 
 const topSectionProducts = [
-  { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png" },
+  { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png", link: "/flash-sale" },
   { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
   { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
   { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
@@ -127,7 +127,7 @@ export default async function HomePage({ params }: { params: Params }) {
           <HorizontalScroller >
             {topSectionProducts.map((c: any) => (
               <div key={c.name} className=" flex-shrink-0">
-                <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link="/coming-soon" />
+                <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link={c?.link??"/coming-soon"} />
               </div>
             ))}
           </HorizontalScroller>
