@@ -1,25 +1,48 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin } from "lucide-react";
-import { useAddressStore } from "@/store/addressStore";
+import { MapPin, Loader2 } from "lucide-react";
+import { useAddressStore, Address } from "@/store/addressStore";
 import { AddressForm } from "./addressform/page";
 import { useRouter } from "next/navigation";
+import { applySelectedAddressToCart } from "@/lib/actions/address-selection";
 
 export default function ShippingAddress() {
   const addresses = useAddressStore((state) => state.addresses);
   const selectAddress = useAddressStore((state) => state.selectAddress);
   const [showForm, setShowForm] = useState(false);
   const [editIndex, setEditIndex] = useState<number | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
+
+  const handleAddressSelection = async (address: Address, index: number) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setFormError(null);
+
+    selectAddress(index);
+
+    const error = await applySelectedAddressToCart(address);
+
+    if (error) {
+      setFormError(error);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setIsSubmitting(false);
+    router.push("/np/check");
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] font-sans text-[#333] pb-10 max-w-md mx-auto border-x border-gray-200">
-
       <div className="p-4 bg-white mb-3">
         <button
-          className="w-full border border-[#00bfa5] text-[#00bfa5] font-bold text-[14px] py-3.5 flex items-center justify-center"
+          className="w-full border border-myBlue text-myBlue font-bold text-[14px] py-3.5 flex items-center justify-center disabled:opacity-50"
           onClick={() => { setEditIndex(undefined); setShowForm(true); }}
+          disabled={isSubmitting}
         >
           + Add address
         </button>
@@ -35,15 +58,18 @@ export default function ShippingAddress() {
         </div>
       )}
 
-      <div className="space-y-3">
+      {formError && (
+        <div className="bg-red-100 text-red-700 p-3 mx-4 mb-3 rounded-md font-medium">
+          Error selecting address: {formError}
+        </div>
+      )}
+
+      <div className={`space-y-3 ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
         {addresses.map((addr, i) => (
           <div
             key={i}
             className="bg-white p-4 flex items-start gap-3 cursor-pointer hover:bg-gray-50"
-            onClick={() => {
-              selectAddress(i);
-              router.push("/np/check"); 
-            }}
+            onClick={() => handleAddressSelection(addr, i)}
           >
             <div className="mt-1">
               <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
@@ -78,6 +104,13 @@ export default function ShippingAddress() {
             </div>
           </div>
         ))}
+        {isSubmitting && (
+          <div className="text-center text-sm text-[#00bfa5] font-medium py-3">
+            <span className="flex items-center justify-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Applying address to cart...
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

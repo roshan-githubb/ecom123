@@ -71,6 +71,9 @@ interface AddVariantSheetProps {
   ratingSummary?: { average_rating: number; total_reviews: number }
   cardPos: { top: number; left: number; width: number; height: number }
   onClose: () => void
+  products?: any[]
+  currentProductIndex?: number
+  onProductChange?: (index: number) => void
 }
 
 export function AddVariantSheet({
@@ -79,18 +82,25 @@ export function AddVariantSheet({
   ratingSummary,
   cardPos,
   onClose,
+  products = [],
+  currentProductIndex = 0,
+  onProductChange,
 }: AddVariantSheetProps) {
   const router = useRouter()
   const params = useParams()
   const locale = params?.locale || "en"
   const [index, setIndex] = useState(0)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [productIndex, setProductIndex] = useState(currentProductIndex)
+  const [direction, setDirection] = useState(0)
   const contentRef = useRef<HTMLDivElement>(null)
   const reviews = initialReviews
   const cartItems = useCartStore((state) => state.items)
   const hasCartItems = cartItems.length > 0
   const y = useMotionValue(cardPos.top)
-  // console.log('product in addvariantsheet ', product?.description)
+  
+  const currentProduct = products.length > 0 ? products[productIndex] : product
+  const hasMultipleProducts = products.length > 1
 
   const smoothClose = useCallback(() => {
     animate(y, window.innerHeight, {
@@ -108,52 +118,19 @@ export function AddVariantSheet({
     }
   }, [])
 
-  useEffect(() => {
-    const content = contentRef.current
-    if (!content) return
 
-    let startY = 0
-    let isDragging = false
 
-    const onTouchStart = (e: TouchEvent) => {
-      if (content.scrollTop === 0) {
-        startY = e.touches[0].clientY
-        isDragging = true
-      }
+  const paginate = useCallback((newDirection: number) => {
+    if (!hasMultipleProducts) return
+    
+    const newIndex = productIndex + newDirection
+    if (newIndex >= 0 && newIndex < products.length) {
+      setDirection(newDirection)
+      setProductIndex(newIndex)
+      setIndex(0)
+      onProductChange?.(newIndex)
     }
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!isDragging) return
-      const deltaY = e.touches[0].clientY - startY
-
-      if (deltaY > 80) {
-        if (isExpanded) {
-          setIsExpanded(false)
-        } else {
-          smoothClose()
-        }
-        isDragging = false
-      }
-      if (deltaY < -60 && !isExpanded) {
-        setIsExpanded(true)
-        isDragging = false
-      }
-    }
-
-    const onTouchEnd = () => {
-      isDragging = false
-    }
-
-    content.addEventListener("touchstart", onTouchStart)
-    content.addEventListener("touchmove", onTouchMove)
-    content.addEventListener("touchend", onTouchEnd)
-
-    return () => {
-      content.removeEventListener("touchstart", onTouchStart)
-      content.removeEventListener("touchmove", onTouchMove)
-      content.removeEventListener("touchend", onTouchEnd)
-    }
-  }, [isExpanded, smoothClose])
+  }, [productIndex, products.length, hasMultipleProducts, onProductChange])
 
   const totalReviews = ratingSummary?.total_reviews ?? reviews?.length ?? 0
 
@@ -163,12 +140,12 @@ export function AddVariantSheet({
     return reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / totalReviews
   }, [reviews, totalReviews, ratingSummary])
 
-  const colorOption = product.options?.find(
-    (opt) => opt.title.toLowerCase() === "color"
+  const colorOption = currentProduct.options?.find(
+    (opt: any) => opt.title.toLowerCase() === "color"
   )
 
   const colors: ColorOption[] =
-    colorOption?.values?.map((v) => {
+    colorOption?.values?.map((v: any) => {
       let bgClass = "bg-gray-200"
       let ringClass = "ring-gray-300"
 
@@ -272,11 +249,11 @@ export function AddVariantSheet({
   }
 
   const variantSizes =
-    product.variants?.map((v) => {
-      const sizeOpt = v?.options?.find((o) =>
-        product?.options
-          ?.find((opt) => opt?.title?.toLowerCase() === "size")
-          ?.values?.some((val) => val.value === o.value)
+    currentProduct.variants?.map((v: any) => {
+      const sizeOpt = v?.options?.find((o: any) =>
+        currentProduct?.options
+          ?.find((opt: any) => opt?.title?.toLowerCase() === "size")
+          ?.values?.some((val: any) => val.value === o.value)
       )
       return sizeOpt?.value
     }) || []
@@ -287,18 +264,18 @@ export function AddVariantSheet({
   const [selectedSize, setSelectedSize] = useState(sizes[0])
 
   const images =
-    product.images?.map((img) => img.url).filter((url) => url) || [
+    currentProduct.images?.map((img: any) => img.url).filter((url: any) => url) || [
       "/images/not-available/not-available.png",
     ]
 
-  const selectedVariant = product.variants?.find((v) => {
+  const selectedVariant = currentProduct.variants?.find((v: any) => {
     const colorLabel = colors.find((c) => c.id === selectedColor)?.label
     const sizeLabel = selectedSize
     const hasColor = colors.length > 0
-      ? v.options?.some((o) => o.value === colorLabel)
+      ? v.options?.some((o: any) => o.value === colorLabel)
       : true
     const hasSize = sizes.length > 0
-      ? v.options?.some((o) => o.value === sizeLabel)
+      ? v.options?.some((o: any) => o.value === sizeLabel)
       : true
     return hasColor && hasSize
   })
@@ -351,7 +328,7 @@ export function AddVariantSheet({
         onClick={smoothClose}
       >
         <motion.div
-          className="bg-white absolute rounded-t-2xl shadow-xl flex flex-col"
+          className="bg-white absolute rounded-t-2xl shadow-xl flex flex-col overflow-hidden"
           style={{ top: y }}
           initial={{
             top: cardPos.top,
@@ -419,11 +396,81 @@ export function AddVariantSheet({
             </div>
           </div>
 
-          <div
-            ref={contentRef}
-            className={`flex-1 ${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
-          >
-            <main className="pb-1">
+          <div className="flex-1 flex flex-col relative">
+            <AnimatePresence initial={false} mode="wait">
+              <motion.div
+                key={productIndex}
+                initial={{ x: direction > 0 ? "100%" : "-100%", opacity: 0, scale: 0.95 }}
+                animate={{ x: 0, opacity: 1, scale: 1 }}
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.3 },
+                  scale: { duration: 0.3 }
+                }}
+                className="absolute inset-0 flex flex-col"
+              >
+                <div
+                  ref={contentRef}
+                  className={`flex-1 ${isExpanded ? "overflow-y-auto" : "overflow-hidden"}`}
+                  onTouchStart={(e) => {
+                    const content = contentRef.current
+                    if (!content) return
+                    
+                    const touch = e.touches[0]
+                    const startX = touch.clientX
+                    const startY = touch.clientY
+                    const startTime = Date.now()
+                    const isAtTop = content.scrollTop === 0
+                    let swipeDirection: 'horizontal' | 'vertical' | null = null
+                    let isDraggingDown = false
+
+                    const handleTouchMove = (e: TouchEvent) => {
+                      const touch = e.touches[0]
+                      const deltaX = touch.clientX - startX
+                      const deltaY = touch.clientY - startY
+                      
+                      if (!swipeDirection && (Math.abs(deltaX) > 15 || Math.abs(deltaY) > 15)) {
+                        swipeDirection = Math.abs(deltaX) > Math.abs(deltaY) * 1.5 ? 'horizontal' : 'vertical'
+                      }
+
+                      if (swipeDirection === 'vertical' && isAtTop) {
+                        isDraggingDown = true
+                        if (deltaY > 80) {
+                          if (isExpanded) {
+                            setIsExpanded(false)
+                          } else {
+                            smoothClose()
+                          }
+                          isDraggingDown = false
+                        } else if (deltaY < -60 && !isExpanded) {
+                          setIsExpanded(true)
+                          isDraggingDown = false
+                        }
+                      }
+                    }
+
+                    const handleTouchEnd = (e: TouchEvent) => {
+                      const touch = e.changedTouches[0]
+                      const deltaX = touch.clientX - startX
+                      const deltaTime = Date.now() - startTime
+                      
+                      if (hasMultipleProducts && swipeDirection === 'horizontal' && Math.abs(deltaX) > 80 && deltaTime < 300) {
+                        if (deltaX < 0) {
+                          paginate(1) 
+                        } else {
+                          paginate(-1) 
+                        }
+                      }
+                      
+                      document.removeEventListener('touchmove', handleTouchMove)
+                      document.removeEventListener('touchend', handleTouchEnd)
+                    }
+
+                    document.addEventListener('touchmove', handleTouchMove, { passive: true })
+                    document.addEventListener('touchend', handleTouchEnd)
+                  }}
+                >
+                  <main className="pb-1">
               <Toaster
                 position="top-right"
                 reverseOrder={false}
@@ -435,13 +482,13 @@ export function AddVariantSheet({
                   <div className="flex items-center justify-between gap-3">
                     <Link
                       href={
-                        (product as any).seller?.handle
-                          ? `/${locale}/sellerpage?seller_handle=${(product as any).seller.handle}`
-                          : (product.store?.url || "#")
+                        (currentProduct as any).seller?.handle
+                          ? `/${locale}/sellerpage?seller_handle=${(currentProduct as any).seller.handle}`
+                          : (currentProduct.store?.url || "#")
                       }
                       className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
                     >
-                      Visit the {(product as any).seller?.name || product.store?.name || "Store"}
+                      Visit the {(currentProduct as any).seller?.name || currentProduct.store?.name || "Store"}
                     </Link>
                     {totalReviews > 0 && (
                       <div className="flex items-center gap-3">
@@ -457,19 +504,19 @@ export function AddVariantSheet({
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
                     <div className="flex-1">
                       <h1 className="text-sm font-medium leading-[21px] text-[#666666] flex items-end">
-                        {product.title}
+                        {currentProduct.title}
                       </h1>
                       <div className="flex flex-wrap gap-2 mt-2">
                         <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
                           #Best Seller
                         </span>
                         <span className="text-md font-medium mt-1 text-contentBlue">
-                          in {product?.collection?.title}
+                          in {currentProduct?.collection?.title}
                         </span>
                       </div>
                       <div className="mt-2 text-[#222222] text-sm">
                         <span className="font-semibold">
-                          {product.soldLastMonth || "0"}
+                          {currentProduct.soldLastMonth || "0"}
                         </span>{" "}
                         Sold Out in past month
                       </div>
@@ -481,43 +528,24 @@ export function AddVariantSheet({
               <section className="max-w-4xl mx-auto pb-6 space-y-6 px-4">
                 <div className="w-screen relative left-1/2 right-1/2 -translate-x-1/2 bg-[#D9D9D9] lg:bg-white flex justify-center py-4">
                   <div className="relative w-[220px] sm:w-[250px] md:w-[284px] lg:w-[296px] overflow-hidden rounded-[16px]">
-
                     <div className="h-[232px] sm:h-[264px] md:h-[296px] lg:h-[320px]">
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        drag="x"
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.1}
-                        onDragEnd={(e, info) => {
-                          if (info.offset.x < -50 && index < images.length - 1) {
-                            setIndex(index + 1)
-                          } else if (info.offset.x > 50 && index > 0) {
-                            setIndex(index - 1)
-                          }
-                        }}
-                        className="w-full h-full"
-                      >
+                      <div className="w-full h-full">
                         <Image
                           src={images[index] || "/images/not-available/not-available.png"}
-                          alt={`${product.title} image ${index + 1}`}
+                          alt={`${currentProduct.title} image ${index + 1}`}
                           width={296}
                           height={320}
                           className="object-cover w-full h-full rounded-[16px]"
                           draggable={false}
                         />
-                      </motion.div>
+                      </div>
                     </div>
-
                   </div>
                 </div>
 
                 {images.length > 1 && (
                   <div className="mt-4 flex items-center justify-center gap-2">
-                    {images.map((_, i) => (
+                    {images.map((_: any, i: number) => (
                       <button
                         key={i}
                         onClick={() => setIndex(i)}
@@ -630,7 +658,7 @@ export function AddVariantSheet({
                         <tr>
                           <td className="py-2 w-40">Material</td>
                           <td className="py-2 font-normal text-[16px]">
-                            {product?.material || "Not given"}
+                            {currentProduct?.material || "Not given"}
                           </td>
                         </tr>
                         <tr>
@@ -785,8 +813,11 @@ export function AddVariantSheet({
                     Buy now
                   </motion.button>
                 </div>
-              </div>
-            </main>
+                </div>
+              </main>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </motion.div>
       </motion.div>

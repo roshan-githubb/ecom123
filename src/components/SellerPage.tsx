@@ -83,11 +83,12 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
 );
 
 
-const ProductCard = ({ product, ratingSummary }: { product: MedusaProduct, ratingSummary?: RatingSummary }) => {
+const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { product: MedusaProduct, ratingSummary?: RatingSummary, allProducts: MedusaProduct[], productIndex: number }) => {
     const addToCart = useCartStore((state) => state.add);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
+    const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex);
 
     const title = product.title;
     const image = product.thumbnail || product.images?.[0]?.url || '/images/not-available/not-available.png';
@@ -123,6 +124,7 @@ const ProductCard = ({ product, ratingSummary }: { product: MedusaProduct, ratin
             width: rect.width,
             height: rect.height,
         });
+        setCurrentModalProductIndex(productIndex);
         setShowModal(true);
     };
 
@@ -244,10 +246,13 @@ const ProductCard = ({ product, ratingSummary }: { product: MedusaProduct, ratin
 
             {showModal && (
                 <AddVariantSheet
-                    product={product as any}
+                    product={allProducts[currentModalProductIndex] as any}
                     ratingSummary={ratingSummary}
                     cardPos={cardPos}
                     onClose={() => setShowModal(false)}
+                    products={allProducts}
+                    currentProductIndex={currentModalProductIndex}
+                    onProductChange={(newIndex) => setCurrentModalProductIndex(newIndex)}
                 />
             )}
         </div>
@@ -279,11 +284,13 @@ export function SellerPage({ products = [], seller, ratingsMap = {} }: SellerPag
 
             <div className="p-3">
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-                    {products.map(product => (
+                    {products.map((product, index) => (
                         <ProductCard
                             key={product.id}
                             product={product}
                             ratingSummary={ratingsMap[product.id]}
+                            allProducts={products}
+                            productIndex={index}
                         />
                     ))}
                 </div>

@@ -532,18 +532,23 @@ exports.deletePromotionCode = deletePromotionCode;
 // TODO: Pass a POJO instead of a form entity here
 function setAddresses(currentState, formData) {
     return __awaiter(this, void 0, void 0, function () {
-        var cartId, data, e_1;
+        var cartId, currentCart, data, emailFromForm, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 3, , 4]);
+                    _a.trys.push([0, 5, , 6]);
                     if (!formData) {
                         throw new Error("No form data found when setting addresses");
                     }
-                    cartId = cookies_1.getCartId();
+                    return [4 /*yield*/, cookies_1.getCartId()];
+                case 1:
+                    cartId = _a.sent();
                     if (!cartId) {
                         throw new Error("No existing cart found when setting addresses");
                     }
+                    return [4 /*yield*/, retrieveCart(cartId)];
+                case 2:
+                    currentCart = _a.sent();
                     data = {
                         shipping_address: {
                             first_name: formData.get("shipping_address.first_name"),
@@ -556,9 +561,16 @@ function setAddresses(currentState, formData) {
                             country_code: formData.get("shipping_address.country_code"),
                             province: formData.get("shipping_address.province"),
                             phone: formData.get("shipping_address.phone")
-                        },
-                        email: formData.get("email")
+                        }
                     };
+                    emailFromForm = formData.get("email");
+                    if (!(currentCart === null || currentCart === void 0 ? void 0 : currentCart.email) && emailFromForm) {
+                        data.email = emailFromForm;
+                        console.log("Setting email on cart:", emailFromForm);
+                    }
+                    else {
+                        console.log("Skipping email update. Current cart email:", currentCart === null || currentCart === void 0 ? void 0 : currentCart.email, "Form email:", emailFromForm);
+                    }
                     // const sameAsBilling = formData.get("same_as_billing")
                     // if (sameAsBilling === "on") data.billing_address = data.shipping_address
                     data.billing_address = data.shipping_address;
@@ -576,7 +588,7 @@ function setAddresses(currentState, formData) {
                     //     phone: formData.get("billing_address.phone"),
                     //   }
                     return [4 /*yield*/, updateCart(data)];
-                case 1:
+                case 3:
                     // if (sameAsBilling !== "on")
                     //   data.billing_address = {
                     //     first_name: formData.get("billing_address.first_name"),
@@ -592,13 +604,13 @@ function setAddresses(currentState, formData) {
                     //   }
                     _a.sent();
                     return [4 /*yield*/, cache_1.revalidatePath("/cart")];
-                case 2:
+                case 4:
                     _a.sent();
-                    return [3 /*break*/, 4];
-                case 3:
+                    return [3 /*break*/, 6];
+                case 5:
                     e_1 = _a.sent();
                     return [2 /*return*/, e_1.message];
-                case 4: return [2 /*return*/];
+                case 6: return [2 /*return*/];
             }
         });
     });

@@ -26,70 +26,73 @@ exports.useAddressStore = zustand_1.create(function (set, get) { return ({
     loadFromStorage: function () {
         if (typeof window === "undefined")
             return;
-        var storedAddresses = JSON.parse(localStorage.getItem("addresses") || "[]") || [];
-        var storedIndex = JSON.parse(localStorage.getItem("selectedAddressIndex") || "null");
-        set({
-            addresses: storedAddresses,
-            selectedAddressIndex: storedIndex
-        });
+        try {
+            var addresses = JSON.parse(localStorage.getItem("addresses") || "[]");
+            var selectedIndex = JSON.parse(localStorage.getItem("selectedAddressIndex") || "null");
+            set({
+                addresses: addresses,
+                selectedAddressIndex: selectedIndex !== null && selectedIndex !== void 0 ? selectedIndex : undefined
+            });
+        }
+        catch (_a) {
+            localStorage.removeItem("addresses");
+            localStorage.removeItem("selectedAddressIndex");
+        }
     },
     addAddress: function (addr) {
         return set(function (state) {
-            var newAddresses = addr.isDefault
+            var addresses = addr.isDefault
                 ? state.addresses.map(function (a) { return (__assign(__assign({}, a), { isDefault: false })); })
-                : state.addresses;
-            var updated = __spreadArrays(newAddresses, [addr]);
-            if (typeof window !== "undefined") {
-                localStorage.setItem("addresses", JSON.stringify(updated));
-                if (addr.isDefault)
-                    localStorage.setItem("selectedAddressIndex", JSON.stringify(updated.length - 1));
+                : __spreadArrays(state.addresses);
+            var updated = __spreadArrays(addresses, [addr]);
+            var selectedIndex = addr.isDefault ? updated.length - 1 : state.selectedAddressIndex;
+            localStorage.setItem("addresses", JSON.stringify(updated));
+            if (selectedIndex !== undefined) {
+                localStorage.setItem("selectedAddressIndex", JSON.stringify(selectedIndex));
             }
-            return { addresses: updated };
+            return { addresses: updated, selectedAddressIndex: selectedIndex };
         });
     },
     updateAddress: function (index, addr) {
         return set(function (state) {
-            var updated = __spreadArrays(state.addresses);
-            if (addr.isDefault)
-                updated.forEach(function (a, i) { return i !== index && (a.isDefault = false); });
-            updated[index] = addr;
-            if (typeof window !== "undefined") {
-                localStorage.setItem("addresses", JSON.stringify(updated));
-                if (addr.isDefault)
-                    localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
+            var updated = state.addresses.map(function (a, i) {
+                return i === index ? addr : addr.isDefault ? __assign(__assign({}, a), { isDefault: false }) : a;
+            });
+            var selectedIndex = addr.isDefault ? index : state.selectedAddressIndex;
+            localStorage.setItem("addresses", JSON.stringify(updated));
+            if (selectedIndex !== undefined) {
+                localStorage.setItem("selectedAddressIndex", JSON.stringify(selectedIndex));
             }
-            return { addresses: updated };
+            return { addresses: updated, selectedAddressIndex: selectedIndex };
         });
     },
     deleteAddress: function (index) {
         return set(function (state) {
             var updated = state.addresses.filter(function (_, i) { return i !== index; });
-            if (typeof window !== "undefined") {
-                localStorage.setItem("addresses", JSON.stringify(updated));
-                // If the deleted address was selected, reset selection
-                var selectedIndex = get().selectedAddressIndex;
-                if (selectedIndex === index) {
-                    localStorage.removeItem("selectedAddressIndex");
-                }
-            }
-            return { addresses: updated };
+            var selectedIndex = state.selectedAddressIndex;
+            if (selectedIndex === index)
+                selectedIndex = undefined;
+            else if (selectedIndex && selectedIndex > index)
+                selectedIndex--;
+            localStorage.setItem("addresses", JSON.stringify(updated));
+            if (selectedIndex === undefined)
+                localStorage.removeItem("selectedAddressIndex");
+            else
+                localStorage.setItem("selectedAddressIndex", JSON.stringify(selectedIndex));
+            return { addresses: updated, selectedAddressIndex: selectedIndex };
         });
     },
     setDefault: function (index) {
         return set(function (state) {
             var updated = state.addresses.map(function (a, i) { return (__assign(__assign({}, a), { isDefault: i === index })); });
-            if (typeof window !== "undefined") {
-                localStorage.setItem("addresses", JSON.stringify(updated));
-                localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
-            }
-            return { addresses: updated };
+            localStorage.setItem("addresses", JSON.stringify(updated));
+            localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
+            return { addresses: updated, selectedAddressIndex: index };
         });
     },
     selectAddress: function (index) {
         return set(function () {
-            if (typeof window !== "undefined") {
-                localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
-            }
+            localStorage.setItem("selectedAddressIndex", JSON.stringify(index));
             return { selectedAddressIndex: index };
         });
     }
