@@ -3,6 +3,7 @@ import { retrieveCustomer } from "@/lib/data/customer"
 import { checkRegion } from "@/lib/helpers/check-region"
 import { Session } from "@talkjs/react"
 import { redirect } from "next/navigation"
+import { Toaster } from "@/components/ui/toaster"
 
 export default async function RootLayout({
   children,
@@ -30,6 +31,7 @@ export default async function RootLayout({
         {children}
         <Footer />
         <StickyCartBar />
+        <Toaster />
       </>
     )
 
@@ -41,6 +43,7 @@ export default async function RootLayout({
         {children}
         <Footer />
         <StickyCartBar />
+        <Toaster />
       </Session>
     </>
   )
