@@ -12,7 +12,6 @@ import { StarRating } from "@/components/atoms"
 import { Review } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 // import SellerProducts from "../SellerProducts/SellerProducts"
-// import TopProducts from "@/components/sections/TopProducts/TopProducts"
 
 interface ProductOptionValue {
   id: string
