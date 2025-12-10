@@ -3,21 +3,130 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useCartStore } from "@/store/useCartStore"
-import { Info, ChevronRight } from "lucide-react"
+import { Info, ChevronRight, Loader2 } from "lucide-react"
 import Image from "next/image"
+import { useToast } from "@/hooks/use-toast"
 
 export default function PaymentPage() {
-  const items = useCartStore((state) => state.items)
-  const [selectedSavedMethod, setSelectedSavedMethod] = useState(false)
+  const {
+    items,
+    subtotal,
+    taxTotal,
+    deliveryFee,
+    serviceFee,
+    totalPayable,
+    currency,
+  } = useCartStore()
+  const [isProcessing, setIsProcessing] = useState(false)
   const router = useRouter()
+  const { toast } = useToast()
 
-  const subtotal = items.reduce(
+  // Use the actual values from cart store, with fallback calculation
+  const calculatedSubtotal = subtotal || items.reduce(
     (acc, i) => acc + i.price * (i.quantity ?? 1),
     0
   )
-  const deliveryCharge = 100
-  const serviceFee = 50
-  const total = subtotal + deliveryCharge + serviceFee
+  const total = totalPayable || (calculatedSubtotal + (deliveryFee || 0) + (serviceFee || 0) + (taxTotal || 0))
+
+  const handleEsewaPayment = async () => {
+    if (isProcessing) return
+    
+    // Validate cart has items
+    if (items.length === 0) {
+      toast({
+        title: "Cart Empty",
+        description: "Your cart is empty. Please add items before proceeding to payment.",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    // Validate total amount
+    if (total <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Invalid payment amount. Please check your cart.",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    setIsProcessing(true)
+    try {
+      // Generate unique transaction ID
+      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      
+      toast({
+        title: "Processing Payment",
+        description: "Initiating eSewa payment...",
+      })
+
+      // Call the initiate payment API
+      const response = await fetch("/api/initiate-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          method: "esewa",
+          amount: total.toString(),
+          productName: `Order from Saransa Marketplace (${items.length} items)`,
+          transactionId: transactionId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Payment initiation failed: ${response.statusText}`)
+      }
+
+      const paymentData = await response.json()
+      
+      toast({
+        title: "Redirecting to eSewa",
+        description: "Please complete your payment on eSewa...",
+      })
+
+      // Create form and submit to eSewa
+      const form = document.createElement("form")
+      form.method = "POST"
+      form.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"
+
+      const esewaPayload = {
+        amount: paymentData.amount,
+        tax_amount: paymentData.esewaConfig.tax_amount,
+        total_amount: paymentData.esewaConfig.total_amount,
+        transaction_uuid: paymentData.esewaConfig.transaction_uuid,
+        product_code: paymentData.esewaConfig.product_code,
+        product_service_charge: paymentData.esewaConfig.product_service_charge,
+        product_delivery_charge: paymentData.esewaConfig.product_delivery_charge,
+        success_url: paymentData.esewaConfig.success_url,
+        failure_url: paymentData.esewaConfig.failure_url,
+        signed_field_names: paymentData.esewaConfig.signed_field_names,
+        signature: paymentData.esewaConfig.signature,
+      }
+
+      Object.entries(esewaPayload).forEach(([key, value]) => {
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = key
+        input.value = String(value)
+        form.appendChild(input)
+      })
+
+      document.body.appendChild(form)
+      form.submit()
+      document.body.removeChild(form)
+    } catch (error) {
+      console.error("eSewa payment error:", error)
+      toast({
+        title: "Payment Failed",
+        description: "Failed to initiate eSewa payment. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#eef1f3] font-sans text-[#333] pb-20 max-w-md mx-auto">
@@ -66,8 +175,10 @@ export default function PaymentPage() {
             My Saved Payment Methods
           </h2>
           <div
-            className="bg-white p-4 flex items-center justify-between shadow-sm active:scale-95 shadow-sm hover:shadow-md transition-all cursor-pointer"
-            onClick={() => setSelectedSavedMethod(!selectedSavedMethod)}
+            className={`bg-white p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all cursor-pointer ${
+              isProcessing ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'
+            }`}
+            onClick={handleEsewaPayment}
           >
             <div className="flex items-center gap-3">
               <div>
@@ -78,13 +189,18 @@ export default function PaymentPage() {
                   height={20}
                 />
               </div>
-              <p className="text-[14px] text-gray-600">Test User</p>
+              <div>
+                <p className="text-[14px] font-medium text-gray-900">
+                  {isProcessing ? 'Processing...' : 'Pay with eSewa'}
+                </p>
+                <p className="text-[11px] text-gray-400">Digital Wallet</p>
+              </div>
             </div>
             <div>
-              {selectedSavedMethod ? (
-                <div className="w-5 h-5 rounded-full border-[5px] border-blue-500 bg-white"></div>
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
               ) : (
-                <div className="w-5 h-5 rounded-full border border-gray-300 bg-white"></div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
               )}
             </div>
           </div>
@@ -96,8 +212,10 @@ export default function PaymentPage() {
           </h2>
           <div className="space-y-2">
             <div
-              className="bg-white p-2 flex items-center justify-between shadow-sm hover:bg-gray-100 active:bg-gray-100 active:scale-95 shadow-sm hover:shadow-md transition-all cursor-pointer"
-              onClick={() => router.push("/np/imepaynow")}
+              className={`bg-white p-2 flex items-center justify-between shadow-sm transition-all cursor-pointer ${
+                isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100 active:bg-gray-100 active:scale-95 hover:shadow-md'
+              }`}
+              onClick={() => !isProcessing && router.push("/np/imepaynow")}
             >
               <div className="flex items-center gap-3">
                 <div>
@@ -118,7 +236,9 @@ export default function PaymentPage() {
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </div>
 
-            <div className="bg-white p-2 flex items-center justify-between shadow-sm cursor-pointer">
+            <div className={`bg-white p-2 flex items-center justify-between shadow-sm cursor-pointer ${
+              isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+            }`}>
               <div className="flex items-center gap-3">
                 <div>
                   <Image
@@ -161,14 +281,30 @@ export default function PaymentPage() {
         <div className="flex justify-between items-center mb-1">
           <span className="text-[14px] text-gray-500">Subtotal</span>
           <span className="text-[14px] font-medium text-gray-900">
-            Rs. {subtotal}
+            {currency} {calculatedSubtotal.toLocaleString()}
           </span>
         </div>
-        <div className="flex justify-between items-center">
+        {(deliveryFee || 0) > 0 && (
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[14px] text-gray-500">Delivery</span>
+            <span className="text-[14px] font-medium text-gray-900">
+              {currency} {(deliveryFee || 0).toLocaleString()}
+            </span>
+          </div>
+        )}
+        {(taxTotal || 0) > 0 && (
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[14px] text-gray-500">Tax</span>
+            <span className="text-[14px] font-medium text-gray-900">
+              {currency} {(taxTotal || 0).toLocaleString()}
+            </span>
+          </div>
+        )}
+        <div className="flex justify-between items-center pt-2 border-t border-gray-100">
           <span className="text-[16px] font-medium text-gray-900">
             Total Amount
           </span>
-          <span className="text-[16px] font-bold text-myBlue">Rs. {total}</span>
+          <span className="text-[16px] font-bold text-myBlue">{currency} {total.toLocaleString()}</span>
         </div>
       </div>
     </div>
