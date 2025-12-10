@@ -1,172 +1,144 @@
-"use client"
-import {
-  FieldError,
-  FieldValues,
-  FormProvider,
-  useForm,
-  useFormContext,
-} from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { addressSchema, AddressFormData } from "./schema"
-import { LabeledInput } from "@/components/cells"
-import { Button } from "@/components/atoms"
-import { addCustomerAddress, updateCustomerAddress } from "@/lib/data/customer"
-import { HttpTypes } from "@medusajs/types"
-import CountrySelect from "@/components/cells/CountrySelect/CountrySelect"
-import { useState } from "react"
+"use client";
 
-interface Props {
-  defaultValues?: AddressFormData
+import React, { useState, FormEvent } from "react";
+import { useAddressStore, Address } from "@/store/addressStore"; 
+import { setAddresses } from "@/lib/data/cart"; 
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react"; 
+import { AddressFormData } from "./schema"
 
-  regions: HttpTypes.StoreRegion[]
-  handleClose?: () => void
+interface AddressFormProps {
+  defaultValues?: AddressFormData | null;
+  initialData?: Address;
+  index?: number;
+  onClose: () => void;
+
 }
 
-export const emptyDefaultAddressValues = {
-  addressName: "",
-  firstName: "",
-  lastName: "",
-  address: "",
-  city: "",
-  countryCode: "",
-  postalCode: "",
-  company: "",
-  province: "",
-  phone: "",
-  metadata: {},
-}
+export const AddressForm: React.FC<AddressFormProps> = ({ initialData, index, onClose }) => {
+  const addAddress = useAddressStore((state) => state.addAddress);
+  const updateAddress = useAddressStore((state) => state.updateAddress);
+  
+  const [name, setName] = useState(initialData?.name || "");
+  const [email, setEmail] = useState(initialData?.email || ""); 
+  const [phone, setPhone] = useState(initialData?.phone || "");
+  const [province, setProvince] = useState(initialData?.province || "");
+  const [district, setDistrict] = useState(initialData?.district || "");
+  const [line1, setLine1] = useState(initialData?.line1 || "");
+  const [line2, setLine2] = useState(initialData?.line2 || "");
+  const [postalCode, setPostalCode] = useState(initialData?.postalCode || ""); 
+  const [countryCode, setCountryCode] = useState(initialData?.countryCode || "np"); 
+  const [landmark, setLandmark] = useState(initialData?.landmark || "");
+  const [label, setLabel] = useState(initialData?.label || "Home");
+  const [isDefault, setIsDefault] = useState(initialData?.isDefault || false);
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export const AddressForm: React.FC<Props> = ({ defaultValues, ...props }) => {
-  const methods = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema),
-    defaultValues: defaultValues || emptyDefaultAddressValues,
-  })
+  const router = useRouter();
 
-  return (
-    <FormProvider {...methods}>
-      <Form {...props} />
-    </FormProvider>
-  )
-}
 
-const Form: React.FC<Props> = ({ regions, handleClose }) => {
-  const [error, setError] = useState<string>()
-  const {
-    handleSubmit,
-    register,
-    formState: { errors },
-    watch,
-  } = useFormContext()
+  const actionHandler = async (formData: FormData) => {
+    setError(null);
+    setLoading(true);
 
-  const region = {
-    countries: regions.flatMap((region) => region.countries),
-  }
-
-  const submit = async (data: FieldValues) => {
-    const formData = new FormData()
-    formData.append("addressId", data.addressId || "")
-    formData.append("address_name", data.addressName)
-    formData.append("first_name", data.firstName)
-    formData.append("last_name", data.lastName)
-    formData.append("address_1", data.address)
-    formData.append("address_2", "")
-    formData.append("province", data.province)
-    formData.append("city", data.city)
-    formData.append("country_code", data.countryCode)
-    formData.append("postal_code", data.postalCode)
-    formData.append("company", data.company)
-    formData.append("phone", data.phone)
-
-    const res = data.addressId
-      ? await updateCustomerAddress(formData)
-      : await addCustomerAddress(formData)
-
-    if (!res.success) {
-      setError(res.error)
-      return
+    if (!name || !email || !phone || !province || !district || !line1 || !postalCode || !countryCode) {
+        setError("Please fill in all required fields.");
+        setLoading(false);
+        return;
     }
 
-    setError("")
-    handleClose && handleClose()
-  }
+    const addr: Address = { name, email, phone, province, district, line1, line2, landmark, label, isDefault, postalCode, countryCode };
+    
+    if (typeof index === "number") {
+      updateAddress(index, addr);
+    } else {
+      addAddress(addr);
+    }
 
-  return (
-    <form onSubmit={handleSubmit(submit)}>
-      <div className="px-4 space-y-4">
-        <div className="max-w-full grid grid-cols-2 items-top gap-4 mb-4">
-          <LabeledInput
-            label="Address name"
-            placeholder="Type address name"
-            className="col-span-2"
-            error={errors.firstName as FieldError}
-            {...register("addressName")}
-          />
-          <LabeledInput
-            label="First name"
-            placeholder="Type first name"
-            error={errors.firstName as FieldError}
-            {...register("firstName")}
-          />
-          <LabeledInput
-            label="Last name"
-            placeholder="Type last name"
-            error={errors.firstName as FieldError}
-            {...register("lastName")}
-          />
-          <LabeledInput
-            label="Company (optional)"
-            placeholder="Type company"
-            error={errors.company as FieldError}
-            {...register("company")}
-          />
-          <LabeledInput
-            label="Address"
-            placeholder="Type address"
-            error={errors.address as FieldError}
-            {...register("address")}
-          />
-          <LabeledInput
-            label="City"
-            placeholder="Type city"
-            error={errors.city as FieldError}
-            {...register("city")}
-          />
-          <LabeledInput
-            label="Postal code"
-            placeholder="Type postal code"
-            error={errors.postalCode as FieldError}
-            {...register("postalCode")}
-          />
-          <LabeledInput
-            label="State / Province"
-            placeholder="Type state / province"
-            error={errors.province as FieldError}
-            {...register("province")}
-          />
-          <div>
-            <CountrySelect
-              region={region as HttpTypes.StoreRegion}
-              {...register("countryCode")}
-              value={watch("countryCode")}
-              className="h-12"
-            />
-            {errors.countryCode && (
-              <p className="label-sm text-negative">
-                {(errors.countryCode as FieldError).message}
-              </p>
-            )}
-          </div>
+    const nameParts = name.trim().split(/\s+/);
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '.'; 
 
-          <LabeledInput
-            label="Phone"
-            placeholder="Type phone number"
-            error={errors.phone as FieldError}
-            {...register("phone")}
-          />
-        </div>
-        {error && <p className="label-md text-negative">{error}</p>}
-        <Button className="w-full ">Save address</Button>
-      </div>
-    </form>
-  )
-}
+
+    formData.set("email", email);
+    formData.set("shipping_address.first_name", first_name);
+    formData.set("shipping_address.last_name", last_name);
+    formData.set("shipping_address.address_1", line1);
+    formData.set("shipping_address.address_2", line2);
+    formData.set("shipping_address.city", district);      
+    formData.set("shipping_address.province", province);   
+    formData.set("shipping_address.postal_code", postalCode);
+    formData.set("shipping_address.country_code", countryCode);
+    formData.set("shipping_address.phone", phone);
+
+
+    const result = await setAddresses(null, formData);
+
+    if (result) {
+      setError(result as string); 
+    } else {
+   
+      onClose();
+      router.push("/np/check");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form 
+        className="bg-white p-4 rounded-md space-y-3" 
+        onSubmit={(e: FormEvent) => { 
+            e.preventDefault(); 
+            actionHandler(new FormData()); 
+        }}
+    >
+   
+      <input type="email" placeholder="Email Address (Required)" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-2 w-full rounded" required />
+      <input type="text" placeholder="Full Name (First & Last)" value={name} onChange={(e) => setName(e.target.value)} className="border p-2 w-full rounded" required />
+      <input type="text" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className="border p-2 w-full rounded" required />
+      
+    
+      <input type="text" placeholder="Province" value={province} onChange={(e) => setProvince(e.target.value)} className="border p-2 w-full rounded" required />
+      <input type="text" placeholder="District / City" value={district} onChange={(e) => setDistrict(e.target.value)} className="border p-2 w-full rounded" required />
+      <input type="text" placeholder="Address Line 1" value={line1} onChange={(e) => setLine1(e.target.value)} className="border p-2 w-full rounded" required />
+      <input type="text" placeholder="Address Line 2 (Optional)" value={line2} onChange={(e) => setLine2(e.target.value)} className="border p-2 w-full rounded" />
+      <input type="text" placeholder="Postal Code (Required)" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="border p-2 w-full rounded" required />
+      
+      <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="border p-2 w-full rounded" required>
+        <option value="np">Nepal</option>
+        <option value="in">India</option>
+      </select>
+      
+    
+      <input type="text" placeholder="Landmark (Optional)" value={landmark} onChange={(e) => setLandmark(e.target.value)} className="border p-2 w-full rounded" />
+      <select value={label} onChange={(e) => setLabel(e.target.value)} className="border p-2 w-full rounded">
+        <option value="Home">Home</option>
+        <option value="Office">Office</option>
+      </select>
+      <label className="flex items-center gap-2">
+        <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+        Set as Default Address
+      </label>
+      
+      
+      {error && <p className="text-red-500 text-sm mt-2 font-medium border border-red-200 p-2 rounded-md">{error}</p>}
+      
+      <div className="flex gap-2">
+        <button 
+            type="submit" 
+            className="bg-[#00bfa5] text-white py-2 flex-1 rounded font-bold flex items-center justify-center disabled:bg-gray-400"
+            disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+            </span>
+          ) : (
+            "Save Address"
+          )}
+        </button>
+      </div>
+    </form>
+  );
+};

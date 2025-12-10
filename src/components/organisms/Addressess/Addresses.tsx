@@ -1,7 +1,7 @@
 "use client"
 import { Button, Card } from "@/components/atoms"
 import { AddressForm, Modal } from "@/components/molecules"
-import { emptyDefaultAddressValues } from "@/components/molecules/AddressForm/AddressForm"
+// import { emptyDefaultAddressValues } from "@/components/molecules/AddressForm/AddressForm"
 import { AddressFormData } from "@/components/molecules/AddressForm/schema"
 import { deleteCustomerAddress } from "@/lib/data/customer"
 import { cn } from "@/lib/utils"
@@ -51,7 +51,7 @@ export const Addresses = ({
   }
 
   const handleAdd = () => {
-    setDefaultValues(emptyDefaultAddressValues)
+    // setDefaultValues(emptyDefaultAddressValues)
     setDeleteAddress(null)
     setShowForm(true)
   }
@@ -142,9 +142,9 @@ export const Addresses = ({
           onClose={() => setShowForm(false)}
         >
           <AddressForm
-            regions={regions}
-            handleClose={() => setShowForm(false)}
-            defaultValues={defaultValues || emptyDefaultAddressValues}
+            // regions={regions}
+            onClose={() => setShowForm(false)}
+            defaultValues={defaultValues}
           />
         </Modal>
       )}
