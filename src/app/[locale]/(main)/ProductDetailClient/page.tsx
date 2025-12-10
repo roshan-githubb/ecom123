@@ -47,6 +47,7 @@ interface Product {
   images?: { url: string }[]
   options?: ProductOption[]
   variants?: ProductVariant[]
+  description?: string
 }
 
 interface ColorOption {
@@ -522,6 +523,24 @@ export default function ProductDetailClient({
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+
+        <details className="mt-4">
+          <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+            <span>Product Description</span>
+            <Image src="/images/icons/arrow.png" alt="arrow" width={16} height={16} />
+          </summary>
+
+          <div className="mt-2">
+            <p className="text-[16px] font-normal text-[#222222] leading-relaxed">
+              {product?.description}
+            </p>
+          </div>
+        </details>
+
+        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
 
         <details className="mt-4">
           <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
