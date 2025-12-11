@@ -180,7 +180,7 @@ const UserDetailsSection: React.FC = () => {
           <Button
             variant="primary"
             className="px-4 py-2 w-auto min-w-[100px] text-sm"
-            onClick={() => router.push("/in/shippinginfo")}
+            onClick={() => router.push("/np/shippinginfo")}
           >
             Add Address
           </Button>
