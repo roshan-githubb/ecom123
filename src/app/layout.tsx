@@ -5,6 +5,7 @@ import { Toaster } from "@medusajs/ui"
 import Head from "next/head"
 import { retrieveCart } from "@/lib/data/cart"
 import { Providers } from "./providers"
+import Script from "next/script"
 
 // Existing Funnel_Display font (optional, still available)
 const funnelDisplay = Funnel_Display({
@@ -141,6 +142,10 @@ export default async function RootLayout({
       <body
         className={`${poppins.variable} antialiased bg-primary text-secondary relative`}
       >
+        <Script
+          src="/flutter-listeners.js"
+          strategy="beforeInteractive"
+        />
         <Providers cart={mappedCart}>{children}</Providers>
         <Toaster position="top-right" />
       </body>

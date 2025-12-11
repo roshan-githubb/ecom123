@@ -22,6 +22,7 @@ export const HomeProductCard = ({
     className,
     hasOfferSticker = false
 }: HomeProductCardProps) => {
+    // console.log("HomeProductCard product: ", api_product );
 
     const [showModal, setShowModal] = useState(false)
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
