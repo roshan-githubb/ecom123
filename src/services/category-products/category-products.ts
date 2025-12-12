@@ -1,15 +1,15 @@
 
 
-export async function getSellerItems(sellerId: string) {
+export async function getSimilarProducts(sellerId: string) {
   try {
-    console.log(`/api/seller-items/${sellerId}`)
-    const res = await fetch(`/api/seller-items/${sellerId}`);
+    console.log(`/api/category/${sellerId}`)
+    const res = await fetch(`/api/category/${sellerId}`);
     
 
     if (!res.ok) {
      
       console.error(
-        " Items Fetch Error:", res,
+        " Category Items Fetch Error:", res,
         res.status,
         res.statusText
       );
@@ -25,12 +25,12 @@ export async function getSellerItems(sellerId: string) {
     try {
       return await res.json();
     } catch (jsonErr) {
-      console.error(" Failed to parse JSON from /api/seller-items:", jsonErr);
-      throw new Error("Invalid JSON received from /api/seller-items");
+      console.error(" Failed to parse JSON from /api/category:", jsonErr);
+      throw new Error("Invalid JSON received from /api/category");
     }
 
   } catch (err: any) {
-    // console.error(" getSellerItems() Exception:", err.message || err);
+    // console.error(" getSimilarProducts() Exception:", err.message || err);
     throw err; 
   }
 }

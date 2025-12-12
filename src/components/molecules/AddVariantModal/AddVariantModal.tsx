@@ -12,6 +12,8 @@ import { StarRating } from "@/components/atoms"
 import { Review } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 // import SellerProducts from "../SellerProducts/SellerProducts"
+import { StoreIcon } from "lucide-react"
+import SimilarProducts from "../SimilarProducts/SimilarProduct"
 
 interface ProductOptionValue {
   id: string
@@ -38,12 +40,18 @@ interface ProductVariant {
     currency_code: string
   }
 }
+// interface Category {
+//   id: string;
+//   name: string;
+//   handle: string
+// }
 
-interface Product {
+export interface Product {
   id: string
   title: string
   description?: string
   store?: { name: string; url: string }
+  // categories?: Category[]
   collection?: { title: string }
   soldLastMonth?: number
   review_count?: number
@@ -67,6 +75,7 @@ interface AddVariantSheetProps {
     soldLastMonth?: number
     material?: string | null
   }
+  // categoryId?: string
   reviews?: Review[]
   ratingSummary?: { average_rating: number; total_reviews: number }
   cardPos: { top: number; left: number; width: number; height: number }
@@ -101,6 +110,9 @@ export function AddVariantSheet({
 
   const currentProduct = products.length > 0 ? products[productIndex] : product
   const hasMultipleProducts = products.length > 1
+  console.log('product and currentproduct ', product,
+    // currentProduct
+  )
 
   const smoothClose = useCallback(() => {
     animate(y, window.innerHeight, {
@@ -808,8 +820,41 @@ export function AddVariantSheet({
                           ))}
                         </div>
                       </details>
+
+                      <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+                      <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+                      <details className="mt-4">
+                        <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+                          {/* <span>Questions & Reviews</span> */}
+                          <Link
+                            href={
+                              (currentProduct as any).seller?.handle
+                                ? `/${locale}/sellerpage?seller_handle=${(currentProduct as any).seller.handle}`
+                                : (currentProduct.store?.url || "#")
+                            }
+                            className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
+                          >
+                            <span className="mr-4"><StoreIcon /></span> Explore all {(currentProduct as any).seller?.name || currentProduct.store?.name || "Store"} products
+                          </Link>
+                        </summary>
+                      </details>
+
+                      <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+                      <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+
+                      <details className="mt-4">
+                        <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
+                          {(product as any).categories?.length > 0 &&
+                            <SimilarProducts categoryId={(product as any).categories[0]?.id} productId={(product as any)?.id} />
+                          }
+                        </summary>
+                      </details>
                     </section>
+
+
                     {/* <SellerProducts sellerId={(product as any).seller?.id} /> */}
+
 
                     <div className={`w-full px-4 pt-6 ${hasCartItems ? "pb-24" : "pb-4"}`}>
                       <div className="flex gap-3">

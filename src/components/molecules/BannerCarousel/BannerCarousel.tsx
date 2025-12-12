@@ -114,7 +114,7 @@ export default function CarouselBanner({ bannerCarousel = [] }: CarouselBannerPr
                 src={bannerCarousel[current]?.image || "/images/not-available/not-available.png"}
                 alt="banner"
                 fill
-                className="object-cover pointer-events-none"
+                className="object-cover"
               />
             </Link>
           </div>

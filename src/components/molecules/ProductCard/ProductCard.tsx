@@ -29,6 +29,7 @@ export const ProductCard = ({
   const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
   const cardRef = useRef<HTMLDivElement>(null)
   const addToCart = useCartStore((state) => state.add)
+  console.log("product in product card ", api_product )
 
   if (!api_product || !api_product.variants?.[0]) return null
 
