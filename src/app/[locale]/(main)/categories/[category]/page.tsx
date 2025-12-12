@@ -3,7 +3,6 @@ import { getCategoryByHandle } from "@/lib/data/categories"
 import { Suspense } from "react"
 
 import type { Metadata } from "next"
-import { Breadcrumbs } from "@/components/atoms"
 import { AlgoliaProductsListing, ProductListing } from "@/components/sections"
 import { notFound } from "next/navigation"
 import isBot from "@/lib/helpers/isBot"

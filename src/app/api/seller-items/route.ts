@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { seller_id: string } }
+  
 ) {
-  console.log("seller items route ")
+  console.log("seller items route")
   try {
-    const sellerId = params?.seller_id;
+    const sellerId ="sel_01K20AWZ6EB0GC5J808V8A2HZM"
     console.log("Fetching items for seller ID:", sellerId);
 
     if (!sellerId) {
@@ -17,7 +16,7 @@ export async function GET(
     }
 
     const backendRes = await fetch(
-      `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products?sales_channel_id=${sellerId}&region_id=${process.env.NEXT_PUBLIC_REGION_ID}&fields=*variants.calculated_price,+variants.inventory_quantity,*seller,*variants,*seller.products,*seller.reviews,*seller.reviews.customer`,
+      `${process.env.BACKEND_URL}/store/products?sales_channel_id=${sellerId}&region_id=${process.env.NEXT_PUBLIC_REGION_ID}&fields=*variants.calculated_price,+variants.inventory_quantity,*seller,*variants,*seller.products,*seller.reviews,*seller.reviews.customer`,
       {
         method: "GET",
         headers: {

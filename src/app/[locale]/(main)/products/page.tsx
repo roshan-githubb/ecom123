@@ -6,25 +6,28 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 
 import { HttpTypes } from "@medusajs/types"
 import { SearchProductListing } from "@/components/sections/SearchProductListing/SearchProductListing"
+import { ProductCard } from "@/components/molecules/ProductCard/ProductCard"
+import { RatingSummary } from "@/types/reviews"
+import { fetchProductRatingSummary } from "@/lib/api/reviews"
 
-type ProductsPageProps = { 
+type ProductsPageProps = {
   params: {
     locale: string
   } | Promise<{ locale: string }>
-  searchParams: Record<string, string | string[] | undefined> 
-    | Promise<Record<string, string | string[] | undefined>>
+  searchParams: Record<string, string | string[] | undefined>
+  | Promise<Record<string, string | string[] | undefined>>
 }
 
 export const revalidate = 0
 
 export default async function ProductsPage(props: ProductsPageProps) {
-  
+
   const params = await props.params
   const searchParams = await props.searchParams
 
   const { locale } = params
 
-  
+
   const query = searchParams?.query || ""
   const order = searchParams?.order || "-created_at"
 
@@ -52,6 +55,13 @@ export default async function ProductsPage(props: ProductsPageProps) {
 
   const response = await listProducts({ queryParams })
 
+  const ratingsMap: Record<string, RatingSummary> = await Promise.all(
+    response.response.products.map(async (product: any) => {
+      const summary = await fetchProductRatingSummary(product.id)
+      return [product.id, summary] as const
+    })
+  ).then(Object.fromEntries)
+
 
   return (
     <main className="container pb-4 ">
@@ -60,13 +70,26 @@ export default async function ProductsPage(props: ProductsPageProps) {
       </h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+          {response.response.products.map((product: HttpTypes.StoreProduct) => (
+            <ProductCard
+              key={product.id}
+              api_product={product}
+              locale={locale}
+              ratingSummary={ratingsMap[product.id]}
+            />
+          ))}
+        </div>
+      </Suspense>
+
+      {/* <Suspense fallback={<ProductListingSkeleton />}>
         <SearchProductListing
           products={response.response.products}
           total={response.response.count}
           locale={locale}
           searchMode={searchMode}
         />
-      </Suspense>
+      </Suspense> */}
     </main>
   )
 }

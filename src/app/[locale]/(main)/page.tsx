@@ -31,9 +31,9 @@ interface CategoryItem {
 const brands = [
   { name: "Nike", image: "/images/brands/Nike.png" },
   { name: "Maybeline", image: "/images/brands/Maybeline.png" },
-  { name: "Dell", image: "/images/brands/Dell.png" },
-  { name: "Adidas", image: "/images/brands/Adidas.png" },
-  { name: "Gucci", image: "/images/brands/Gucci.png" },
+  { name: "Dell", image: "/images/brands/dell.png" },
+  { name: "Adidas", image: "/images/brands/adidas.png" },
+  { name: "Gucci", image: "/images/brands/gucci.png" },
   { name: "H&M", image: "/images/brands/H&M.png" },
   { name: "Prada", image: "/images/brands/Prada.png" },
   { name: "Philips", image: "/images/brands/Philips.png" },
@@ -74,15 +74,6 @@ export default async function HomePage({ params }: { params: Params }) {
   } = await listProducts({
     countryCode: locale,
     queryParams: { limit: 8, order: "created_at",
-      fields: [
-      "*variants.calculated_price",
-      "+variants.inventory_quantity",
-      "*seller",
-      "*variants",
-      "*seller.products",
-      "*seller.reviews",
-      "*seller.reviews.customer",
-    ].join(","),
     },
   })
 
@@ -93,7 +84,7 @@ export default async function HomePage({ params }: { params: Params }) {
     name: p.title,
   }))
 
-  // console.log("item list and origianl list ", itemList, jsonLdProducts)
+  console.log("item list and origianl list ",  jsonLdProducts)
   const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
 
   try {

@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
+import { AddVariantSheet, Product } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
 import { useCartStore } from "@/store/useCartStore"
@@ -70,7 +70,7 @@ export const HomeProductCard = ({
     return (
         <div
             className={cn(
-                "w-[180px] bg-[#F7F7FF] rounded-lg h-[100%] overflow-hidden shadow-sm",
+                "w-[180px] bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
                 className
             )}
         >
@@ -136,6 +136,7 @@ export const HomeProductCard = ({
                         product={api_product}
                         cardPos={cardPos}
                         onClose={() => setShowModal(false)}
+                        // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
                     />
                 )}
             </div>
