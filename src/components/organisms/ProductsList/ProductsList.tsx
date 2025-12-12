@@ -14,9 +14,15 @@ export const ProductsList = ({
       <div
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
       >
-        {products.map((product) => (
+        {products.map((product, index) => (
           // <SkeletonProductCard key={product.id} />
-          <ProductCard key={product.id} api_product={product} locale={locale} />
+          <ProductCard 
+            key={product.id} 
+            api_product={product} 
+            locale={locale}
+            allProducts={products}
+            productIndex={index}
+          />
         ))}
       </div>
     </>

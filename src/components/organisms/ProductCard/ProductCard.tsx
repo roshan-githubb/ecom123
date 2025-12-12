@@ -7,6 +7,8 @@ import { BaseHit, Hit } from "instantsearch.js"
 import clsx from "clsx"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
+import { useState } from "react"
+import { AddVariantSheet } from "@/components/molecules/AddVariantModal/AddVariantModal"
 
 export const ProductCard = ({
   product,
@@ -15,6 +17,9 @@ export const ProductCard = ({
   product: Hit<HttpTypes.StoreProduct> | Partial<Hit<BaseHit>>
   api_product?: HttpTypes.StoreProduct | null
 }) => {
+  const [showModal, setShowModal] = useState(false)
+  const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
+
   if (!api_product) {
     return null
   }
@@ -24,6 +29,19 @@ export const ProductCard = ({
   })
 
   const productName = String(product.title || "Product")
+
+  const handleOpenModal = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const target = e.currentTarget as HTMLElement
+    const rect = target.getBoundingClientRect()
+    setCardPos({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    })
+    setShowModal(true)
+  }
 
   return (
     <div
