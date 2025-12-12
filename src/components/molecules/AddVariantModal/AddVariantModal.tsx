@@ -845,7 +845,7 @@ export function AddVariantSheet({
 
                       <details className="mt-4">
                         <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
-                          {(product as any).categories.length > 0 &&
+                          {(product as any).categories?.length > 0 &&
                             <SimilarProducts categoryId={(product as any).categories[0]?.id} productId={(product as any)?.id} />
                           }
                         </summary>
