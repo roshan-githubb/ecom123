@@ -16,6 +16,8 @@ import toast from "react-hot-toast"
 import { Review } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
+import { StoreIcon } from "lucide-react"
+import SimilarProducts from "../SimilarProducts/SimilarProduct"
 
 interface ProductOptionValue {
   id: string
@@ -175,6 +177,76 @@ function ProductCardInternal({
           break
         case "blue":
           bgClass = "bg-blue-500"
+          break
+        case "yellow":
+          bgClass = "bg-yellow-400"
+          break
+        case "orange":
+          bgClass = "bg-orange-500"
+          break
+        case "purple":
+          bgClass = "bg-purple-500"
+          break
+        case "pink":
+          bgClass = "bg-pink-500"
+          break
+        case "indigo":
+          bgClass = "bg-indigo-500"
+          break
+        case "teal":
+          bgClass = "bg-teal-500"
+          break
+        case "cyan":
+          bgClass = "bg-cyan-500"
+          break
+        case "lime":
+          bgClass = "bg-lime-500"
+          break
+        case "emerald":
+          bgClass = "bg-emerald-500"
+          break
+        case "sky":
+          bgClass = "bg-sky-500"
+          break
+        case "violet":
+          bgClass = "bg-violet-500"
+          break
+        case "fuchsia":
+          bgClass = "bg-fuchsia-500"
+          break
+        case "rose":
+          bgClass = "bg-rose-500"
+          break
+        case "amber":
+          bgClass = "bg-amber-500"
+          break
+        case "brown":
+          bgClass = "bg-amber-700"
+          break
+        case "gray":
+        case "grey":
+          bgClass = "bg-gray-500"
+          break
+        case "navy":
+          bgClass = "bg-blue-900"
+          break
+        case "maroon":
+          bgClass = "bg-red-900"
+          break
+        case "olive":
+          bgClass = "bg-yellow-700"
+          break
+        case "silver":
+          bgClass = "bg-gray-300"
+          break
+        case "gold":
+          bgClass = "bg-yellow-500"
+          break
+        case "beige":
+          bgClass = "bg-amber-100"
+          break
+        case "cream":
+          bgClass = "bg-yellow-50"
           break
       }
       return { id: v.id, label: v.value, bg: bgClass, ring: "ring-gray-300" }
@@ -372,7 +444,7 @@ function ProductCardInternal({
           </div>
           <button
             onClick={handleAddToCart}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
+            className="bg-myBlue text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
           >
             ADD
           </button>
@@ -569,6 +641,35 @@ function ProductCardInternal({
             </summary>
             <div className="mt-2 text-sm text-gray-600">No reviews yet</div>
           </details>
+
+          <hr className="border-gray-300" />
+
+          <details className="py-2" open={isFullScreen}>
+            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
+              <Link
+                href={
+                  (product as any).seller?.handle
+                    ? `/sellerpage?seller_handle=${(product as any).seller.handle}`
+                    : product.store?.url || "#"
+                }
+                className="inline-flex items-center text-[14px] leading-[21px] font-medium text-[#425699] hover:underline"
+              >
+                <span className="mr-2"><StoreIcon size={16} /></span> 
+                Explore all {(product as any).seller?.name || product.store?.name || "Store"} products
+              </Link>
+            </summary>
+          </details>
+
+          <hr className="border-gray-300" />
+
+          {(product as any).categories?.length > 0 && (
+            <div className="py-2">
+              <SimilarProducts 
+                categoryId={(product as any).categories[0]?.id} 
+                productId={(product as any)?.id} 
+              />
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
@@ -595,8 +696,8 @@ export function AddVariantSheet({
   const backdropOpacity = useMotionValue(0)
 
   const cardWidth = useMotionValue(85) 
-  const cardScale = useTransform(cardWidth, [85, 100], [0.98, 1]) // Subtle scale effect
-  const cardBorderRadius = useTransform(cardWidth, [85, 100], [20, 0]) // More pronounced border radius
+  const cardScale = useTransform(cardWidth, [85, 100], [0.98, 1]) 
+  const cardBorderRadius = useTransform(cardWidth, [85, 100], [20, 0]) 
 
   const activeCardY = useMotionValue(0)
   const fullscreenDragY = useMotionValue(0)
@@ -609,7 +710,7 @@ export function AddVariantSheet({
     [0, 16]
   )
 
-  // Pre-compute combined transforms to avoid conditional hook calls
+  
   const combinedScale = useTransform(
     [cardScale, sheetPreviewScale],
     ([card, preview]) => (card as number) * (preview as number)
@@ -622,7 +723,6 @@ export function AddVariantSheet({
   const activeProducts = products.length > 0 ? products : [initialProduct]
 
   useEffect(() => {
-    // Optimized initial entry animation
     const springConfig = {
       type: "spring" as const,
       stiffness: 400,
@@ -634,14 +734,13 @@ export function AddVariantSheet({
     // Set initial active index
     setActiveIndex(currentProductIndex)
 
-    // Snap to clicked product with requestAnimationFrame for better performance
+    
     if (scrollRef.current && products.length > 0) {
       requestAnimationFrame(() => {
         const container = scrollRef.current
         if (container) {
           const card = container.children[currentProductIndex] as HTMLElement
           if (card) {
-            // Calculation to center the card with the left padding gap (like reference code)
             const offset = card.offsetLeft - 16
             container.scrollTo({ left: offset, behavior: "instant" })
           }
@@ -681,7 +780,6 @@ export function AddVariantSheet({
     activeCardY.set(0)
     fullscreenDragY.set(0)
 
-    // Save current scroll position before going fullscreen
     if (scrollRef.current) {
       setSavedScrollPosition(scrollRef.current.scrollLeft)
     }
@@ -726,16 +824,14 @@ export function AddVariantSheet({
       animate(y, 0, springConfig),
       animate(cardWidth, 85, springConfig), // 85vw for main card
     ]).then(() => {
-      // Change view mode after animation completes for smooth transition
       setViewMode("sheet")
       
-      // Calculate and set scroll position after view mode changes
       requestAnimationFrame(() => {
         if (scrollRef.current) {
           const container = scrollRef.current
           const card = container.children[activeIndex] as HTMLElement
           if (card) {
-            const offset = card.offsetLeft - 16 // Account for padding
+            const offset = card.offsetLeft - 16 
             container.scrollLeft = offset
           }
         }
@@ -791,13 +887,10 @@ export function AddVariantSheet({
   const handleHorizontalScroll = () => {
     if (!scrollRef.current || viewMode === "fullscreen") return
 
-    // Set scrolling state
     setIsScrolling(true)
 
-    // Update index immediately (no debounce for better responsiveness)
     updateActiveIndex()
 
-    // Clear existing timeouts
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current)
     }
@@ -805,10 +898,8 @@ export function AddVariantSheet({
       clearTimeout(scrollEndTimeoutRef.current)
     }
 
-    // Mark scrolling as ended after a delay
     scrollEndTimeoutRef.current = setTimeout(() => {
       setIsScrolling(false)
-      // Final index update to ensure accuracy
       updateActiveIndex()
     }, 150)
   }
@@ -829,7 +920,6 @@ export function AddVariantSheet({
           dragElastic={false}
           dragMomentum={false}
           onDrag={(_, info) => {
-            // Prevent dragging above the initial position for smooth feel
             if (info.offset.y < 0) {
               y.set(0)
             }
@@ -851,7 +941,7 @@ export function AddVariantSheet({
 
               // More responsive thresholds for native feel
               if (offset.y < -40 || velocity.y < -300) {
-                // Go to fullscreen immediately for responsive feel
+                
                 goToFullscreen()
                 return
               }
@@ -886,6 +976,8 @@ export function AddVariantSheet({
             className={`flex h-full w-full overflow-y-hidden snap-x snap-mandatory pb-0 no-scrollbar items-end md:items-center will-change-scroll ${
               viewMode === "fullscreen"
                 ? "overflow-x-hidden justify-center"
+                : activeProducts.length === 1
+                ? "overflow-x-hidden justify-center"
                 : "overflow-x-auto pl-4 gap-2 touch-pan-x md:pl-[calc(50vw-200px)] md:pr-[calc(50vw-200px)]"
             }`}
           >
@@ -917,7 +1009,6 @@ export function AddVariantSheet({
                 dragElastic={false}
                 dragMomentum={false}
                 onDrag={(_, info) => {
-                  // Update fullscreen drag for preview effects
                   const dragY = Math.max(0, info.offset.y)
                   fullscreenDragY.set(dragY)
 
@@ -927,9 +1018,7 @@ export function AddVariantSheet({
                   }
                 }}
                 onDragEnd={(_, { offset, velocity }) => {
-                  // Transition to sheet mode on downward drag
                   if (offset.y > 80 || velocity.y > 250) {
-                    // Smoothly animate drag position back to 0 before transitioning
                     animate(fullscreenDragY, 0, {
                       type: "spring",
                       stiffness: 400,
@@ -962,7 +1051,6 @@ export function AddVariantSheet({
                 />
               </motion.div>
             ) : (
-              // Sheet: Show all cards with horizontal scroll and optimized transforms
               activeProducts.map((prod, idx) => (
                 <motion.div
                   key={prod.id || idx}
@@ -970,7 +1058,7 @@ export function AddVariantSheet({
                   style={{
                     scale: cardScale,
                     borderRadius: cardBorderRadius,
-                    width: "85vw", // 85vw to show adjacent cards
+                    width: "85vw", 
                  }}
                   transition={{
                     layout: {

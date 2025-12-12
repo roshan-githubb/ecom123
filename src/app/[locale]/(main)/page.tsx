@@ -31,16 +31,16 @@ interface CategoryItem {
 const brands = [
   { name: "Nike", image: "/images/brands/Nike.png" },
   { name: "Maybeline", image: "/images/brands/Maybeline.png" },
-  { name: "Dell", image: "/images/brands/Dell.png" },
-  { name: "Adidas", image: "/images/brands/Adidas.png" },
-  { name: "Gucci", image: "/images/brands/Gucci.png" },
+  { name: "Dell", image: "/images/brands/dell.png" },
+  { name: "Adidas", image: "/images/brands/adidas.png" },
+  { name: "Gucci", image: "/images/brands/gucci.png" },
   { name: "H&M", image: "/images/brands/H&M.png" },
   { name: "Prada", image: "/images/brands/Prada.png" },
   { name: "Philips", image: "/images/brands/Philips.png" },
 ];
 
 const topSectionProducts = [
-  { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png" },
+  { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png", link: "/flash-sale" },
   { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
   { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
   { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
@@ -59,15 +59,7 @@ const categories = [
 
 
 
-const recommended = new Array(8).fill(0).map((_, i) => ({
-  id: String(i),
-  image: "/images/product/cotton-Tshirt.jpg",
-  title: `Product ${i + 1}`,
-  currentPrice: 2000 + i * 100,
-  oldPrice: 2400 + i * 120,
-  discount: i % 2 === 0 ? "10% OFF" : "25% OFF",
-  description: "Short description",
-}));
+
 
 
 interface Params {
@@ -82,15 +74,6 @@ export default async function HomePage({ params }: { params: Params }) {
   } = await listProducts({
     countryCode: locale,
     queryParams: { limit: 8, order: "created_at",
-      fields: [
-      "*variants.calculated_price",
-      "+variants.inventory_quantity",
-      "*seller",
-      "*variants",
-      "*seller.products",
-      "*seller.reviews",
-      "*seller.reviews.customer",
-    ].join(","),
     },
   })
 
@@ -101,7 +84,7 @@ export default async function HomePage({ params }: { params: Params }) {
     name: p.title,
   }))
 
-  // console.log("item list and origianl list ", itemList, jsonLdProducts)
+  console.log("item list and origianl list ",  jsonLdProducts)
   const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
 
   try {
@@ -135,7 +118,7 @@ export default async function HomePage({ params }: { params: Params }) {
           <HorizontalScroller >
             {topSectionProducts.map((c: any) => (
               <div key={c.name} className=" flex-shrink-0">
-                <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link="/coming-soon" />
+                <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link={c?.link??"/coming-soon"} />
               </div>
             ))}
           </HorizontalScroller>

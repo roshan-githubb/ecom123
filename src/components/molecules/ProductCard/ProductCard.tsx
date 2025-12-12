@@ -34,6 +34,7 @@ export const ProductCard = ({
   const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
   const cardRef = useRef<HTMLDivElement>(null)
   const addToCart = useCartStore((state) => state.add)
+  console.log("product in product card ", api_product )
 
   if (!api_product || !api_product.variants?.[0]) return null
 

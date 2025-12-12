@@ -26,6 +26,7 @@ export const HomeProductCard = ({
     allProducts = [],
     productIndex = 0
 }: HomeProductCardProps) => {
+    // console.log("HomeProductCard product: ", api_product );
 
     const [showModal, setShowModal] = useState(false)
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
@@ -75,7 +76,7 @@ export const HomeProductCard = ({
     return (
         <div
             className={cn(
-                "w-[180px] bg-[#F7F7FF] rounded-lg h-[100%] overflow-hidden shadow-sm",
+                "w-[180px] bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
                 className
             )}
         >
@@ -104,7 +105,7 @@ export const HomeProductCard = ({
                 )}
             </motion.div>
 
-            <div className="p-3 flex flex-col gap-1">
+            <div className="p-3 flex flex-col h-[55%]">
                 <p
                     onClick={handleOpenModal}
                     className="text-[12px] font-medium min-h-[32px] line-clamp-2 cursor-pointer hover:underline"
@@ -113,7 +114,7 @@ export const HomeProductCard = ({
                     {title}
                 </p>
 
-                <div className="flex items-center gap-x-2">
+                <div className="flex items-center gap-x-2 mt-1">
                     <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
                         Rs. {currentPrice}
                     </span>
@@ -127,7 +128,7 @@ export const HomeProductCard = ({
                 </p>
 
                 <button
-                    className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center mt-auto text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: "#4444FF" }}
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}

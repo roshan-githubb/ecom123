@@ -175,11 +175,11 @@ const UserDetailsSection: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex justify-between">
+        <div className="flex flex-col gap-3">
           <span className="text-gray-500 text-sm">Address not added</span>
           <Button
             variant="primary"
-            className="px-4 py-2 w-auto min-w-[100px] text-sm"
+            className="px-4 py-2 w-full text-sm"
             onClick={() => router.push("/np/shippinginfo")}
           >
             Add Address

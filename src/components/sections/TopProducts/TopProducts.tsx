@@ -11,7 +11,7 @@ export default async function TopProducts() {
     return (
         <>
             <div>
-                <SectionHeader title="Top products" actionLabel="See All" />
+                <SectionHeader title="Top products" actionLabel="See All" link='/top-products'/>
                 <div className="my-2"></div>
                 <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
                     {topProducts?.products?.map((r: any, index: number) => (
