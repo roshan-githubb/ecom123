@@ -158,10 +158,12 @@ export default async function HomePage({ params }: { params: Params }) {
           {/* Recommended for you — horizontal, hidden scrollbar */}
           <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
           <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
-            {jsonLdProducts.map((r) => (
+            {jsonLdProducts.map((r, index) => (
               <div key={r.id} className="w-[180px] flex-shrink-0 ">
                 <HomeProductCard
                   api_product={r}
+                  allProducts={jsonLdProducts}
+                  productIndex={index}
                 // hasOfferSticker={true}
                 />
 
@@ -184,11 +186,13 @@ export default async function HomePage({ params }: { params: Params }) {
           {/* Best deals */}
           <SectionHeader title="Best Deals" actionLabel="See All" />
           <HorizontalScroller className="no-scrollbar !mt-1">
-            {jsonLdProducts.map((r) => (
+            {jsonLdProducts.map((r, index) => (
               <div key={r.id} className="w-[180px] flex-shrink-0">
-                <HomeProductCard api_product={r} />
-
-                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
+                <HomeProductCard 
+                  api_product={r} 
+                  allProducts={jsonLdProducts}
+                  productIndex={index}
+                />
               </div>
             ))}
           </HorizontalScroller>

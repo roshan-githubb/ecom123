@@ -21,11 +21,13 @@ export default async function FlashItems() {
                 <SectionHeader title="Flash sale" actionLabel="See All" />
                 <div className="my-2"></div>
                 <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-                    {jsonLdProducts.map((r) => (
+                    {jsonLdProducts.map((r, index) => (
                         <div key={r.id} className="w-[180px] flex-shrink-0 ">
                             <HomeProductCard
                                 api_product={r}
                                 hasOfferSticker={true}
+                                allProducts={jsonLdProducts}
+                                productIndex={index}
                             />
 
                             {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}

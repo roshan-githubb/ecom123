@@ -14,10 +14,12 @@ export default async function TopProducts() {
                 <SectionHeader title="Top products" actionLabel="See All" link='/top-products'/>
                 <div className="my-2"></div>
                 <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-                    {topProducts?.products?.map((r: any) => (
+                    {topProducts?.products?.map((r: any, index: number) => (
                         <div key={r.id} className="w-[180px] flex-shrink-0 ">
                             <HomeProductCard
                                 api_product={r}
+                                allProducts={topProducts?.products || []}
+                                productIndex={index}
                             />
 
                         </div>

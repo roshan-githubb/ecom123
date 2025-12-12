@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { AddVariantSheet, Product } from "../AddVariantModal/AddVariantModal"
+import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
 import { useCartStore } from "@/store/useCartStore"
@@ -15,18 +15,23 @@ interface HomeProductCardProps {
     api_product: HttpTypes.StoreProduct
     className?: string
     hasOfferSticker?: boolean
+    allProducts?: HttpTypes.StoreProduct[]
+    productIndex?: number
 }
 
 export const HomeProductCard = ({
     api_product,
     className,
-    hasOfferSticker = false
+    hasOfferSticker = false,
+    allProducts = [],
+    productIndex = 0
 }: HomeProductCardProps) => {
     // console.log("HomeProductCard product: ", api_product );
 
     const [showModal, setShowModal] = useState(false)
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
     const [isAddingToCart, setIsAddingToCart] = useState(false)
+    const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
     const addToCart = useCartStore((state) => state.add)
 
     // --- Extract fields from the Medusa product ---
@@ -48,6 +53,7 @@ export const HomeProductCard = ({
             width: rect.width,
             height: rect.height,
         })
+        setCurrentModalProductIndex(productIndex)
         setShowModal(true)
     }
 
@@ -99,7 +105,7 @@ export const HomeProductCard = ({
                 )}
             </motion.div>
 
-            <div className="p-3 flex flex-col gap-1">
+            <div className="p-3 flex flex-col h-[55%]">
                 <p
                     onClick={handleOpenModal}
                     className="text-[12px] font-medium min-h-[32px] line-clamp-2 cursor-pointer hover:underline"
@@ -108,7 +114,7 @@ export const HomeProductCard = ({
                     {title}
                 </p>
 
-                <div className="flex items-center gap-x-2">
+                <div className="flex items-center gap-x-2 mt-1">
                     <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
                         Rs. {currentPrice}
                     </span>
@@ -122,7 +128,7 @@ export const HomeProductCard = ({
                 </p>
 
                 <button
-                    className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center justify-center mt-auto text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: "#4444FF" }}
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}
@@ -133,10 +139,12 @@ export const HomeProductCard = ({
 
                 {showModal && (
                     <AddVariantSheet
-                        product={api_product}
+                        product={allProducts.length > 0 ? allProducts[currentModalProductIndex] : api_product}
                         cardPos={cardPos}
                         onClose={() => setShowModal(false)}
-                        // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
+                        products={allProducts.length > 0 ? allProducts : [api_product]}
+                        currentProductIndex={currentModalProductIndex}
+                        onProductChange={(newIndex) => setCurrentModalProductIndex(newIndex)}
                     />
                 )}
             </div>
