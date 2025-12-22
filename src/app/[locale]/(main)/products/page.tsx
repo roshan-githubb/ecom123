@@ -1,11 +1,9 @@
 import { listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
-import { ProductListing } from "@/components/sections"
 import { Suspense } from "react"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 
 import { HttpTypes } from "@medusajs/types"
-import { SearchProductListing } from "@/components/sections/SearchProductListing/SearchProductListing"
 import { ProductCard } from "@/components/molecules/ProductCard/ProductCard"
 import { RatingSummary } from "@/types/reviews"
 import { fetchProductRatingSummary } from "@/lib/api/reviews"
@@ -54,6 +52,7 @@ export default async function ProductsPage(props: ProductsPageProps) {
   if (color) queryParams.color = color
 
   const response = await listProducts({ queryParams })
+  console.log('product response ', response)
 
   const ratingsMap: Record<string, RatingSummary> = await Promise.all(
     response.response.products.map(async (product: any) => {

@@ -39,6 +39,14 @@ export const HomeProductCard = ({
     const currentPrice =
         api_product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
 
+
+    const totalInventory = api_product?.variants?.reduce(
+        (sum, variant) => sum + (variant.inventory_quantity || 0),
+        0
+    ) || 0
+    // console.log("total inventory ", totalInventory, api_product.title)
+
+
     const handleOpenModal = (e: React.MouseEvent) => {
         const target = e.currentTarget as HTMLElement
         const rect = target.getBoundingClientRect()
@@ -75,10 +83,10 @@ export const HomeProductCard = ({
             )}
         >
             <motion.div
-                className="w-full h-[45%] relative cursor-pointer"
                 onClick={handleOpenModal}
                 whileTap={{ scale: 0.95, opacity: 0.8 }}
                 whileHover={{ scale: 1.02 }}
+                className="w-full h-[45%] relative cursor-pointer"
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
                 <Image
@@ -122,13 +130,19 @@ export const HomeProductCard = ({
                 </p>
 
                 <button
-                    className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: "#4444FF" }}
+                    // className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    // style={{ backgroundColor: "#4444FF" }}
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}
+                    // >
+                    className={`flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
+            ${isAddingToCart || totalInventory <= 0
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
+                        } text-[#FFFFFF]`}
                 >
                     <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} />
-                    {isAddingToCart ? "Adding..." : "Add to Cart"}
+                    {isAddingToCart ? "Adding..." : ( totalInventory <= 0 ? "Out of Stock" : "Add to Cart")}
                 </button>
 
                 {showModal && (
@@ -136,7 +150,7 @@ export const HomeProductCard = ({
                         product={api_product}
                         cardPos={cardPos}
                         onClose={() => setShowModal(false)}
-                        // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
+                    // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
                     />
                 )}
             </div>

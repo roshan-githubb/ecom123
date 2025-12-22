@@ -21,7 +21,7 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
   }, [categoryId]);
 
   if (loading) return <p>Loading...</p>;
-  
+
 
   return (
     <div className="px-2">
@@ -29,7 +29,7 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
       <div className="my-2"></div>
 
       <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-        {similarProducts.filter((product: any)=> product?.id != productId).map((item: any) => (
+        {similarProducts.filter((product: any) => product?.id != productId).slice(0, 3).map((item: any) => (
           <div key={item.id} className="w-[180px] flex-shrink-0">
             <HomeProductCard api_product={item} />
           </div>

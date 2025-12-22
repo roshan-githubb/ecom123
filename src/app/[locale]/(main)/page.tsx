@@ -84,7 +84,7 @@ export default async function HomePage({ params }: { params: Params }) {
     name: p.title,
   }))
 
-  console.log("item list and origianl list ",  jsonLdProducts)
+  // console.log("item list and origianl list ",  jsonLdProducts)
   const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
 
   try {
