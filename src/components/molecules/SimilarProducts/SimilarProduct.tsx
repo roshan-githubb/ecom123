@@ -63,7 +63,7 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
       {loading && (
         <div className="overflow-x-auto overflow-y-hidden gap-x-2 flex no-scrollbar scroll-smooth touch-pan-x">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="w-[180px] h-[280px] flex-shrink-0 bg-gray-200 rounded-lg animate-pulse" />
+            <div key={i} className="w-[180px] h-[200px] flex-shrink-0 bg-gray-200 rounded-lg animate-pulse" />
           ))}
         </div>
       )}
