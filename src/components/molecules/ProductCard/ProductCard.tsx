@@ -19,14 +19,19 @@ export const ProductCard = ({
   api_product,
   locale,
   ratingSummary = { average_rating: 0, total_reviews: 0 },
+  allProducts = [],
+  productIndex = 0,
 }: {
   api_product: HttpTypes.StoreProduct | null
   locale: string
   ratingSummary?: RatingSummary
+  allProducts?: HttpTypes.StoreProduct[]
+  productIndex?: number
 }) => {
   const [showModal, setShowModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
+  const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
   const cardRef = useRef<HTMLDivElement>(null)
   const addToCart = useCartStore((state) => state.add)
   // console.log("product in product card ", api_product )
@@ -43,7 +48,10 @@ export const ProductCard = ({
 
   const variant = api_product.variants[0]
   const calculatedPrice = variant.calculated_price
-  if (!calculatedPrice) return <div>Price not available</div>
+  if (!calculatedPrice) {
+    console.log('product with no calculated price i.e api_product.variants[0].calculated_price ', api_product)
+    return
+  }
 
   const price = Number(calculatedPrice.calculated_amount)
   const originalPrice = Number(calculatedPrice.original_amount)
@@ -85,6 +93,7 @@ export const ProductCard = ({
       width: rect.width,
       height: rect.height,
     })
+    setCurrentModalProductIndex(productIndex)
     setShowModal(true)
   }
 
@@ -208,10 +217,13 @@ export const ProductCard = ({
 
         {showModal && (
           <AddVariantSheet
-            product={api_product}
+            product={allProducts.length > 0 ? allProducts[currentModalProductIndex] : api_product!}
             ratingSummary={ratingSummary}
             cardPos={cardPos}
             onClose={() => setShowModal(false)}
+            products={allProducts.length > 0 ? allProducts : [api_product!]}
+            currentProductIndex={currentModalProductIndex}
+            onProductChange={(newIndex) => setCurrentModalProductIndex(newIndex)}
           />
         )}
       </div>

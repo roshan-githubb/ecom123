@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { AddVariantSheet, Product } from "../AddVariantModal/AddVariantModal"
+import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
 import { useCartStore } from "@/store/useCartStore"
@@ -15,18 +15,23 @@ interface HomeProductCardProps {
     api_product: HttpTypes.StoreProduct
     className?: string
     hasOfferSticker?: boolean
+    allProducts?: HttpTypes.StoreProduct[]
+    productIndex?: number
 }
 
 export const HomeProductCard = ({
     api_product,
     className,
-    hasOfferSticker = false
+    hasOfferSticker = false,
+    allProducts = [],
+    productIndex = 0
 }: HomeProductCardProps) => {
     // console.log("HomeProductCard product: ", api_product );
 
     const [showModal, setShowModal] = useState(false)
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
     const [isAddingToCart, setIsAddingToCart] = useState(false)
+    const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
     const addToCart = useCartStore((state) => state.add)
 
     // --- Extract fields from the Medusa product ---
@@ -38,6 +43,8 @@ export const HomeProductCard = ({
 
     const currentPrice =
         api_product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+
+    
 
 
     const totalInventory = api_product?.variants?.reduce(
@@ -56,6 +63,7 @@ export const HomeProductCard = ({
             width: rect.width,
             height: rect.height,
         })
+        setCurrentModalProductIndex(productIndex)
         setShowModal(true)
     }
 
@@ -107,7 +115,7 @@ export const HomeProductCard = ({
                 )}
             </motion.div>
 
-            <div className="p-3 flex flex-col gap-1">
+            <div className="p-3 flex flex-col h-[55%]">
                 <p
                     onClick={handleOpenModal}
                     className="text-[12px] font-medium min-h-[32px] line-clamp-2 cursor-pointer hover:underline"
@@ -116,7 +124,7 @@ export const HomeProductCard = ({
                     {title}
                 </p>
 
-                <div className="flex items-center gap-x-2">
+                <div className="flex items-center gap-x-2 mt-1">
                     <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
                         Rs. {currentPrice}
                     </span>
@@ -142,15 +150,18 @@ export const HomeProductCard = ({
                         } text-[#FFFFFF]`}
                 >
                     <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} />
-                    {isAddingToCart ? "Adding..." : ( totalInventory <= 0 ? "Out of Stock" : "Add to Cart")}
+                    {isAddingToCart ? "Adding..." : (totalInventory <= 0 ? "Out of Stock" : "Add to Cart")}
                 </button>
 
                 {showModal && (
                     <AddVariantSheet
-                        product={api_product}
+                        product={allProducts.length > 0 ? allProducts[currentModalProductIndex] : api_product}
                         cardPos={cardPos}
                         onClose={() => setShowModal(false)}
-                    // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
+                        // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
+                        products={allProducts.length > 0 ? allProducts : [api_product]}
+                        currentProductIndex={currentModalProductIndex}
+                        onProductChange={(newIndex) => setCurrentModalProductIndex(newIndex)}
                     />
                 )}
             </div>
