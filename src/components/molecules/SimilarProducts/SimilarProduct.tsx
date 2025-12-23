@@ -12,27 +12,36 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!categoryId || hasLoaded) return;
+    if (!categoryId || hasLoaded || loading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !hasLoaded) {
-          setHasLoaded(true);
-          setLoading(true);
-          setError(null);
+        if (entries[0].isIntersecting && !hasLoaded && !loading) {
+          if (loadingTimeoutRef.current) {
+            clearTimeout(loadingTimeoutRef.current);
+          }
+          
+          loadingTimeoutRef.current = setTimeout(() => {
+            setHasLoaded(true);
+            setLoading(true);
+            setError(null);
 
-          getSimilarProducts(categoryId)
-            .then((data) => {
-              const products = data.items || data.products || [];
-              setSimilarProducts(products);
-            })
-            .catch((err) => {
-              console.error("Failed to load similar products:", err);
-              setError("Failed to load similar products");
-            })
-            .finally(() => setLoading(false));
+            getSimilarProducts(categoryId)
+              .then((data) => {
+                const products = data?.products || data?.items || [];
+                setSimilarProducts(products);
+                setError(null);
+              })
+              .catch((err) => {
+                console.error("Failed to load similar products:", err);
+                setError("Failed to load similar products");
+                setSimilarProducts([]); 
+              })
+              .finally(() => setLoading(false));
+          }, 100); 
         }
       },
       {
@@ -47,11 +56,14 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
     }
 
     return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       if (containerRef.current) {
         observer.unobserve(containerRef.current);
       }
     };
-  }, [categoryId, hasLoaded]);
+  }, [categoryId, hasLoaded, loading]);
 
   const filteredProducts = similarProducts.filter((product: any) => product?.id != productId);
 
@@ -80,9 +92,9 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
         <div 
           className="overflow-x-auto overflow-y-hidden gap-x-2 flex no-scrollbar scroll-smooth touch-pan-x"
           style={{ 
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none'
+            WebkitOverflowScrolling: 'touch' as const,
+            scrollbarWidth: 'none' as const,
+            msOverflowStyle: 'none' as const
           }}
         >
           {filteredProducts.map((item: any, index: number) => (

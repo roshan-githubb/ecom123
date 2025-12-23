@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Funnel_Display, Poppins } from "next/font/google"
 import './globals.css'
 import { Toaster } from "@medusajs/ui"
+import { Toaster as HotToaster } from "react-hot-toast"
 import Head from "next/head"
 import { retrieveCart } from "@/lib/data/cart"
 import { Providers } from "./providers"
@@ -148,6 +149,7 @@ export default async function RootLayout({
         />
         <Providers cart={mappedCart}>{children}</Providers>
         <Toaster position="top-right" />
+        <HotToaster position="top-right" />
       </body>
     </html>
   )

@@ -7,7 +7,7 @@ import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
 import { useCartStore } from "@/store/useCartStore"
-import toast, { Toaster } from "react-hot-toast"
+import { cartToast } from "@/lib/cart-toast"
 
 
 
@@ -64,9 +64,9 @@ export const HomeProductCard = ({
         setIsAddingToCart(true)
         try {
             await addToCart(api_product.variants[0].id, 1)
-            toast.success("Added to cart!")
+            cartToast.showCartToast()
         } catch (error) {
-            toast.error("Failed to add to cart")
+            cartToast.showErrorToast()
             console.error("Add to cart error:", error)
         } finally {
             setIsAddingToCart(false)
@@ -148,7 +148,6 @@ export const HomeProductCard = ({
                     />
                 )}
             </div>
-            <Toaster position="top-right" reverseOrder={false} />
         </div>
     )
 }
