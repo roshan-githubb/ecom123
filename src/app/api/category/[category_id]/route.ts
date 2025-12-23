@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 
 export async function GET(
-    req: Request,
-    { params }: { params: { category_id: string } }
+  req: Request,
+  context: { params: { category_id: string } }
 ) {
+<<<<<<< HEAD
     try {
         const categoryId = await params?.category_id;
+=======
+  console.log("category items route ");
+>>>>>>> main
 
-        if (!categoryId) {
-            return NextResponse.json(
-                { error: "category_id is required" },
-                { status: 400 }
-            );
-        }
+  try {
+    const { category_id: categoryId } = await context.params;
 
+<<<<<<< HEAD
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
         const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
 
@@ -55,5 +56,37 @@ export async function GET(
             { error: "Failed to fetch category items", details: error instanceof Error ? error.message : "Unknown error" },
             { status: 500 }
         );
+=======
+    console.log("Fetching items for category ID:", categoryId);
+
+    if (!categoryId) {
+      return NextResponse.json(
+        { error: "category_id is required" },
+        { status: 400 }
+      );
+>>>>>>> main
     }
+
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
+
+    const backendRes = await fetch(
+      `${backendUrl}/store/products?category_id=${categoryId}&limit=4&fields=*variants.calculated_price,+variants.inventory_quantity,*seller,*variants,*seller.products,*seller.reviews,*seller.reviews.customer`,
+      {
+        method: "GET",
+        headers: {
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await backendRes.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Proxy error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch category items" },
+      { status: 500 }
+    );
+  }
 }

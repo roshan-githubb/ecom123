@@ -1,6 +1,6 @@
 import { SectionHeader } from '@/components/atoms/SectionHeader/SectionHeader'
 import { HomeProductCard } from '@/components/molecules/HomeProductCard/HomeProductCard'
-import { getFlashSaleProducts } from '@/lib/data/flash-products'
+// import { getFlashSaleProducts } from '@/lib/data/flash-products'
 import { listProducts } from '@/lib/data/products'
 import React from 'react'
 
@@ -12,8 +12,8 @@ export default async function FlashItems() {
         queryParams: { limit: 8, order: "created_at" },
     })
 
-    const flashProducts = await getFlashSaleProducts({})
-    console.log("Flash sale products: ", flashProducts);
+    // const flashProducts = await getFlashSaleProducts({})
+    // console.log("Flash sale products: ", flashProducts);
 
     return (
         <>
@@ -29,8 +29,6 @@ export default async function FlashItems() {
                                 allProducts={jsonLdProducts}
                                 productIndex={index}
                             />
-
-                            {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
                         </div>
                     ))}
                 </div>

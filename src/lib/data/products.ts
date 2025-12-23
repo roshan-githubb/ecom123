@@ -16,7 +16,7 @@ type ListProductsResponse = {
 export const listProducts = async ({
   pageParam = 1,
   queryParams,
-  countryCode,
+  countryCode = "np",
   regionId: providedRegionId,
 }: {
   pageParam?: number
@@ -35,13 +35,15 @@ export const listProducts = async ({
 
   if (!regionId) {
     console.warn("No region_id - prices will be missing!")
+    // regionId = process.env.NEXT_PUBLIC_REGION_ID;
+
   }
 
   const { products = [], count = 0 } = await publicProductClient.store.product.list({
     limit,
     offset,
-    region_id: regionId!, 
-    fields: [ "*variants.calculated_price", "+variants.inventory_quantity", "*seller", "*categories", "*variants", "*seller.products", "*seller.reviews", "*seller.reviews.customer", ].join(","),
+    region_id: regionId!,
+    fields: ["*variants.calculated_price", "+variants.inventory_quantity", "*seller", "*categories", "*variants", "*seller.products", "*seller.reviews", "*seller.reviews.customer",].join(","),
     ...queryParams,
   })
 
@@ -78,15 +80,15 @@ export const listProductsWithSort = async ({
   const limit = queryParams?.limit || 12
 
   const { response: { products } } = await listProducts({
-  pageParam: 1,
-  queryParams: {
-    ...queryParams,
-    limit: 200,
-    category_id,
-    collection_id,
-  },
-  countryCode,
-})
+    pageParam: 1,
+    queryParams: {
+      ...queryParams,
+      limit: 200,
+      category_id,
+      collection_id,
+    },
+    countryCode,
+  })
 
   let filtered = seller_id
     ? products.filter((p: any) => p.seller?.id === seller_id)

@@ -29,6 +29,7 @@ export async function getOrCreateCartId() {
 }
 
 export async function addToServerCart(variantId: string, quantity = 1) {
+    console.log('Adding to server cart ', variantId, quantity);
     const cartId = await getOrCreateCartId();
 
     const res = await fetch("/api/cart/add", {
@@ -39,7 +40,9 @@ export async function addToServerCart(variantId: string, quantity = 1) {
             quantity,
         }),
     });
-    return res.json();
+    const resData  = await res.json();
+    console.log("Add to cart response:",  resData);
+    return resData;
 }
 
 export async function updateCartItemQuantity(lineItemId: string, quantity: number) {

@@ -34,13 +34,24 @@ export const ProductCard = ({
   const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
   const cardRef = useRef<HTMLDivElement>(null)
   const addToCart = useCartStore((state) => state.add)
-  console.log("product in product card ", api_product )
+  // console.log("product in product card ", api_product )
 
   if (!api_product || !api_product.variants?.[0]) return null
 
+  const totalInventory = api_product.variants.reduce(
+    (sum, variant) => sum + (variant.inventory_quantity || 0),
+    0
+  )
+  // if (totalInventory <= 0) return null
+  // console.log("total inventory ", totalInventory, api_product.title )
+
+
   const variant = api_product.variants[0]
   const calculatedPrice = variant.calculated_price
-  if (!calculatedPrice) return <div>Price not available</div>
+  if (!calculatedPrice) {
+    console.log('product with no calculated price i.e api_product.variants[0].calculated_price ', api_product)
+    return
+  }
 
   const price = Number(calculatedPrice.calculated_amount)
   const originalPrice = Number(calculatedPrice.original_amount)
@@ -62,6 +73,7 @@ export const ProductCard = ({
 
     setIsAddingToCart(true)
     try {
+      // console.log("Adding to cart variant id: ", variant.id );
       await addToCart(variant.id, 1)
       cartToast.showCartToast()
     } catch (error) {
@@ -113,7 +125,7 @@ export const ProductCard = ({
             onClick={handleOpenModal}
             className="text-[clamp(14px,2vw,18px)] font-normal text-[#111111] cursor-pointer hover:underline"
           >
-            {api_product.title} 
+            {api_product.title}
           </h2>
 
           {total_reviews > 0 ? (
@@ -183,11 +195,11 @@ export const ProductCard = ({
 
         <motion.button
           onClick={handleAddToCart}
-          disabled={isAddingToCart}
+          disabled={isAddingToCart || totalInventory <= 0}
           whileTap={{ scale: 0.95 }}
           whileHover={{ scale: 1.02 }}
           className={`w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
-            ${isAddingToCart
+            ${isAddingToCart || totalInventory <= 0
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
             } text-[#FFFFFF]`}
@@ -199,7 +211,7 @@ export const ProductCard = ({
             width={16}
             height={16}
           />
-          {isAddingToCart ? "Adding..." : "Add to Cart"}
+          {isAddingToCart ? "Adding..." : (totalInventory <= 0 ? "Out of Stock" : "Add to Cart")}
         </motion.button>
 
         {showModal && (
