@@ -6,8 +6,9 @@ import React, { useState, useMemo, useRef } from "react"
 import { StarRating } from "@/components/atoms"
 import { useCartStore } from "@/store/useCartStore"
 import { Review } from "@/types/reviews"
-import toast, { Toaster } from "react-hot-toast"
+import { cartToast } from "@/lib/cart-toast"
 import { motion } from "framer-motion"
+import { Toaster } from "react-hot-toast"
 
 
 interface ProductOptionValue {
@@ -219,15 +220,15 @@ export default function ProductDetailClient({
     const variant = selectedVariant
 
     if (!variant) {
-      toast.error("Please select a valid variant")
+      cartToast.showErrorToast("Please select a valid variant")
       return
     }
 
     try {
       await useCartStore.getState().add(variant.id, 1)
-      toast.success("Item added to cart!")
+      cartToast.showCartToast()
     } catch (e) {
-      toast.error("Failed to add item")
+      cartToast.showErrorToast()
     }
   }
 

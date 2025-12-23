@@ -6,7 +6,7 @@ import { ProductVariants } from "@/components/molecules"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
 import { useState, useMemo } from "react"
 import { addToCart } from "@/lib/data/cart"
-import { toast } from "@/lib/helpers/toast"
+import { cartToast } from "@/lib/cart-toast"
 import { useCartContext } from "@/components/providers"
 
 const optionsAsKeymap = (
@@ -121,15 +121,9 @@ export const ProductDetailsHeaderClient = ({
                 quantity: 1,
                 countryCode: locale,
             })
-            toast.success({
-                title: "Added to cart",
-                description: `${product.title} has been added to your cart`,
-            })
+            cartToast.showCartToast()
         } catch (error) {
-            toast.error({
-                title: "Error adding to cart",
-                description: "Some variant does not have the required inventory",
-            })
+            cartToast.showErrorToast("Some variant does not have the required inventory")
         } finally {
             setIsAdding(false)
         }

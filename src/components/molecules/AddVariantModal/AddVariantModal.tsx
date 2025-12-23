@@ -12,7 +12,7 @@ import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icon
 import { FaRegBookmark } from "react-icons/fa"
 import { IoShareOutline } from "react-icons/io5"
 import { useCartStore } from "@/store/useCartStore"
-import toast from "react-hot-toast"
+import { cartToast } from "@/lib/cart-toast"
 import { Review } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
@@ -300,12 +300,12 @@ function ProductCardInternal({
     selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "INR"
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) return toast.error("Variant unavailable")
+    if (!selectedVariant) return cartToast.showErrorToast("Variant unavailable")
     try {
       await useCartStore.getState().add(selectedVariant.id, 1)
-      toast.success("Added to cart")
+      cartToast.showCartToast()
     } catch {
-      toast.error("Failed to add item")
+      cartToast.showErrorToast()
     }
   }
 
@@ -872,15 +872,10 @@ export function AddVariantSheet({
       }
     }
 
-    // Update active index immediately if changed
+   
     if (closestIndex !== activeIndex) {
       setActiveIndex(closestIndex)
-      console.log(
-        "Active index changed to:",
-        closestIndex,
-        "Product:",
-        activeProducts[closestIndex]?.title
-      )
+      
     }
   }
 

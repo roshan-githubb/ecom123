@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useCartStore } from "@/store/useCartStore"
-import toast, { Toaster } from "react-hot-toast"
+import { cartToast } from "@/lib/cart-toast"
 import { RatingSummary } from "@/types/reviews"
 import { AddVariantSheet } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { motion } from "framer-motion"
@@ -135,9 +135,9 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
         setIsAddingToCart(true);
         try {
             await addToCart(firstVariant.id, 1);
-            toast.success("Added to cart!");
+            cartToast.showCartToast();
         } catch (error) {
-            toast.error("Failed to add to cart");
+            cartToast.showErrorToast();
             console.error("Add to cart error:", error);
         } finally {
             setIsAddingToCart(false);
@@ -146,7 +146,6 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
 
     return (
         <div className="flex flex-col bg-white rounded-lg">
-            <Toaster position="top-right" reverseOrder={false} />
             <div
                 className="relative w-full aspect-[4/5] bg-[#F3F5F7] rounded-xl overflow-visible mb-2 cursor-pointer"
                 onClick={handleOpenModal}

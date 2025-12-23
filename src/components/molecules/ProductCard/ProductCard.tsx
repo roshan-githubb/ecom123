@@ -4,7 +4,7 @@ import Image from "next/image"
 import { StarRating } from "@/components/atoms"
 import { HttpTypes } from "@medusajs/types"
 import { useCartStore } from "@/store/useCartStore"
-import { toast, Toaster } from "react-hot-toast"
+import { cartToast } from "@/lib/cart-toast"
 import { useState, useRef } from "react"
 import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { RatingSummary } from "@/types/reviews"
@@ -75,9 +75,9 @@ export const ProductCard = ({
     try {
       // console.log("Adding to cart variant id: ", variant.id );
       await addToCart(variant.id, 1)
-      toast.success("Added to cart!")
+      cartToast.showCartToast()
     } catch (error) {
-      toast.error("Failed to add to cart")
+      cartToast.showErrorToast()
       console.error("Add to cart error:", error)
     } finally {
       setIsAddingToCart(false)
@@ -99,7 +99,6 @@ export const ProductCard = ({
 
   return (
     <div ref={cardRef} className="w-full max-w-md mx-auto flex flex-row md:flex-col gap-3 relative">
-      <Toaster position="top-right" reverseOrder={false} />
 
       <motion.div
         className="w-[45%] md:w-full flex-shrink-0 cursor-pointer"
