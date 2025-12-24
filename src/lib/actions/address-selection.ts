@@ -1,52 +1,56 @@
 // src/lib/actions/address-selection.ts
 "use client";
 
-import { setAddresses } from "@/lib/data/cart"; // Import your Server Action
-import { Address } from "@/store/addressStore"; // Import your local Address type
+import { Address } from "@/store/addressStore";
+import { getLocalCartId } from "@/services/cart";
+import { setAddressesWithCartId } from "@/lib/data/cart";
 
 /**
- * Converts a local Address object to the FormData required by the setAddresses Server Action
- * and executes the action.
+ * Applies the selected address to the cart via Server Action
  * @param address The local Address object selected by the user.
  * @returns The error message string on failure, or null on success.
  */
 export async function applySelectedAddressToCart(address: Address) {
-  const formData = new FormData();
-  
-  // --- 1. Name Splitting ---
-  const nameParts = address.name.trim().split(/\s+/);
-  const first_name = nameParts[0] || '';
-  const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '.'; 
-  
-  // --- 2. FormData Mapping (Must match cart.ts/setAddresses expectations) ---
-  
-  // Customer Email
-  formData.set("email", address.email);
+  try {
+    const cartId = getLocalCartId();
+    
+    if (!cartId) {
+      return "No cart found. Please add items to your cart first.";
+    }
 
-  // Shipping Address Fields
-  formData.set("shipping_address.first_name", first_name);
-  formData.set("shipping_address.last_name", last_name);
-  formData.set("shipping_address.company", ""); // Required field, set to empty string if not available
-  formData.set("shipping_address.address_1", address.line1);
-  formData.set("shipping_address.address_2", address.line2 || "");
-  formData.set("shipping_address.city", address.district);
-  formData.set("shipping_address.province", address.province);
-  formData.set("shipping_address.postal_code", address.postalCode);
-  formData.set("shipping_address.country_code", address.countryCode);
-  formData.set("shipping_address.phone", address.phone);
-  
-  // Crucial: Set billing address equal to shipping address (based on your cart.ts logic)
-  // Your setAddresses in cart.ts does: data.billing_address = data.shipping_address
-  // We don't need to explicitly set billing fields on FormData, but we ensure email/shipping is set.
+    // --- 1. Name Splitting ---
+    const nameParts = address.name.trim().split(/\s+/);
+    const first_name = nameParts[0] || '';
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '.';
 
-  // --- 3. Execute Server Action ---
-  const result = await setAddresses(null, formData);
+    // --- 2. Prepare address data ---
+    const addressData = {
+      email: address.email,
+      shipping_address: {
+        first_name,
+        last_name,
+        company: "",
+        address_1: address.line1,
+        address_2: address.line2 || "",
+        city: address.district,
+        province: address.province,
+        postal_code: address.postalCode,
+        country_code: address.countryCode,
+        phone: address.phone,
+      },
+    };
 
-  if (result) {
-    // Server Action returns the error message on failure
-    console.error("Server Action failed to set address:", result);
-    return result as string; 
+    // --- 3. Call Server Action to update cart with address ---
+    const error = await setAddressesWithCartId(cartId, addressData);
+
+    if (error) {
+      console.error("Failed to set address:", error);
+      return error;
+    }
+
+    return null; // Success
+  } catch (err: any) {
+    console.error("Error applying address to cart:", err);
+    return err.message || "An unexpected error occurred";
   }
-
-  return null; // Success
 }

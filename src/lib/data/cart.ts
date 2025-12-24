@@ -413,6 +413,65 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
 }
 
 /**
+ * Sets addresses on a cart using the provided cart ID (for localStorage-based cart systems)
+ * @param cartId - The cart ID from localStorage
+ * @param addressData - The address data to set
+ * @returns Error message on failure, null on success
+ */
+export async function setAddressesWithCartId(
+  cartId: string,
+  addressData: {
+    email?: string
+    shipping_address: {
+      first_name: string
+      last_name: string
+      address_1: string
+      address_2?: string
+      company?: string
+      postal_code: string
+      city: string
+      country_code: string
+      province: string
+      phone: string
+    }
+  }
+) {
+  try {
+    if (!cartId) {
+      throw new Error("No cart ID provided")
+    }
+
+    // Set the cart ID in cookies temporarily so updateCart can use it
+    await setCartId(cartId)
+
+    const currentCart = await retrieveCart(cartId)
+    
+    const data = {
+      shipping_address: addressData.shipping_address,
+      billing_address: addressData.shipping_address, // Set billing same as shipping
+    } as any
+
+    // Always try to update email if provided
+    // Note: Medusa may ignore this if cart has a customer, but we'll try anyway
+    if (addressData.email) {
+      data.email = addressData.email
+      console.log("Attempting to set email on cart:", addressData.email, "Cart has customer:", !!currentCart?.customer_id)
+    }
+
+    // Use the existing updateCart function
+    const result = await updateCart(data)
+    console.log("Cart updated. Email in response:", result.email)
+
+    await revalidatePath("/cart")
+    
+    return null // Success
+  } catch (e: any) {
+    console.error("Error setting addresses:", e)
+    return e.message
+  }
+}
+
+/**
  * Places an order for a cart. If no cart ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to place an order for.
  * @returns The cart object if the order was successful, or null if not.
