@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useAddressStore, Address } from "@/store/addressStore"
 import { MapPin, Loader2 } from "lucide-react"
+import { applySelectedAddressToCart } from "@/lib/actions/address-selection"
 
 interface AddressFormProps {
   initialData?: Address
@@ -25,9 +26,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   const [district, setDistrict] = useState(initialData?.district || "")
   const [line1, setLine1] = useState(initialData?.line1 || "")
   const [line2, setLine2] = useState(initialData?.line2 || "")
-  const [landmark, setLandmark] = useState(initialData?.landmark || "")
   const [label, setLabel] = useState(initialData?.label || "Home")
-  const [isDefault, setIsDefault] = useState(initialData?.isDefault || false)
   const [email, setEmail] = useState(initialData?.email || "")
   const [postalCode, setPostalCode] = useState(initialData?.postalCode || "")
   const [countryCode, setCountryCode] = useState(
@@ -35,9 +34,40 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   )
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  React.useEffect(() => {
+    async function loadCartEmail() {
+      if (initialData?.email) return
+      
+      const cartId = localStorage.getItem("cart_id")
+      if (!cartId) return
+
+      try {
+        const res = await fetch("/api/cart/get", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_id: cartId }),
+        })
+        const data = await res.json()
+        
+        if (data?.cart?.email) {
+          setEmail(data.cart.email)
+        }
+      } catch (err) {
+        console.error("Failed to fetch cart email:", err)
+      }
+    }
+
+    loadCartEmail()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSaving(true)
+    setSaveError(null)
+
     const addr: Address = {
       name,
       email, 
@@ -47,17 +77,38 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       line1,
       line2,
       postalCode, 
-      countryCode, 
-      landmark,
+      countryCode,
       label,
-      isDefault,
+      isDefault: initialData?.isDefault || false,
     }
-    if (typeof index === "number") {
-      updateAddress(index, addr)
-    } else {
-      addAddress(addr)
+
+    try {
+      
+      if (typeof index === "number") {
+        updateAddress(index, addr)
+      } else {
+        addAddress(addr)
+      }
+
+      
+      const error = await applySelectedAddressToCart(addr)
+      
+      if (error) {
+        setSaveError(error)
+        setIsSaving(false)
+        return
+      }
+
+      setIsSaving(false)
+      
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      
+      onClose()
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to save address")
+      setIsSaving(false)
     }
-    onClose()
   }
 
   const handleDelete = () => {
@@ -136,6 +187,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
   return (
     <form className="bg-white p-4 rounded-md space-y-3" onSubmit={handleSubmit}>
+      {saveError && (
+        <div className="bg-red-100 text-red-700 p-2 rounded text-sm">
+          {saveError}
+        </div>
+      )}
+
       <button
         type="button"
         onClick={handleUseCurrentLocation}
@@ -208,13 +265,6 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         onChange={(e) => setLine2(e.target.value)}
         className="border p-2 w-full rounded"
       />
-      <input
-        type="text"
-        placeholder="Landmark"
-        value={landmark}
-        onChange={(e) => setLandmark(e.target.value)}
-        className="border p-2 w-full rounded"
-      />
 
       <input
         type="email"
@@ -224,7 +274,6 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         className="border p-2 w-full rounded"
         required
       />
-
 
       <input
         type="text"
@@ -243,21 +292,17 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         <option value="np">Nepal</option>
         <option value="in">India</option>
       </select>
-
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={isDefault}
-          onChange={(e) => setIsDefault(e.target.checked)}
-        />
-        Default Address
-      </label>
+      
       <div className="flex gap-2">
         <button
           type="submit"
-          className="bg-[#00bfa5] text-white py-2 flex-1 rounded font-bold"
+          disabled={isSaving}
+          className="bg-[#00bfa5] text-white py-2 flex-1 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Save Address
+          <span className="text-sm flex items-center justify-center gap-2">
+            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSaving ? "Saving..." : "Save"}
+          </span>
         </button>
         {typeof index === "number" && (
           <button
@@ -265,15 +310,15 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             onClick={handleDelete}
             className="bg-red-500 text-white py-2 flex-1 rounded font-bold"
           >
-            Delete
+            <span className="text-sm">Delete</span>
           </button>
         )}
         <button
           type="button"
           onClick={handleCancel}
-          className="bg-gray-300 text-gray-800 py-2 flex-1 rounded font-bold"
+          className="bg-gray-300 text-gray-800 text-sm py-2 flex-1 rounded font-bold"
         >
-          Cancel
+          <span className="text-sm">Cancel</span>
         </button>
       </div>
     </form>
