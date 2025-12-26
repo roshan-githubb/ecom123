@@ -131,6 +131,16 @@ export function OrderSummary({ summary }: OrderSummaryProps) {
             Rs {summary?.subtotal.toLocaleString()}
           </span>
         </div>
+        {summary.discountTotal > 0 && (
+          <div className="flex justify-between items-center py-1">
+            <span className="text-sm font-medium text-green-600">
+              Promotion ({summary.promotions.map(p => p.code).join(", ")})
+            </span>
+            <span className="text-sm font-medium text-green-600">
+              − Rs {summary.discountTotal.toLocaleString()}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between items-center py-1">
           <span className="text-sm font-medium text-[#777777]">
             Delivery Charge

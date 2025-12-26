@@ -287,16 +287,20 @@ const CheckoutPage: React.FC = () => {
     totalPayable,
     currency,
     fetchCart,
+    discountTotal,
+    promotions
   } = useCartStore()
   const summary = {
     currency,
     subtotal,
+    discountTotal,
     taxTotal,
     deliveryFee,
     serviceFee,
     totalPayable,
     items,
     cartId,
+    promotions
   }
 
   useEffect(() => {
