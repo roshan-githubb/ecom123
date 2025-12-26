@@ -95,6 +95,7 @@ export const useCartStore = create<CartState>()(
 
       fetchCart: async () => {
         const data = await getCart();
+        console.log('unmapped cart from db ', data)
         if (data?.cart) set(mapCart(data.cart));
       },
 
@@ -108,31 +109,26 @@ export const useCartStore = create<CartState>()(
         if (data?.cart) set(mapCart(data.cart));
       },
 
-      // decrease: async (lineItemId, currentQty) => {
-      //   if (currentQty <= 1) {
-      //     const data = await removeFromCart(lineItemId);
-      //     if (data?.cart) set(mapCart(data.cart));
-      //     return;
-      //   }
-
-      //   const data = await updateCartItemQuantity(lineItemId, currentQty - 1);
-      //   if (data?.cart) set(mapCart(data.cart));
-      // },
       decrease: async (lineItemId, currentQuantity) => {
         if (currentQuantity <= 1) {
           // Remove item
           const data = await removeFromCart(lineItemId);
-          if (data?.cart?.items) {
-            set({ items: data.cart.items });
+          console.log('remove item response ', data)
+          if (data?.deleted == true) {
+            const data = await getCart();
+            if (data?.cart) set(mapCart(data.cart));
           } else {
             // If API returns nothing, manually remove from state
             set({ items: get().items.filter(i => i.id !== lineItemId) });
+            // set(mapCart(data.cart));
+
           }
           return;
         }
 
         // Decrement quantity
         const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
+        console.log('decrement item ', data)
         if (data?.cart) {
           set(mapCart(data.cart));
         }
