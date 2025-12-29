@@ -217,7 +217,7 @@ export async function deleteLineItem(lineId: string) {
   }
 
   await sdk.store.cart
-    .deleteLineItem(cartId, lineId, headers)
+    .deleteLineItem(cartId, lineId, {})
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       await revalidateTag(cartCacheTag)
@@ -264,6 +264,7 @@ export async function initiatePaymentSession(
     .then(async (resp) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
+      console.log('payment session initiate response, cart and data ', {resp, cart, data})
       return resp
     })
     .catch(medusaError)
@@ -596,7 +597,7 @@ export async function updateRegionWithValidation(
           )
           if (item) {
             try {
-              await sdk.store.cart.deleteLineItem(cart.id, item.id, headers)
+              await sdk.store.cart.deleteLineItem(cart.id, item.id, {})
               removedItems.push(item.product_title || "Unknown product")
             } catch (deleteError) {
               // Silent failure - item removal failed but continue

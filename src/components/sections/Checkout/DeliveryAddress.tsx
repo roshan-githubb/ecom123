@@ -44,7 +44,7 @@ const DeliveryAddress = () => {
                 const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
                 setHasAddress(!!isValid)
                 setLoading(false)
-                console.log("Address check:", { shippingAddr, isValid })
+                console.log("delivery Address check:", { shippingAddr, isValid })
             } catch (err) {
                 console.error("Failed to check address:", err)
                 setHasAddress(false)

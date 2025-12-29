@@ -132,6 +132,14 @@ export function OrderSummary() {
     cartId,
     promotions
   }
+  useEffect(() => {
+    const fetchCartData = async () => {
+      await fetchCart();
+    }
+    fetchCartData()
+  }, [fetchCart])
+
+  console.log('delivery fee ', deliveryFee)
 
   // if (loading) return <CheckoutSkeleton />
   const cartSummary = mapCartToOrderSummary(summary)
@@ -213,7 +221,7 @@ export const RememberUserInfo = () => {
   const [checked, setChecked] = useState(false)
   const [hasAddress, setHasAddress] = useState(false)
   const router = useRouter()
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
     await placeOrder().catch((err) => {
@@ -255,7 +263,7 @@ export const RememberUserInfo = () => {
       // Check if address exists AND has actual data (not just null properties)
       const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
       setHasAddress(!!isValid)
-      console.log("Address check:", { shippingAddr, isValid })
+      console.log("save userinfo Address check:", { shippingAddr, isValid })
     } catch (err) {
       console.error("Failed to check address:", err)
       setHasAddress(false)

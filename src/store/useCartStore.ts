@@ -62,6 +62,7 @@ function mapCart(cart: any): { items: CartItem[] } & CartSummary {
    const discountTotal =
     cart.discount_total ??
     Math.max((cart.subtotal ?? 0) - (cart.total ?? 0), 0);
+    // console.log('map cart function cart object ', cart)
 
   return {
     cartId: cart.id,
