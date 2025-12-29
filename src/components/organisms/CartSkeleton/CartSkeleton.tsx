@@ -4,22 +4,7 @@ export const CheckoutSkeleton = () => {
     return (
         <div className="min-h-screen pb-8 animate-pulse">
             <main className="max-w-md mx-auto relative z-0">
-                {/* User Details Skeleton */}
-                <div className="bg-white p-4 rounded-2xl border mx-4 md:mx-0 mt-4">
-                    <div className="flex justify-between items-start">
-                        <div className="flex flex-col gap-2 w-[178px]">
-                            <div className="h-5 w-28 bg-gray-200 rounded"></div>
-                            <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                            <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                            <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                            <div className="h-4 w-28 bg-gray-200 rounded"></div>
-                        </div>
-
-                        <div className="flex flex-col">
-                            <div className="h-8 w-20 bg-gray-200 rounded-md"></div>
-                        </div>
-                    </div>
-                </div>
+                <DeliveryAddressSkeleton />
 
                 {/* Order Summary Skeleton */}
                 <div className="bg-white p-4 rounded-2xl border mx-4 md:mx-0 mt-4 flex flex-col gap-4">
@@ -74,3 +59,31 @@ export const CheckoutSkeleton = () => {
         </div>
     );
 };
+
+
+export const DeliveryAddressSkeleton = () => {
+    return (
+        <>
+        {/* // <div className="min-h-screen pb-8 animate-pulse">
+        //     <main className="max-w-md mx-auto relative z-0"> */}
+                    {/* User Details Skeleton */}
+                    < div className="bg-white p-4 rounded-2xl border mx-4 md:mx-0 mt-4" >
+                        <div className="flex justify-between items-start">
+                            <div className="flex flex-col gap-2 w-[178px]">
+                                <div className="h-5 w-28 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                                <div className="h-4 w-28 bg-gray-200 rounded"></div>
+                            </div>
+
+                            <div className="flex flex-col">
+                                <div className="h-8 w-20 bg-gray-200 rounded-md"></div>
+                            </div>
+                        </div>
+                    </div >
+        {/* //     </main>
+        // </div> */}
+        </>
+    )
+}

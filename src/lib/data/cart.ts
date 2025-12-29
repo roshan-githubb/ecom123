@@ -217,7 +217,7 @@ export async function deleteLineItem(lineId: string) {
   }
 
   await sdk.store.cart
-    .deleteLineItem(cartId, lineId, headers)
+    .deleteLineItem(cartId, lineId, {})
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       await revalidateTag(cartCacheTag)
@@ -264,6 +264,7 @@ export async function initiatePaymentSession(
     .then(async (resp) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
+      console.log('payment session initiate response, cart and data ', {resp, cart, data})
       return resp
     })
     .catch(medusaError)
@@ -487,22 +488,21 @@ export async function placeOrder(cartId?: string) {
     ...(await getAuthHeaders()),
   }
 
-  const res = await fetchQuery(`/store/carts/${id}/complete`, {
-    method: "POST",
-    headers,
-  })
+  const cartRes: any = await sdk.store.cart
+    .complete(id, {}, headers)
+    .then(async (cartRes) => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+      return cartRes
+    })
+    .catch(medusaError)
 
-  const cartCacheTag = await getCacheTag("carts")
-  revalidateTag(cartCacheTag)
-
-  if (res?.data?.order_set) {
-    revalidatePath("/user/reviews")
-    revalidatePath("/user/orders")
+  if (cartRes?.order_set) {
     removeCartId()
-    redirect(`/order/${res?.data?.order_set.orders[0].id}/confirmed`)
+    redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
   }
 
-  return res
+  return cartRes.order_set.cart
 }
 
 /**
@@ -597,7 +597,7 @@ export async function updateRegionWithValidation(
           )
           if (item) {
             try {
-              await sdk.store.cart.deleteLineItem(cart.id, item.id, headers)
+              await sdk.store.cart.deleteLineItem(cart.id, item.id, {})
               removedItems.push(item.product_title || "Unknown product")
             } catch (deleteError) {
               // Silent failure - item removal failed but continue

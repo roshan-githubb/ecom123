@@ -23,6 +23,13 @@ export interface CartItem {
   variantId?: string;
   productId?: string;
 }
+export interface Promotion {
+   code: string;
+   id: string;
+   value: number;
+   type: string;
+   isAutomatic: boolean;
+}
 
 export interface CartSummary {
   cartId: string;
@@ -32,6 +39,8 @@ export interface CartSummary {
   serviceFee: number;
   totalPayable: number;
   currency: string;
+  discountTotal: number;
+  promotions: Promotion[];
 }
 
 interface CartState extends CartSummary {
@@ -50,6 +59,11 @@ interface CartState extends CartSummary {
 // Mapper
 // -------------------------
 function mapCart(cart: any): { items: CartItem[] } & CartSummary {
+   const discountTotal =
+    cart.discount_total ??
+    Math.max((cart.subtotal ?? 0) - (cart.total ?? 0), 0);
+    // console.log('map cart function cart object ', cart)
+
   return {
     cartId: cart.id,
     currency: (cart.currency_code ?? "NPR").toUpperCase(),
@@ -59,6 +73,15 @@ function mapCart(cart: any): { items: CartItem[] } & CartSummary {
     serviceFee: 0,
     taxTotal: cart.tax_total ?? 0,
     totalPayable: cart.total ?? 0,
+    discountTotal,
+    promotions:
+      cart.promotions?.map((p: any) => ({
+        code: p.code || '',
+        id: p.id,
+        type: p.application_method?.type || '',
+        value: p.application_method?.value || 0,
+        isAutomatic: p.is_automatic || false
+      })) ?? [],
 
     items: cart.items?.map((item: any) => ({
       id: item.id,
@@ -84,13 +107,14 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-
+      promotions: [],
       cartId: "",
       subtotal: 0,
       taxTotal: 0,
       deliveryFee: 0,
       serviceFee: 0,
       totalPayable: 0,
+      discountTotal: 0,
       currency: "NPR",
 
       fetchCart: async () => {

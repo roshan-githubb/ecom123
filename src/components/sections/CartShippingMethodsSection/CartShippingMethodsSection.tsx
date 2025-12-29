@@ -14,6 +14,7 @@ import { Modal, SelectField } from "@/components/molecules"
 import { CartShippingMethodRow } from "./CartShippingMethodRow"
 import { Listbox, Transition } from "@headlessui/react"
 import clsx from "clsx"
+import { Truck } from "lucide-react"
 
 // Extended cart item product type to include seller
 type ExtendedStoreProduct = HttpTypes.StoreProduct & {
@@ -22,6 +23,7 @@ type ExtendedStoreProduct = HttpTypes.StoreProduct & {
     name: string
   }
 }
+
 
 // Cart item type definition
 type CartItem = {
@@ -44,13 +46,7 @@ type ShippingProps = {
   }
   availableShippingMethods:
   | (StoreCardShippingMethod &
-    {
-      rules: any
-      seller_id: string
-      price_type: string
-      id: string
-      amount?: number
-    }[])
+    { rules: any; seller_id: string; price_type: string; id: string }[])
   | null
 }
 
@@ -59,6 +55,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   availableShippingMethods,
 }) => {
   const [isLoadingPrices, setIsLoadingPrices] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<
     Record<string, number>
   >({})
@@ -72,7 +69,8 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "delivery"
+
+
 
   const _shippingMethods = availableShippingMethods?.filter(
     (sm) =>
@@ -99,12 +97,10 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     if (missingSellerIds.length > 0 && !cart.shipping_methods?.length) {
       setMissingModal(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart, _shippingMethods])
+  }, [cart])
 
   useEffect(() => {
     if (_shippingMethods?.length) {
-      setIsLoadingPrices(true)
       const promises = _shippingMethods
         .filter((sm) => sm.price_type === "calculated")
         .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
@@ -114,47 +110,33 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           const pricesMap: Record<string, number> = {}
           res
             .filter((r) => r.status === "fulfilled")
-            .forEach((p: any) => {
-              if (p.status === "fulfilled" && p.value) {
-                pricesMap[p.value.id] = p.value.amount
-              }
-            })
+            .forEach((p) => (pricesMap[p.value?.id || ""] = p.value?.amount!))
 
           setCalculatedPricesMap(pricesMap)
           setIsLoadingPrices(false)
         })
       }
     }
-  }, [_shippingMethods, cart.id])
+  }, [availableShippingMethods])
 
 
-  const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
-  }
 
   const handleSetShippingMethod = async (id: string | null) => {
+    setIsLoadingPrices(true)
+    setError(null)
+
     if (!id) {
+      setIsLoadingPrices(false)
       return
     }
 
-    try {
-      setError(null)
-      setIsLoadingPrices(true)
-      const res = await setShippingMethod({
-        cartId: cart.id,
-        shippingMethodId: id,
-      })
-      if (!res.ok) {
-        return setError(res.error?.message)
+    await setShippingMethod({ cartId: cart.id, shippingMethodId: id }).catch(
+      (err) => {
+        setError(err.message)
       }
-    } catch (error: any) {
-      setError(
-        error?.message?.replace("Error setting up the request: ", "") ||
-        "An error occurred"
-      )
-    } finally {
-      setIsLoadingPrices(false)
-    }
+    )
+    setIsOpen(false)
+    setIsLoadingPrices(false)
   }
 
   useEffect(() => {
@@ -168,21 +150,12 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       acc[sellerId] = []
     }
 
-    const amount = Number(
-      method.price_type === "flat"
-        ? method.amount
-        : calculatedPricesMap[method.id]
-    )
-
-    if (!isNaN(amount)) {
-      acc[sellerId]?.push(method)
-    }
-
+    acc[sellerId].push(method)
     return acc
   }, {})
 
   const handleEdit = () => {
-    router.replace(pathname + "?step=delivery")
+    setIsOpen(true)
   }
 
   const missingSellers = cart.items
@@ -192,11 +165,11 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     .map((item) => item.product?.seller?.name)
 
   return (
-    <div className="border p-4 rounded-sm bg-ui-bg-interactive">
-      {/* {missingModal && (
+    <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
+      {missingModal && (
         <Modal
           heading="Missing seller shipping option"
-          onClose={() => router.push(`/${pathname.split("/")[1]}/cart`)}
+          onClose={() => router.push("/")}
         >
           <div className="p-4">
             <h2 className="heading-sm">
@@ -208,8 +181,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
               <span className="font-bold">
                 {missingSellers?.map(
                   (seller, index) =>
-                    `${seller}${
-                      index === missingSellers.length - 1 ? " " : ", "
+                    `${seller}${index === missingSellers.length - 1 ? " " : ", "
                     }`
                 )}
               </span>{" "}
@@ -219,163 +191,111 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
             </p>
           </div>
         </Modal>
-      )} */}
-      <div className="flex flex-row items-center justify-between mb-6">
-        <Heading
-          level="h2"
-          className="flex flex-row text-3xl-regular gap-x-2 items-baseline items-center"
-        >
-          {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-            <CheckCircleSolid />
-          )}
-          Delivery
-        </Heading>
-        {!isOpen && (
-          <Text>
-            <Button onClick={handleEdit} variant="tonal">
-              Edit
-            </Button>
-          </Text>
-        )}
-      </div>
-      {isOpen ? (
-        <>
-          <div className="grid">
-            <div data-testid="delivery-options-container">
-              <div className="pb-8 md:pt-0 pt-2">
-                {Object.keys(groupedBySellerId).map((key) => {
-                  return (
-                    <div key={key} className="mb-4">
-                      <Heading level="h3" className="mb-2">
+      )}
+      <div className="space-y-4 px-4 md:px-0 mt-4">
+        {/* Header */}
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]" />
+            <Truck className="w-5 h-5 text-[#2b5bf7] relative z-10" />
+          </div>
+
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                Shipping Method
+                {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
+                  <CheckCircleSolid className="w-4 h-4 text-[#2b5bf7]" />
+                )}
+              </h2>
+
+              {!isOpen && (
+                <button
+                  onClick={handleEdit}
+                  className="text-[13px] font-medium text-[#2b5bf7]"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="mt-2 border-t border-gray-200 pt-3">
+              {isOpen ? (
+                <div className="space-y-4">
+                  {Object.keys(groupedBySellerId).map((key) => (
+                    <div key={key}>
+                      <p className="text-[13px] font-medium text-gray-900 mb-1">
                         {groupedBySellerId[key][0].seller_name}
-                      </Heading>
+                      </p>
+
                       <Listbox
                         value={cart.shipping_methods?.[0]?.id}
-                        onChange={(value) => {
-                          handleSetShippingMethod(value)
-                        }}
+                        onChange={handleSetShippingMethod}
                       >
                         <div className="relative">
-                          <Listbox.Button
-                            className={clsx(
-                              "relative w-full flex justify-between items-center px-4 h-12 bg-component-secondary text-left  cursor-default focus:outline-none border rounded-lg focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-gray-300 focus-visible:ring-offset-2 focus-visible:border-gray-300 text-base-regular"
-                            )}
-                          >
-                            {({ open }) => (
-                              <>
-                                <span className="block truncate">
-                                  Choose delivery option
-                                </span>
-                                <ChevronUpDown
-                                  className={clx(
-                                    "transition-rotate duration-200",
-                                    {
-                                      "transform rotate-180": open,
-                                    }
-                                  )}
-                                />
-                              </>
-                            )}
+                          <Listbox.Button className="w-full h-11 px-3 border border-gray-200 rounded-md text-[13px] text-gray-600 flex justify-between items-center">
+                            Choose shipping option
+                            <ChevronUpDown className="w-4 h-4 text-gray-400" />
                           </Listbox.Button>
-                          <Transition
-                            as={Fragment}
-                            leave="transition ease-in duration-100"
-                            leaveFrom="opacity-100"
-                            leaveTo="opacity-0"
-                          >
-                            <Listbox.Options
-                              className="absolute z-20 w-full overflow-auto text-small-regular bg-white border rounded-lg border-top-0 max-h-60 focus:outline-none sm:text-sm"
-                              data-testid="shipping-address-options"
-                            >
-                              {groupedBySellerId[key].map((option: any) => {
-                                return (
-                                  <Listbox.Option
-                                    className="cursor-pointer select-none relative pl-6 pr-10 hover:bg-gray-50 py-4 border-b"
-                                    value={option.id}
-                                    key={option.id}
-                                  >
-                                    {option.name}
-                                    {" - "}
-                                    {option.price_type === "flat" ? (
-                                      convertToLocale({
-                                        amount: option.amount!,
-                                        currency_code: cart?.currency_code,
-                                      })
-                                    ) : calculatedPricesMap[option.id] ? (
-                                      convertToLocale({
-                                        amount: calculatedPricesMap[option.id],
-                                        currency_code: cart?.currency_code,
-                                      })
-                                    ) : isLoadingPrices ? (
-                                      <Loader />
-                                    ) : (
-                                      "-"
-                                    )}
-                                  </Listbox.Option>
-                                )
-                              })}
+
+                          <Transition as={Fragment}>
+                            <Listbox.Options className="absolute z-20 w-full bg-white border border-gray-200 rounded-md mt-1 max-h-56 overflow-auto">
+                              {groupedBySellerId[key].map((option: any) => (
+                                <Listbox.Option
+                                  key={option.id}
+                                  value={option.id}
+                                  className="px-4 py-3 text-[13px] text-gray-700 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                                >
+                                  {option.name} —{" "}
+                                  {convertToLocale({
+                                    amount: option.amount!,
+                                    currency_code: cart.currency_code,
+                                  })}
+                                </Listbox.Option>
+                              ))}
                             </Listbox.Options>
                           </Transition>
                         </div>
                       </Listbox>
                     </div>
-                  )
-                })}
-                {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-                  <div className="flex flex-col">
-                    {cart.shipping_methods?.map((method) => (
-                      <CartShippingMethodRow
-                        key={method.id}
-                        method={method}
-                        currency_code={cart.currency_code}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+                  ))}
+                  {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
+                    <div className="flex flex-col">
+                      {cart.shipping_methods?.map((method) => (
+                        <CartShippingMethodRow
+                          key={method.id}
+                          method={method}
+                          currency_code={cart.currency_code}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  <ErrorMessage error={error} />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cart.shipping_methods?.map((method) => (
+                    <div key={method.id}>
+                      <p className="text-[13px] text-gray-700">
+                        {method.name} —{" "}
+                        {convertToLocale({
+                          amount: method.amount!,
+                          currency_code: cart.currency_code,
+                        })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-          <div>
-            <ErrorMessage
-              error={error}
-              data-testid="delivery-option-error-message"
-            />
-            <Button
-              onClick={handleSubmit}
-              variant="tonal"
-              disabled={!cart.shipping_methods?.[0]}
-              loading={isLoadingPrices}
-            >
-              Continue to payment
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div>
-          <div className="text-small-regular">
-            {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <div className="flex flex-col">
-                {cart.shipping_methods?.map((method) => (
-                  <div key={method.id} className="mb-4 border rounded-md p-4">
-                    <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                      Method
-                    </Text>
-                    <Text className="txt-medium text-ui-fg-subtle">
-                      {method.name}{" "}
-                      {convertToLocale({
-                        amount: method.amount!,
-                        currency_code: cart?.currency_code,
-                      })}
-                    </Text>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
-      )}
+      </div>
     </div>
   )
+
 }
 
 export default CartShippingMethodsSection

@@ -1,3 +1,5 @@
+import { Promotion } from "@/store/useCartStore";
+
 export interface OrderSummaryItem {
     lineId: string;
     productId: string;
@@ -15,8 +17,10 @@ export interface OrderSummaryData {
     currency: string;
 
     items: OrderSummaryItem[];
+    promotions: Promotion[]
 
     subtotal: number;
+    discountTotal: number;
     deliveryFee: number;
     serviceFee: number;
     totalPayable: number;
@@ -52,6 +56,8 @@ export function mapCartToOrderSummary(cart: any): OrderSummaryData {
     })) || [];
 
     const subtotal = cart.subtotal ?? cart.item_total ?? 0;
+    const discountTotal = cart?.discountTotal ?? 0
+    const promotions = cart?.promotions ?? []
 
     const deliveryFee = cart?.shipping_totla ?? 0;
     const taxTotal = cart?.taxt_total ?? 0;
@@ -67,11 +73,13 @@ export function mapCartToOrderSummary(cart: any): OrderSummaryData {
         currency: currency.toUpperCase(),
 
         items,
+        discountTotal,
 
         subtotal,
         deliveryFee,
         serviceFee,
         taxTotal,
         totalPayable,
+        promotions,
     };
 }
