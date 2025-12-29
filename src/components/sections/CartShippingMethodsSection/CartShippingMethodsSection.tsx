@@ -44,13 +44,7 @@ type ShippingProps = {
   }
   availableShippingMethods:
   | (StoreCardShippingMethod &
-    {
-      rules: any
-      seller_id: string
-      price_type: string
-      id: string
-      amount?: number
-    }[])
+    { rules: any; seller_id: string; price_type: string; id: string }[])
   | null
 }
 
@@ -59,6 +53,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   availableShippingMethods,
 }) => {
   const [isLoadingPrices, setIsLoadingPrices] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<
     Record<string, number>
   >({})
@@ -72,7 +67,6 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "delivery"
 
   const _shippingMethods = availableShippingMethods?.filter(
     (sm) =>
@@ -99,12 +93,10 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     if (missingSellerIds.length > 0 && !cart.shipping_methods?.length) {
       setMissingModal(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart, _shippingMethods])
+  }, [cart])
 
   useEffect(() => {
     if (_shippingMethods?.length) {
-      setIsLoadingPrices(true)
       const promises = _shippingMethods
         .filter((sm) => sm.price_type === "calculated")
         .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
@@ -114,47 +106,33 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           const pricesMap: Record<string, number> = {}
           res
             .filter((r) => r.status === "fulfilled")
-            .forEach((p: any) => {
-              if (p.status === "fulfilled" && p.value) {
-                pricesMap[p.value.id] = p.value.amount
-              }
-            })
+            .forEach((p) => (pricesMap[p.value?.id || ""] = p.value?.amount!))
 
           setCalculatedPricesMap(pricesMap)
           setIsLoadingPrices(false)
         })
       }
     }
-  }, [_shippingMethods, cart.id])
+  }, [availableShippingMethods])
 
 
-  const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
-  }
 
   const handleSetShippingMethod = async (id: string | null) => {
+    setIsLoadingPrices(true)
+    setError(null)
+
     if (!id) {
+      setIsLoadingPrices(false)
       return
     }
 
-    try {
-      setError(null)
-      setIsLoadingPrices(true)
-      const res = await setShippingMethod({
-        cartId: cart.id,
-        shippingMethodId: id,
-      })
-      if (!res.ok) {
-        return setError(res.error?.message)
+    await setShippingMethod({ cartId: cart.id, shippingMethodId: id }).catch(
+      (err) => {
+        setError(err.message)
       }
-    } catch (error: any) {
-      setError(
-        error?.message?.replace("Error setting up the request: ", "") ||
-        "An error occurred"
-      )
-    } finally {
-      setIsLoadingPrices(false)
-    }
+    )
+    setIsOpen(false)
+    setIsLoadingPrices(false)
   }
 
   useEffect(() => {
@@ -168,21 +146,12 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       acc[sellerId] = []
     }
 
-    const amount = Number(
-      method.price_type === "flat"
-        ? method.amount
-        : calculatedPricesMap[method.id]
-    )
-
-    if (!isNaN(amount)) {
-      acc[sellerId]?.push(method)
-    }
-
+    acc[sellerId].push(method)
     return acc
   }, {})
 
   const handleEdit = () => {
-    router.replace(pathname + "?step=delivery")
+    setIsOpen(true)
   }
 
   const missingSellers = cart.items
@@ -192,11 +161,11 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     .map((item) => item.product?.seller?.name)
 
   return (
-    <div className="border p-4 rounded-sm bg-ui-bg-interactive">
-      {/* {missingModal && (
+    <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
+      {missingModal && (
         <Modal
           heading="Missing seller shipping option"
-          onClose={() => router.push(`/${pathname.split("/")[1]}/cart`)}
+          onClose={() => router.push("/check")}
         >
           <div className="p-4">
             <h2 className="heading-sm">
@@ -208,8 +177,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
               <span className="font-bold">
                 {missingSellers?.map(
                   (seller, index) =>
-                    `${seller}${
-                      index === missingSellers.length - 1 ? " " : ", "
+                    `${seller}${index === missingSellers.length - 1 ? " " : ", "
                     }`
                 )}
               </span>{" "}
@@ -219,7 +187,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
             </p>
           </div>
         </Modal>
-      )} */}
+      )}
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
           level="h2"
@@ -340,14 +308,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
               error={error}
               data-testid="delivery-option-error-message"
             />
-            <Button
-              onClick={handleSubmit}
-              variant="tonal"
-              disabled={!cart.shipping_methods?.[0]}
-              loading={isLoadingPrices}
-            >
-              Continue to payment
-            </Button>
+
           </div>
         </>
       ) : (

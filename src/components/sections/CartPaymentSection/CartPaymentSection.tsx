@@ -39,6 +39,7 @@ const CartPaymentSection = ({
   const [error, setError] = useState<string | null>(null)
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     activeSession?.provider_id ?? ""
   )
@@ -47,12 +48,12 @@ const CartPaymentSection = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "payment"
 
   const isStripe = isStripeFunc(selectedPaymentMethod)
 
   const setPaymentMethod = async (method: string) => {
     setError(null)
+    setIsOpen(false)
     setSelectedPaymentMethod(method)
     if (isStripeFunc(method)) {
       await initiatePaymentSession(cart, {
@@ -78,13 +79,12 @@ const CartPaymentSection = ({
   )
 
   const handleEdit = () => {
-    router.push(pathname + "?" + createQueryString("step", "payment"), {
-      scroll: false,
-    })
+    setIsOpen(true)
   }
 
   const handleSubmit = async () => {
     setIsLoading(true)
+    setIsOpen(false)
     try {
       const shouldInputCard =
         isStripeFunc(selectedPaymentMethod) && !activeSession
@@ -99,12 +99,12 @@ const CartPaymentSection = ({
       }
 
       if (!shouldInputCard) {
-        return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
-        )
+        // return router.push(
+        //   pathname + "?" + createQueryString("step", "review"),
+        //   {
+        //     scroll: false,
+        //   }
+        // )
       }
     } catch (err: any) {
       setError(err.message)

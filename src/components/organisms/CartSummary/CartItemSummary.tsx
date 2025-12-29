@@ -1,10 +1,14 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
-import { OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
+import { mapCartToOrderSummary, OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
 import Image from "next/image";
 import Link from "next/link";
+// import { CheckoutSkeleton } from "../CartSkeleton/CartSkeleton";
+import { Button } from "@/components/sections/Checkout/DeliveryAddress";
+import { useRouter } from "next/navigation";
+import { placeOrder } from "@/lib/data/cart";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -100,7 +104,41 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
   )
 }
 
-export function OrderSummary({ summary }: OrderSummaryProps) {
+export function OrderSummary() {
+  // const [loading, setLoading] = useState(true)
+
+  const {
+    cartId,
+    items,
+    subtotal,
+    taxTotal,
+    deliveryFee,
+    serviceFee,
+    totalPayable,
+    currency,
+    fetchCart,
+    discountTotal,
+    promotions
+  } = useCartStore()
+  const summary = {
+    currency,
+    subtotal,
+    discountTotal,
+    taxTotal,
+    deliveryFee,
+    serviceFee,
+    totalPayable,
+    items,
+    cartId,
+    promotions
+  }
+
+  // if (loading) return <CheckoutSkeleton />
+  const cartSummary = mapCartToOrderSummary(summary)
+
+  if (cartSummary && !cartSummary?.items.length) {
+    return <div className="text-center mt-10">Your cart is empty</div>
+  }
   // console.log('order summary prop received ', summary)
 
   // const subtotal = items.reduce(
@@ -117,7 +155,7 @@ export function OrderSummary({ summary }: OrderSummaryProps) {
         Order Summary
       </h2>
       <div className="pb-4 border-b border-gray-100 space-y-2">
-        {summary.items.map((item) => (
+        {cartSummary.items.map((item: any) => (
           <OrderRow
             key={`${item.lineId}`}
             item={item}
@@ -167,5 +205,98 @@ export function OrderSummary({ summary }: OrderSummaryProps) {
         </span>
       </div>
     </div>
+  )
+}
+
+export const RememberUserInfo = () => {
+
+  const [checked, setChecked] = useState(false)
+  const [hasAddress, setHasAddress] = useState(false)
+  const router = useRouter()
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    await placeOrder().catch((err) => {
+      setErrorMessage(err.message !== "NEXT_REDIRECT" ? err.message : null)
+    })
+  }
+
+  const handlePayment = () => {
+    onPaymentCompleted()
+  }
+
+  const {
+    cartId,
+    fetchCart,
+  } = useCartStore()
+
+  // Check if address exists
+  useEffect(() => {
+
+
+    checkAddress()
+  }, [cartId])
+
+  async function checkAddress() {
+    if (!cartId) {
+      setHasAddress(false)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/cart/get", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart_id: cartId }),
+      })
+      const data = await res.json()
+      const shippingAddr = data?.cart?.shipping_address
+      console.log("shipping addr ", data, data?.cart?.shipping_address)
+      // Check if address exists AND has actual data (not just null properties)
+      const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
+      setHasAddress(!!isValid)
+      console.log("Address check:", { shippingAddr, isValid })
+    } catch (err) {
+      console.error("Failed to check address:", err)
+      setHasAddress(false)
+    }
+  }
+
+
+
+  const handlePlaceOrder = async () => {
+    console.log("Place order clicked, hasAddress:", hasAddress)
+    await checkAddress()
+    if (!hasAddress) {
+      // Use the existing cart toast system
+      const { cartToast } = require("@/lib/cart-toast")
+      cartToast.showErrorToast("Please add a delivery address first")
+      return
+    }
+
+    router.push("/np/payment")
+  }
+  return (
+    <>
+      <div className="max-w-md mx-auto mt-4">
+        <label className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            className="w-6 h-6 accent-blue-600 rounded border-gray-300"
+          />
+          <span className="text-[#555] font-poppins text-sm font-normal leading-[1.4em]">
+            Save my information for a faster checkout
+          </span>
+        </label>
+      </div>
+
+      <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
+        <Button variant="primary" onClick={handlePayment}>
+          Place Order
+        </Button>
+      </div>
+    </>
   )
 }

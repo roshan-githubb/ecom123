@@ -487,22 +487,21 @@ export async function placeOrder(cartId?: string) {
     ...(await getAuthHeaders()),
   }
 
-  const res = await fetchQuery(`/store/carts/${id}/complete`, {
-    method: "POST",
-    headers,
-  })
+  const cartRes: any = await sdk.store.cart
+    .complete(id, {}, headers)
+    .then(async (cartRes) => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+      return cartRes
+    })
+    .catch(medusaError)
 
-  const cartCacheTag = await getCacheTag("carts")
-  revalidateTag(cartCacheTag)
-
-  if (res?.data?.order_set) {
-    revalidatePath("/user/reviews")
-    revalidatePath("/user/orders")
+  if (cartRes?.order_set) {
     removeCartId()
-    redirect(`/order/${res?.data?.order_set.orders[0].id}/confirmed`)
+    redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
   }
 
-  return res
+  return cartRes.order_set.cart
 }
 
 /**
