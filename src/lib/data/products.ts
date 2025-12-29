@@ -79,13 +79,17 @@ export const listProductsWithSort = async ({
 }): Promise<any> => {
   const limit = queryParams?.limit || 12
 
+  // For seller queries, fetch more products to ensure we get all seller products
+  const fetchLimit = seller_id ? 1000 : 200
+
   const { response: { products } } = await listProducts({
     pageParam: 1,
     queryParams: {
       ...queryParams,
-      limit: 200,
+      limit: fetchLimit,
       category_id,
       collection_id,
+      // Don't pass seller_id to API as it's not supported
     },
     countryCode,
   })
@@ -97,6 +101,8 @@ export const listProductsWithSort = async ({
   filtered = filtered.filter((p: any) =>
     p.variants?.some((v: any) => v.calculated_price != null)
   )
+
+  console.log(`Seller ${seller_id} products found:`, filtered.length, "out of", products.length, "total products");
 
   const sorted = sortProducts(filtered, sortBy)
   const start = (page - 1) * limit

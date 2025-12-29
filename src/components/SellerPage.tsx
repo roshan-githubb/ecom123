@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
 import { RatingSummary } from "@/types/reviews"
@@ -260,25 +261,215 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
 
 
 export function SellerPage({ products = [], seller, ratingsMap = {} }: SellerPageProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [showFilters, setShowFilters] = useState(false);
+    const [showSort, setShowSort] = useState(false);
+
+    const currentSort = searchParams.get('sort') || 'created_at';
+    const currentFilter = searchParams.get('filter') || 'all';
+
+    // Close dropdowns when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = () => {
+            setShowFilters(false);
+            setShowSort(false);
+        };
+
+        if (showFilters || showSort) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [showFilters, showSort]);
+
+    const sortOptions = [
+        { value: 'created_at', label: 'Newest First' },
+        { value: 'price_asc', label: 'Price: Low to High' },
+        { value: 'price_desc', label: 'Price: High to Low' },
+        { value: 'title_asc', label: 'Name: A to Z' },
+        { value: 'title_desc', label: 'Name: Z to A' },
+    ];
+
+    const filterOptions = [
+        { value: 'all', label: 'All Products' },
+        { value: 'in_stock', label: 'In Stock Only' },
+        { value: 'on_sale', label: 'On Sale' },
+        { value: 'low_price', label: 'Under Rs. 1000' },
+        { value: 'high_price', label: 'Above Rs. 5000' },
+    ];
+
+    const updateURL = (key: string, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value && value !== 'all' && value !== 'created_at') {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
+        router.push(`?${params.toString()}`);
+    };
+
+    const handleSortChange = (sortValue: string) => {
+        updateURL('sort', sortValue);
+        setShowSort(false);
+    };
+
+    const handleFilterChange = (filterValue: string) => {
+        updateURL('filter', filterValue);
+        setShowFilters(false);
+    };
+
+    const clearFilter = () => {
+        updateURL('filter', 'all');
+    };
+
+    const clearSort = () => {
+        updateURL('sort', 'created_at');
+    };
+
+    const clearAllFilters = () => {
+        const params = new URLSearchParams();
+        router.push(`?${params.toString()}`);
+    };
+
+    // Get active filters for display
+    const activeFilters = [];
+    if (currentFilter !== 'all') {
+        const filterLabel = filterOptions.find(opt => opt.value === currentFilter)?.label || currentFilter;
+        activeFilters.push({ type: 'filter', value: currentFilter, label: filterLabel });
+    }
+    if (currentSort !== 'created_at') {
+        const sortLabel = sortOptions.find(opt => opt.value === currentSort)?.label || currentSort;
+        activeFilters.push({ type: 'sort', value: currentSort, label: sortLabel });
+    }
+
     return (
         <div className="min-h-screen bg-white w-full max-w-md md:max-w-7xl mx-auto border-x border-gray-100">
             <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3">
                 <h1 className="text-lg font-semibold text-gray-800">{seller?.name || (products.length > 0 ? products[0].collection?.title : "") || "Store"}</h1>
             </div>
 
-            <div className="sticky top-0 z-20 bg-white">
+            <div className="sticky top-0 z-40 bg-white">
                 <div className="flex items-center gap-2 p-3 overflow-x-auto no-scrollbar border-b border-gray-100">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 whitespace-nowrap shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
-                        Filters
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 whitespace-nowrap shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4" /></svg>
-                        Sort
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
+                    {/* Filters Button */}
+                    <div className="relative">
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowFilters(!showFilters);
+                                setShowSort(false);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 whitespace-nowrap shadow-sm hover:bg-gray-50"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+                            Filters
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        
+                        {showFilters && (
+                            <div 
+                                className="fixed top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] min-w-[180px]"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    position: 'fixed',
+                                    top: '120px', // Adjust based on header height
+                                    left: '16px', // Adjust based on button position
+                                }}
+                            >
+                                {filterOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => handleFilterChange(option.value)}
+                                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Sort Button */}
+                    <div className="relative">
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowSort(!showSort);
+                                setShowFilters(false);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 whitespace-nowrap shadow-sm hover:bg-gray-50"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4" /></svg>
+                            {sortOptions.find(opt => opt.value === currentSort)?.label || 'Sort'}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        
+                        {showSort && (
+                            <div 
+                                className="fixed top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] min-w-[180px]"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    position: 'fixed',
+                                    top: '120px', // Adjust based on header height
+                                    left: '120px', // Adjust based on button position
+                                }}
+                            >
+                                {sortOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => handleSortChange(option.value)}
+                                        className={`w-full text-left px-3 py-2 text-[13px] hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                                            currentSort === option.value ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                                        }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
+
+                {/* Active Filters Display */}
+                {activeFilters.length > 0 && (
+                    <div className="px-3 py-2 border-b border-gray-100">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs text-gray-500 font-medium">Active:</span>
+                            {activeFilters.map((filter, index) => (
+                                <div
+                                    key={`${filter.type}-${filter.value}`}
+                                    className="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-full px-2 py-1"
+                                >
+                                    <span className="text-xs text-blue-700 font-medium">
+                                        {filter.label}
+                                    </span>
+                                    <button
+                                        onClick={() => {
+                                            if (filter.type === 'filter') {
+                                                clearFilter();
+                                            } else if (filter.type === 'sort') {
+                                                clearSort();
+                                            }
+                                        }}
+                                        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            ))}
+                            {activeFilters.length > 1 && (
+                                <button
+                                    onClick={clearAllFilters}
+                                    className="text-xs text-gray-500 hover:text-gray-700 underline ml-2"
+                                >
+                                    Clear all
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="p-3">

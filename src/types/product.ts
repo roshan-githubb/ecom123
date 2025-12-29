@@ -42,7 +42,7 @@ export interface Product {
 
 
 
-export type SortOptions = "price_asc" | "price_desc" | "created_at"
+export type SortOptions = "price_asc" | "price_desc" | "created_at" | "title_asc" | "title_desc"
 
 export interface SingleProductImage {
   id: string

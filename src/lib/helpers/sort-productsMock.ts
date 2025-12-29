@@ -27,5 +27,17 @@ export function sortProducts(
     });
   }
 
+  if (sortBy === 'title_asc') {
+    products.sort((a, b) => {
+      return a.title!.localeCompare(b.title!);
+    });
+  }
+
+  if (sortBy === 'title_desc') {
+    products.sort((a, b) => {
+      return b.title!.localeCompare(a.title!);
+    });
+  }
+
   return products;
 }
