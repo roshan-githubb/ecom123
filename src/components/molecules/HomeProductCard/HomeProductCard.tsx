@@ -7,7 +7,10 @@ import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
 import { useCartStore } from "@/store/useCartStore"
+import { useInventoryStore } from "@/store/useInventoryStore"
 import { cartToast } from "@/lib/cart-toast"
+import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
+import { useInventorySync } from "@/hooks/useInventorySync"
 
 
 
@@ -33,6 +36,10 @@ export const HomeProductCard = ({
     const [isAddingToCart, setIsAddingToCart] = useState(false)
     const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
     const addToCart = useCartStore((state) => state.add)
+    const { getAdjustedInventory } = useInventoryStore()
+
+    // Sync inventory with cart state on component mount and navigation
+    useInventorySync()
 
     // --- Extract fields from the Medusa product ---
     const id = api_product.id
@@ -44,14 +51,27 @@ export const HomeProductCard = ({
     const currentPrice =
         api_product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
 
-    
-
-
-    const totalInventory = api_product?.variants?.reduce(
+    // Calculate original total inventory
+    const originalTotalInventory = api_product?.variants?.reduce(
         (sum, variant) => sum + (variant.inventory_quantity || 0),
         0
     ) || 0
+
+    // Get adjusted inventory for each variant and calculate total
+    const adjustedTotalInventory = api_product?.variants?.reduce(
+        (sum, variant) => {
+            const originalInventory = variant.inventory_quantity || 0
+            const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
+            return sum + adjustedInventory
+        },
+        0
+    ) || 0
+
+    const totalInventory = adjustedTotalInventory
     // console.log("total inventory ", totalInventory, api_product.title)
+
+    // Get dynamic stock display information
+    const stockInfo = getStockDisplayInfo(totalInventory)
 
 
     const handleOpenModal = (e: React.MouseEvent) => {
@@ -69,11 +89,14 @@ export const HomeProductCard = ({
 
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.stopPropagation()
-        if (isAddingToCart || !api_product.variants?.[0]?.id) return
+        if (isAddingToCart || !api_product.variants?.[0]?.id || totalInventory <= 0) return
 
         setIsAddingToCart(true)
         try {
             await addToCart(api_product.variants[0].id, 1)
+            
+            // Inventory is now handled in the cart store
+            
             cartToast.showCartToast()
         } catch (error) {
             cartToast.showErrorToast()
@@ -136,6 +159,12 @@ export const HomeProductCard = ({
                 >
                     {description}
                 </p>
+
+                {stockInfo.showWarning && (
+                    <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
+                        {stockInfo.message}
+                    </p>
+                )}
 
                 <button
                     // className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"

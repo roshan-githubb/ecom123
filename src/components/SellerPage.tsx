@@ -5,6 +5,9 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
+import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
+import { useInventoryStore } from "@/store/useInventoryStore"
+import { useInventorySync } from "@/hooks/useInventorySync"
 import { RatingSummary } from "@/types/reviews"
 import { AddVariantSheet } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { motion } from "framer-motion"
@@ -86,7 +89,11 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
 
 const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { product: MedusaProduct, ratingSummary?: RatingSummary, allProducts: MedusaProduct[], productIndex: number }) => {
     const addToCart = useCartStore((state) => state.add);
+    const { getAdjustedInventory } = useInventoryStore();
     const [isAddingToCart, setIsAddingToCart] = useState(false);
+    
+    // Sync inventory with cart state on component mount and navigation
+    useInventorySync();
     const [showModal, setShowModal] = useState(false);
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
     const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex);
@@ -107,8 +114,28 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
     const discountPercentage = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
     const saveAmount = mrp - price;
 
-    const isSoldOut = false;
-    const lowStock = false;
+    // Calculate original total inventory across all variants
+    const originalTotalInventory = product.variants?.reduce(
+        (sum, variant) => sum + (variant.inventory_quantity || 0),
+        0
+    ) || 0;
+
+    // Get adjusted inventory for each variant and calculate total
+    const adjustedTotalInventory = product.variants?.reduce(
+        (sum, variant) => {
+            const originalInventory = variant.inventory_quantity || 0;
+            const adjustedInventory = getAdjustedInventory(variant.id, originalInventory);
+            return sum + adjustedInventory;
+        },
+        0
+    ) || 0;
+
+    const totalInventory = adjustedTotalInventory;
+
+    // Get dynamic stock display information
+    const stockInfo = getStockDisplayInfo(totalInventory);
+
+    const isSoldOut = totalInventory <= 0;
 
     const averageRating = ratingSummary?.average_rating || 0;
     const ratingCount = ratingSummary?.total_reviews || 0;
@@ -131,11 +158,14 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
 
     const handleAddToCart = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (isAddingToCart || !firstVariant.id) return;
+        if (isAddingToCart || !firstVariant.id || totalInventory <= 0) return;
 
         setIsAddingToCart(true);
         try {
             await addToCart(firstVariant.id, 1);
+            
+            // Inventory is now handled in the cart store
+            
             cartToast.showCartToast();
         } catch (error) {
             cartToast.showErrorToast();
@@ -224,8 +254,10 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
                 )}
 
                 <div className="flex flex-col gap-0.5">
-                    {lowStock && (
-                        <span className="text-[9px] text-orange-600 font-medium">Only {1} left</span>
+                    {stockInfo.showWarning && (
+                        <span className="text-[9px] font-medium" style={{ color: stockInfo.textColor }}>
+                            {stockInfo.message}
+                        </span>
                     )}
                 </div>
 
@@ -269,7 +301,6 @@ export function SellerPage({ products = [], seller, ratingsMap = {} }: SellerPag
     const currentSort = searchParams.get('sort') || 'created_at';
     const currentFilter = searchParams.get('filter') || 'all';
 
-    // Close dropdowns when clicking outside
     React.useEffect(() => {
         const handleClickOutside = () => {
             setShowFilters(false);
@@ -331,7 +362,6 @@ export function SellerPage({ products = [], seller, ratingsMap = {} }: SellerPag
         router.push(`?${params.toString()}`);
     };
 
-    // Get active filters for display
     const activeFilters = [];
     if (currentFilter !== 'all') {
         const filterLabel = filterOptions.find(opt => opt.value === currentFilter)?.label || currentFilter;
@@ -371,8 +401,8 @@ export function SellerPage({ products = [], seller, ratingsMap = {} }: SellerPag
                                 onClick={(e) => e.stopPropagation()}
                                 style={{
                                     position: 'fixed',
-                                    top: '120px', // Adjust based on header height
-                                    left: '16px', // Adjust based on button position
+                                    top: '120px', 
+                                    left: '16px', 
                                 }}
                             >
                                 {filterOptions.map((option) => (
@@ -409,8 +439,8 @@ export function SellerPage({ products = [], seller, ratingsMap = {} }: SellerPag
                                 onClick={(e) => e.stopPropagation()}
                                 style={{
                                     position: 'fixed',
-                                    top: '120px', // Adjust based on header height
-                                    left: '120px', // Adjust based on button position
+                                    top: '120px', 
+                                    left: '120px',
                                 }}
                             >
                                 {sortOptions.map((option) => (

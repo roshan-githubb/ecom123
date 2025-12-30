@@ -4,16 +4,14 @@ import Image from "next/image"
 import { StarRating } from "@/components/atoms"
 import { HttpTypes } from "@medusajs/types"
 import { useCartStore } from "@/store/useCartStore"
+import { useInventoryStore } from "@/store/useInventoryStore"
 import { cartToast } from "@/lib/cart-toast"
 import { useState, useRef } from "react"
 import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { RatingSummary } from "@/types/reviews"
 import { motion } from "framer-motion"
-
-
-interface AddVariantSheetProps {
-  product: HttpTypes.StoreProduct
-}
+import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
+import { useInventorySync } from "@/hooks/useInventorySync"
 
 export const ProductCard = ({
   api_product,
@@ -34,14 +32,32 @@ export const ProductCard = ({
   const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
   const cardRef = useRef<HTMLDivElement>(null)
   const addToCart = useCartStore((state) => state.add)
+  const { getAdjustedInventory } = useInventoryStore()
+  
+  // Sync inventory with cart state on component mount
+  useInventorySync()
+  
   // console.log("product in product card ", api_product )
 
   if (!api_product || !api_product.variants?.[0]) return null
 
-  const totalInventory = api_product.variants.reduce(
+  // Calculate original total inventory
+  const originalTotalInventory = api_product.variants.reduce(
     (sum, variant) => sum + (variant.inventory_quantity || 0),
     0
   )
+
+  // Get adjusted inventory for each variant and calculate total
+  const adjustedTotalInventory = api_product.variants.reduce(
+    (sum, variant) => {
+      const originalInventory = variant.inventory_quantity || 0
+      const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
+      return sum + adjustedInventory
+    },
+    0
+  )
+
+  const totalInventory = adjustedTotalInventory
   // if (totalInventory <= 0) return null
   // console.log("total inventory ", totalInventory, api_product.title )
 
@@ -67,14 +83,20 @@ export const ProductCard = ({
 
   const { average_rating, total_reviews } = ratingSummary
 
+  // Get dynamic stock display information
+  const stockInfo = getStockDisplayInfo(totalInventory)
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isAddingToCart || !variant.id) return
+    if (isAddingToCart || !variant.id || totalInventory <= 0) return
 
     setIsAddingToCart(true)
     try {
       // console.log("Adding to cart variant id: ", variant.id );
       await addToCart(variant.id, 1)
+      
+      // Inventory is now handled in the cart store
+      
       cartToast.showCartToast()
     } catch (error) {
       cartToast.showErrorToast()
@@ -185,9 +207,11 @@ export const ProductCard = ({
           </span>
         </p>
 
-        <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#FF0000] mt-1">
-          Only 4 left in stock — order soon
-        </p>
+        {stockInfo.showWarning && (
+          <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1" style={{ color: stockInfo.textColor }}>
+            {stockInfo.message}
+          </p>
+        )}
 
         <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
           FREE delivery on <strong>Sat, 27 Sept</strong> for members
