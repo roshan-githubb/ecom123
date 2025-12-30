@@ -6,7 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useCartStore } from "@/store/useCartStore"
 import { useInventoryStore } from "@/store/useInventoryStore"
 import { cartToast } from "@/lib/cart-toast"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { RatingSummary } from "@/types/reviews"
 import { motion } from "framer-motion"
@@ -30,6 +30,7 @@ export const ProductCard = ({
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
   const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
+  const [isHydrated, setIsHydrated] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const addToCart = useCartStore((state) => state.add)
   const { getAdjustedInventory } = useInventoryStore()
@@ -37,29 +38,72 @@ export const ProductCard = ({
   // Sync inventory with cart state on component mount
   useInventorySync()
   
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+  
   // console.log("product in product card ", api_product )
 
   if (!api_product || !api_product.variants?.[0]) return null
 
   // Calculate original total inventory
+  // Handle different inventory data structures (top products vs regular products)
   const originalTotalInventory = api_product.variants.reduce(
-    (sum, variant) => sum + (variant.inventory_quantity || 0),
-    0
-  )
-
-  // Get adjusted inventory for each variant and calculate total
-  const adjustedTotalInventory = api_product.variants.reduce(
     (sum, variant) => {
-      const originalInventory = variant.inventory_quantity || 0
-      const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
-      return sum + adjustedInventory
+      // Try direct inventory_quantity first (regular products)
+      if (variant.inventory_quantity !== undefined) {
+        return sum + (variant.inventory_quantity || 0)
+      }
+      
+      // Try nested inventory structure (top products API)
+      const inventoryItem = (variant as any).inventory_items?.[0]
+      if (inventoryItem?.inventory?.location_levels) {
+        // Sum up available_quantity from all location levels
+        const totalFromLocations = inventoryItem.inventory.location_levels.reduce(
+          (locationSum: number, locationLevel: any) => {
+            return locationSum + (locationLevel.available_quantity || 0)
+          },
+          0
+        )
+        return sum + totalFromLocations
+      }
+      
+      return sum
     },
     0
   )
 
-  const totalInventory = adjustedTotalInventory
+  // Use hydration-safe inventory calculation
+  const totalInventory = isHydrated 
+    ? api_product.variants.reduce(
+        (sum, variant) => {
+          // Try direct inventory_quantity first (regular products)
+          let originalInventory = 0
+          if (variant.inventory_quantity !== undefined) {
+            originalInventory = variant.inventory_quantity || 0
+          } else {
+            // Try nested inventory structure (top products API)
+            const inventoryItem = (variant as any).inventory_items?.[0]
+            if (inventoryItem?.inventory?.location_levels) {
+              // Sum up available_quantity from all location levels
+              originalInventory = inventoryItem.inventory.location_levels.reduce(
+                (locationSum: number, locationLevel: any) => {
+                  return locationSum + (locationLevel.available_quantity || 0)
+                },
+                0
+              )
+            }
+          }
+          
+          const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
+          return sum + adjustedInventory
+        },
+        0
+      )
+    : originalTotalInventory
+  
   // if (totalInventory <= 0) return null
-  // console.log("total inventory ", totalInventory, api_product.title )
 
 
   const variant = api_product.variants[0]

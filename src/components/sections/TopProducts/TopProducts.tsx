@@ -5,7 +5,7 @@ import React from 'react'
 
 export default async function TopProducts() {
 
-    const topProducts = await getTopProducts({ limit: 8 })
+    const topProducts = await getTopProducts({ limit: 20 })
     // console.log("top sale products: ", topProducts );
 
     return (
