@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from "@/store/useCartStore"
@@ -91,9 +91,15 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
     const addToCart = useCartStore((state) => state.add);
     const { getAdjustedInventory } = useInventoryStore();
     const [isAddingToCart, setIsAddingToCart] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
     
     // Sync inventory with cart state on component mount and navigation
     useInventorySync();
+
+    // Handle hydration
+    useEffect(() => {
+        setIsHydrated(true);
+    }, []);
     const [showModal, setShowModal] = useState(false);
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
     const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex);
@@ -115,22 +121,49 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
     const saveAmount = mrp - price;
 
     // Calculate original total inventory across all variants
+    // Handle different inventory data structures (top products vs regular products)
     const originalTotalInventory = product.variants?.reduce(
-        (sum, variant) => sum + (variant.inventory_quantity || 0),
-        0
-    ) || 0;
-
-    // Get adjusted inventory for each variant and calculate total
-    const adjustedTotalInventory = product.variants?.reduce(
         (sum, variant) => {
-            const originalInventory = variant.inventory_quantity || 0;
-            const adjustedInventory = getAdjustedInventory(variant.id, originalInventory);
-            return sum + adjustedInventory;
+            // Try direct inventory_quantity first (regular products)
+            if (variant.inventory_quantity !== undefined) {
+                return sum + (variant.inventory_quantity || 0)
+            }
+            
+            // Try nested inventory structure (top products API)
+            const inventoryItem = (variant as any).inventory_items?.[0]
+            if (inventoryItem?.inventory?.location_levels?.[0]) {
+                const locationLevel = inventoryItem.inventory.location_levels[0]
+                return sum + (locationLevel.available_quantity || 0)
+            }
+            
+            return sum
         },
         0
     ) || 0;
 
-    const totalInventory = adjustedTotalInventory;
+    // Use hydration-safe inventory calculation
+    const totalInventory = isHydrated 
+        ? product.variants?.reduce(
+            (sum, variant) => {
+                // Try direct inventory_quantity first (regular products)
+                let originalInventory = 0;
+                if (variant.inventory_quantity !== undefined) {
+                    originalInventory = variant.inventory_quantity || 0;
+                } else {
+                    // Try nested inventory structure (top products API)
+                    const inventoryItem = (variant as any).inventory_items?.[0]
+                    if (inventoryItem?.inventory?.location_levels?.[0]) {
+                        const locationLevel = inventoryItem.inventory.location_levels[0]
+                        originalInventory = locationLevel.available_quantity || 0
+                    }
+                }
+                
+                const adjustedInventory = getAdjustedInventory(variant.id, originalInventory);
+                return sum + adjustedInventory;
+            },
+            0
+          ) || 0
+        : originalTotalInventory;
 
     // Get dynamic stock display information
     const stockInfo = getStockDisplayInfo(totalInventory);
@@ -204,26 +237,30 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
                 </div>
 
                 <div className="absolute bottom-[-8px] right-[-8px] z-20">
-                    {!isSoldOut ? (
-                        <motion.button
-                            onClick={(e) => {
-                                e.stopPropagation();
+                    <motion.button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isSoldOut) {
                                 handleAddToCart(e);
-                            }}
-                            disabled={isAddingToCart}
-                            whileTap={{ scale: 0.9 }}
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                            className="bg-white border border-green-600 rounded-lg flex flex-col items-center justify-center w-[50px] h-[25px] lg:w-[75px] lg:h-[35px] shadow-sm">
-                            <span className="text-green-700 font-bold text-[12px] leading-none">
-                                {isAddingToCart ? "Adding" : "ADD"}
-                            </span>
-                        </motion.button>
-                    ) : (
-                        <button className="bg-white border border-green-600 rounded-lg flex items-center justify-center w-[70px] h-[30px] shadow-sm">
-                            <span className="text-green-700 font-bold text-[12px]">Notify</span>
-                        </button>
-                    )}
+                            }
+                        }}
+                        disabled={isAddingToCart || isSoldOut}
+                        whileTap={!isSoldOut ? { scale: 0.9 } : {}}
+                        whileHover={!isSoldOut ? { scale: 1.05 } : {}}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        className={`bg-white rounded-lg flex flex-col items-center justify-center w-[50px] h-[25px] lg:w-[75px] lg:h-[35px] shadow-sm ${
+                            isSoldOut 
+                                ? "border border-gray-300 cursor-not-allowed opacity-60" 
+                                : "border border-green-600"
+                        }`}>
+                        <span className={`font-bold text-[12px] leading-none ${
+                            isSoldOut 
+                                ? "text-gray-400" 
+                                : "text-green-700"
+                        }`}>
+                            {isAddingToCart ? "Adding" : "ADD"}
+                        </span>
+                    </motion.button>
                 </div>
             </div>
 

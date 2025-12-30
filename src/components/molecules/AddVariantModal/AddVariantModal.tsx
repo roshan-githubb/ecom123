@@ -13,6 +13,8 @@ import { FaRegBookmark } from "react-icons/fa"
 import { IoShareOutline } from "react-icons/io5"
 import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
+import { useInventoryStore } from "@/store/useInventoryStore"
+import { useInventorySync } from "@/hooks/useInventorySync"
 import { Review } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
@@ -96,7 +98,18 @@ function ProductCardInternal({
   const [imgIndex, setImgIndex] = useState(0)
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
   const [isAtTop, setIsAtTop] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const { getAdjustedInventory } = useInventoryStore()
+  
+  // Sync inventory with cart state
+  useInventorySync()
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const atTop = e.currentTarget.scrollTop <= 5
@@ -289,6 +302,36 @@ function ProductCardInternal({
       return hasColor && hasSize
     }) || product.variants?.[0]
 
+  // Calculate inventory for selected variant
+  const getVariantInventory = (variant: any) => {
+    if (!variant) return 0
+    
+    // Try direct inventory_quantity first (regular products)
+    let originalInventory = 0
+    if (variant.inventory_quantity !== undefined) {
+      originalInventory = variant.inventory_quantity || 0
+    } else {
+      // Try nested inventory structure (top products API)
+      const inventoryItem = variant.inventory_items?.[0]
+      if (inventoryItem?.inventory?.location_levels) {
+        // Sum up available_quantity from all location levels
+        originalInventory = inventoryItem.inventory.location_levels.reduce(
+          (locationSum: number, locationLevel: any) => {
+            return locationSum + (locationLevel.available_quantity || 0)
+          },
+          0
+        )
+      }
+    }
+    
+    return isHydrated 
+      ? getAdjustedInventory(variant.id, originalInventory)
+      : originalInventory
+  }
+
+  const selectedVariantInventory = getVariantInventory(selectedVariant)
+  const isSelectedVariantOutOfStock = selectedVariantInventory <= 0
+
   const price = selectedVariant?.calculated_price?.calculated_amount ?? 0
   const originalPrice =
     selectedVariant?.calculated_price?.original_amount ?? price
@@ -300,7 +343,12 @@ function ProductCardInternal({
     selectedVariant?.calculated_price?.currency_code?.toUpperCase() ?? "INR"
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) return cartToast.showErrorToast("Variant unavailable")
+    if (!selectedVariant || isSelectedVariantOutOfStock) {
+      if (isSelectedVariantOutOfStock) {
+        return // Do nothing for out of stock items
+      }
+      return cartToast.showErrorToast("Variant unavailable")
+    }
     try {
       await useCartStore.getState().add(selectedVariant.id, 1)
       cartToast.showCartToast()
@@ -444,7 +492,12 @@ function ProductCardInternal({
           </div>
           <button
             onClick={handleAddToCart}
-            className="bg-myBlue text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
+            disabled={isSelectedVariantOutOfStock}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors shadow-md ${
+              isSelectedVariantOutOfStock
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-myBlue text-white hover:bg-blue-700"
+            }`}
           >
             ADD
           </button>

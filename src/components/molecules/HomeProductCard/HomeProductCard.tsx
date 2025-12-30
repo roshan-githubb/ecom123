@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
 import { HttpTypes } from "@medusajs/types"
 import { motion } from "framer-motion"
@@ -35,14 +35,19 @@ export const HomeProductCard = ({
     const [cardPos, setCardPos] = useState({ top: 0, left: 0, width: 0, height: 0 })
     const [isAddingToCart, setIsAddingToCart] = useState(false)
     const [currentModalProductIndex, setCurrentModalProductIndex] = useState(productIndex)
+    const [isHydrated, setIsHydrated] = useState(false)
     const addToCart = useCartStore((state) => state.add)
     const { getAdjustedInventory } = useInventoryStore()
 
     // Sync inventory with cart state on component mount and navigation
     useInventorySync()
 
+    // Handle hydration
+    useEffect(() => {
+        setIsHydrated(true)
+    }, [])
+
     // --- Extract fields from the Medusa product ---
-    const id = api_product.id
     const title = api_product.title
     const description = api_product.description
 
@@ -52,23 +57,60 @@ export const HomeProductCard = ({
         api_product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
 
     // Calculate original total inventory
+    // Handle different inventory data structures (top products vs regular products)
     const originalTotalInventory = api_product?.variants?.reduce(
-        (sum, variant) => sum + (variant.inventory_quantity || 0),
-        0
-    ) || 0
-
-    // Get adjusted inventory for each variant and calculate total
-    const adjustedTotalInventory = api_product?.variants?.reduce(
         (sum, variant) => {
-            const originalInventory = variant.inventory_quantity || 0
-            const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
-            return sum + adjustedInventory
+            // Try direct inventory_quantity first (regular products)
+            if (variant.inventory_quantity !== undefined) {
+                return sum + (variant.inventory_quantity || 0)
+            }
+            
+            // Try nested inventory structure (top products API)
+            const inventoryItem = (variant as any).inventory_items?.[0]
+            if (inventoryItem?.inventory?.location_levels) {
+                // Sum up available_quantity from all location levels
+                const totalFromLocations = inventoryItem.inventory.location_levels.reduce(
+                    (locationSum: number, locationLevel: any) => {
+                        return locationSum + (locationLevel.available_quantity || 0)
+                    },
+                    0
+                )
+                return sum + totalFromLocations
+            }
+            
+            return sum
         },
         0
     ) || 0
 
-    const totalInventory = adjustedTotalInventory
-    // console.log("total inventory ", totalInventory, api_product.title)
+    // Use hydration-safe inventory calculation
+    const totalInventory = isHydrated 
+        ? api_product?.variants?.reduce(
+            (sum, variant) => {
+                // Try direct inventory_quantity first (regular products)
+                let originalInventory = 0
+                if (variant.inventory_quantity !== undefined) {
+                    originalInventory = variant.inventory_quantity || 0
+                } else {
+                    // Try nested inventory structure (top products API)
+                    const inventoryItem = (variant as any).inventory_items?.[0]
+                    if (inventoryItem?.inventory?.location_levels) {
+                        // Sum up available_quantity from all location levels
+                        originalInventory = inventoryItem.inventory.location_levels.reduce(
+                            (locationSum: number, locationLevel: any) => {
+                                return locationSum + (locationLevel.available_quantity || 0)
+                            },
+                            0
+                        )
+                    }
+                }
+                
+                const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
+                return sum + adjustedInventory
+            },
+            0
+          ) || 0
+        : originalTotalInventory
 
     // Get dynamic stock display information
     const stockInfo = getStockDisplayInfo(totalInventory)
@@ -138,41 +180,40 @@ export const HomeProductCard = ({
                 )}
             </motion.div>
 
-            <div className="p-3 flex flex-col h-[55%]">
-                <p
-                    onClick={handleOpenModal}
-                    className="text-[12px] font-medium min-h-[32px] line-clamp-2 cursor-pointer hover:underline"
-                    style={{ color: "#32425A" }}
-                >
-                    {title}
-                </p>
+            <div className="p-3 flex flex-col justify-between h-[55%]">
+                <div className="flex flex-col">
+                    <p
+                        onClick={handleOpenModal}
+                        className="text-[12px] font-medium min-h-[32px] line-clamp-2 cursor-pointer hover:underline"
+                        style={{ color: "#32425A" }}
+                    >
+                        {title}
+                    </p>
 
-                <div className="flex items-center gap-x-2 mt-1">
-                    <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
-                        Rs. {currentPrice}
-                    </span>
+                    <div className="flex items-center gap-x-2 mt-1">
+                        <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
+                            Rs. {currentPrice}
+                        </span>
+                    </div>
+
+                    <p
+                        className="text-[9px] max-h-[32px] leading-snug mt-1 line-clamp-2"
+                        style={{ color: "#768397" }}
+                    >
+                        {description}
+                    </p>
+
+                    {stockInfo.showWarning && (
+                        <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
+                            {stockInfo.message}
+                        </p>
+                    )}
                 </div>
 
-                <p
-                    className="text-[9px] max-h-[32px] leading-snug mt-1 line-clamp-2"
-                    style={{ color: "#768397" }}
-                >
-                    {description}
-                </p>
-
-                {stockInfo.showWarning && (
-                    <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
-                        {stockInfo.message}
-                    </p>
-                )}
-
                 <button
-                    // className="flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    // style={{ backgroundColor: "#4444FF" }}
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}
-                    // >
-                    className={`flex items-center justify-center mt-2 text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
+                    className={`flex items-center justify-center mt-auto text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
             ${isAddingToCart || totalInventory <= 0
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
