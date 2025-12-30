@@ -10,6 +10,9 @@ import {
   getCart
 } from "@/services/cart";
 
+// Import inventory store to sync inventory changes
+import { useInventoryStore } from "./useInventoryStore";
+
 // -------------------------
 // Interfaces
 // -------------------------
@@ -120,17 +123,39 @@ export const useCartStore = create<CartState>()(
       fetchCart: async () => {
         const data = await getCart();
         console.log('unmapped cart from db ', data)
-        if (data?.cart) set(mapCart(data.cart));
+        if (data?.cart) {
+          const mappedCart = mapCart(data.cart);
+          set(mappedCart);
+          
+          // Sync inventory store with current cart contents
+          const cartItems = mappedCart.items.map(item => ({
+            variantId: item.variantId || '',
+            quantity: item.quantity
+          })).filter(item => item.variantId); // Filter out items without variantId
+          
+          useInventoryStore.getState().syncWithCart(cartItems);
+        }
       },
 
       add: async (variantId, quantity = 1) => {
         const data = await addToServerCart(variantId, quantity);
-        if (data?.cart) set(mapCart(data.cart));
+        if (data?.cart) {
+          set(mapCart(data.cart));
+          // Update inventory store
+          useInventoryStore.getState().decreaseInventory(variantId, quantity);
+        }
       },
 
       increase: async (lineItemId, currentQty) => {
         const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
-        if (data?.cart) set(mapCart(data.cart));
+        if (data?.cart) {
+          set(mapCart(data.cart));
+          // Find the variant ID for this line item and decrease inventory
+          const item = data.cart.items?.find((item: any) => item.id === lineItemId);
+          if (item?.variant_id) {
+            useInventoryStore.getState().decreaseInventory(item.variant_id, 1);
+          }
+        }
       },
 
       decrease: async (lineItemId, currentQuantity) => {
@@ -139,13 +164,24 @@ export const useCartStore = create<CartState>()(
           const data = await removeFromCart(lineItemId);
           console.log('remove item response ', data)
           if (data?.deleted == true) {
-            const data = await getCart();
-            if (data?.cart) set(mapCart(data.cart));
+            const cartData = await getCart();
+            if (cartData?.cart) {
+              set(mapCart(cartData.cart));
+              // Find the variant ID and increase inventory back
+              const currentItems = get().items;
+              const item = currentItems.find(i => i.id === lineItemId);
+              if (item?.variantId) {
+                useInventoryStore.getState().increaseInventory(item.variantId, 1);
+              }
+            }
           } else {
             // If API returns nothing, manually remove from state
-            set({ items: get().items.filter(i => i.id !== lineItemId) });
-            // set(mapCart(data.cart));
-
+            const currentItems = get().items;
+            const item = currentItems.find(i => i.id === lineItemId);
+            if (item?.variantId) {
+              useInventoryStore.getState().increaseInventory(item.variantId, 1);
+            }
+            set({ items: currentItems.filter(i => i.id !== lineItemId) });
           }
           return;
         }
@@ -155,6 +191,11 @@ export const useCartStore = create<CartState>()(
         console.log('decrement item ', data)
         if (data?.cart) {
           set(mapCart(data.cart));
+          // Find the variant ID for this line item and increase inventory
+          const item = data.cart.items?.find((item: any) => item.id === lineItemId);
+          if (item?.variant_id) {
+            useInventoryStore.getState().increaseInventory(item.variant_id, 1);
+          }
         }
       },
 
