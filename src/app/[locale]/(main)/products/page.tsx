@@ -7,6 +7,7 @@ import { HttpTypes } from "@medusajs/types"
 import { ProductCard } from "@/components/molecules/ProductCard/ProductCard"
 import { RatingSummary } from "@/types/reviews"
 import { fetchProductRatingSummary } from "@/lib/api/reviews"
+import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 
 type ProductsPageProps = {
   params: {
@@ -60,6 +61,8 @@ export default async function ProductsPage(props: ProductsPageProps) {
       return [product.id, summary] as const
     })
   ).then(Object.fromEntries)
+  const sortedProducts = sortProductsByInventory(response?.response?.products)
+
 
 
   return (
@@ -70,7 +73,7 @@ export default async function ProductsPage(props: ProductsPageProps) {
 
       <Suspense fallback={<ProductListingSkeleton />}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-          {response.response.products.map((product: HttpTypes.StoreProduct) => (
+          {sortedProducts.map((product: HttpTypes.StoreProduct) => (
             <ProductCard
               key={product.id}
               api_product={product}

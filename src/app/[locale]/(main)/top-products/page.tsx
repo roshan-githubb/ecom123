@@ -2,10 +2,9 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 import { Suspense } from "react"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
-import { listProducts } from "@/lib/data/products"
-import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
 import { ProductsList } from "@/components/organisms"
 import { getTopProducts } from "@/lib/data/top-products"
+import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 
 
 export const revalidate = 60
@@ -53,14 +52,16 @@ async function TopProducts({
     params: Promise<{ locale: string }>
 }) {
     const topProducts = await getTopProducts({ limit: 16 })
+    const sortedProducts = sortProductsByInventory(topProducts?.products)
+
 
     return (
         <main className="container">
 
-       <h1 className="heading-md uppercase mb-4">Top Products</h1>
+            <h1 className="heading-md uppercase mb-4">Top Products</h1>
 
             <Suspense fallback={<ProductListingSkeleton />}>
-                <ProductsList products={topProducts?.products} locale={"np"} />
+                <ProductsList products={sortedProducts} locale={"np"} />
 
             </Suspense>
         </main>
