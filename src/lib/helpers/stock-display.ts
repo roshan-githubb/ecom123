@@ -18,7 +18,7 @@ export interface StockDisplayInfo {
 export function getStockDisplayInfo(totalInventory: number): StockDisplayInfo {
   if (totalInventory <= 0) {
     return {
-      message: "Out of stock",
+      message: "",
       showWarning: true,
       textColor: "#FF0000"
     };

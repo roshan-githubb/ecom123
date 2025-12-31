@@ -11,6 +11,7 @@ import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getBanners } from "@/lib/get-banners";
+import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts";
 
 
 interface CategoryItemMetadata {
@@ -77,13 +78,9 @@ export default async function HomePage({ params }: { params: Params }) {
     queryParams: { limit: 8, order: "created_at",
     },
   })
-
-  const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
-    "@type": "ListItem",
-    position: idx + 1,
-    url: `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/${locale}/products/${p.handle}`,
-    name: p.title,
-  }))
+  
+  const sortedProducts = sortProductsByInventory(jsonLdProducts)
+ 
 
   // console.log("item list and origianl list ",  jsonLdProducts)
   const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
@@ -155,11 +152,11 @@ export default async function HomePage({ params }: { params: Params }) {
           {/* Recommended for you — horizontal, hidden scrollbar */}
           <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
           <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
-            {jsonLdProducts.map((r, index) => (
+            {sortedProducts.map((r, index) => (
               <div key={r.id} className="w-[180px] flex-shrink-0 ">
                 <HomeProductCard
                   api_product={r}
-                  allProducts={jsonLdProducts}
+                  allProducts={sortedProducts}
                   productIndex={index}
                 // hasOfferSticker={true}
                 />
@@ -183,11 +180,11 @@ export default async function HomePage({ params }: { params: Params }) {
           {/* Best deals */}
           <SectionHeader title="Best Deals" actionLabel="See All" />
           <HorizontalScroller className="no-scrollbar !mt-1">
-            {jsonLdProducts.map((r, index) => (
+            {sortedProducts.map((r, index) => (
               <div key={r.id} className="w-[180px] flex-shrink-0">
                 <HomeProductCard 
                   api_product={r} 
-                  allProducts={jsonLdProducts}
+                  allProducts={sortedProducts}
                   productIndex={index}
                 />
               </div>

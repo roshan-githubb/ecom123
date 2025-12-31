@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { listProducts } from "@/lib/data/products"
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
 import { ProductsList } from "@/components/organisms"
+import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 
 
 export const revalidate = 60
@@ -60,6 +61,7 @@ async function FlashSales({
 
     // const flashProducts = await getFlashSaleProducts({})
 
+    const sortedProducts = sortProductsByInventory(jsonLdProducts)
 
 
 
@@ -70,7 +72,7 @@ async function FlashSales({
             <h1 className="heading-md uppercase mb-4">Flash Sales</h1>
 
             <Suspense fallback={<ProductListingSkeleton />}>
-                <ProductsList products={jsonLdProducts} locale={"np"} />
+                <ProductsList products={sortedProducts} locale={"np"} />
 
             </Suspense>
         </main>

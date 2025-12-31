@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { SectionHeader } from "@/components/atoms/SectionHeader/SectionHeader";
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard";
 import { getSimilarProducts } from "@/services/category-products/category-products";
-import { String } from "lodash";
+import { filter, String } from "lodash";
+import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts";
 
 export default function SimilarProducts({ categoryId, productId }: { categoryId: string, productId: String }) {
   const [similarProducts, setSimilarProducts] = useState<any[]>([]);
@@ -23,7 +24,7 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
           if (loadingTimeoutRef.current) {
             clearTimeout(loadingTimeoutRef.current);
           }
-          
+
           loadingTimeoutRef.current = setTimeout(() => {
             setHasLoaded(true);
             setLoading(true);
@@ -38,10 +39,10 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
               .catch((err) => {
                 console.error("Failed to load similar products:", err);
                 setError("Failed to load similar products");
-                setSimilarProducts([]); 
+                setSimilarProducts([]);
               })
               .finally(() => setLoading(false));
-          }, 100); 
+          }, 100);
         }
       },
       {
@@ -67,6 +68,8 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
 
   const filteredProducts = similarProducts.filter((product: any) => product?.id != productId);
 
+  const sortedProducts = useMemo(() => { return sortProductsByInventory(filteredProducts) }, [filteredProducts])
+
   return (
     <div ref={containerRef} className="px-2">
       <SectionHeader title="Similar Products" actionLabel="" />
@@ -89,19 +92,19 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
       )}
 
       {!loading && !error && filteredProducts.length > 0 && (
-        <div 
+        <div
           className="overflow-x-auto overflow-y-hidden gap-x-2 flex no-scrollbar scroll-smooth touch-pan-x"
-          style={{ 
+          style={{
             WebkitOverflowScrolling: 'touch' as const,
             scrollbarWidth: 'none' as const,
             msOverflowStyle: 'none' as const
           }}
         >
-          {filteredProducts.map((item: any, index: number) => (
+          {sortedProducts.map((item: any, index: number) => (
             <div key={item.id} className="w-[180px] flex-shrink-0">
-              <HomeProductCard 
-                api_product={item} 
-                allProducts={filteredProducts}
+              <HomeProductCard
+                api_product={item}
+                allProducts={sortedProducts}
                 productIndex={index}
               />
             </div>
