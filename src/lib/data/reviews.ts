@@ -17,6 +17,27 @@ export type Review = {
   updated_at: string
 }
 
+export type ProductReview = {
+  id: string
+  rating: number
+  customer_note: string
+  created_at: string
+  updated_at: string
+  customer: {
+    id: string
+    first_name: string
+    last_name: string
+    email: string
+  }
+}
+
+export type ProductReviewsResponse = {
+  reviews: ProductReview[]
+  count: number
+  offset: number
+  limit: number
+}
+
 export type Order = HttpTypes.StoreOrder & {
   seller: { id: string; name: string; reviews?: any[] }
   reviews: any[]
@@ -31,6 +52,23 @@ const getReviews = async () => {
     headers,
     method: "GET",
     query: { fields: "*seller,+customer.id,+order_id" },
+  })
+
+  return res
+}
+
+const getProductReviews = async (productId: string, limit: number = 20, offset: number = 0) => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const res = await fetchQuery(`/store/products/${productId}/reviews`, {
+    headers,
+    method: "GET",
+    query: { 
+      limit: limit.toString(),
+      offset: offset.toString()
+    },
   })
 
   return res
@@ -60,4 +98,17 @@ const createReview = async (review: any) => {
   return response.json()
 }
 
-export { getReviews, createReview }
+const getProductRatingSummary = async (productId: string) => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const res = await fetchQuery(`/store/products/${productId}/rating-summary`, {
+    headers,
+    method: "GET",
+  })
+
+  return res
+}
+
+export { getReviews, getProductReviews, getProductRatingSummary, createReview }

@@ -22,7 +22,7 @@ export const getSellerByHandle = async (handle: string) => {
     .catch(() => null)
 }
 
-export const getProductsBySellerId = async ({
+export const getProductsBySellerId = async ({   
   sellerId,
   page = 1,
   limit = 12,

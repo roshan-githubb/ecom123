@@ -11,6 +11,8 @@ import { useInventoryStore } from "@/store/useInventoryStore"
 import { cartToast } from "@/lib/cart-toast"
 import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
 import { useInventorySync } from "@/hooks/useInventorySync"
+import { StarRating } from "@/components/atoms/StarRating/StarRating"
+import { SimpleRatingSummary } from "@/types/reviews"
 
 
 
@@ -20,6 +22,7 @@ interface HomeProductCardProps {
     hasOfferSticker?: boolean
     allProducts?: HttpTypes.StoreProduct[]
     productIndex?: number
+    ratingSummary?: SimpleRatingSummary
 }
 
 export const HomeProductCard = ({
@@ -27,7 +30,8 @@ export const HomeProductCard = ({
     className,
     hasOfferSticker = false,
     allProducts = [],
-    productIndex = 0
+    productIndex = 0,
+    ratingSummary
 }: HomeProductCardProps) => {
     // console.log("HomeProductCard product: ", api_product );
 
@@ -196,6 +200,15 @@ export const HomeProductCard = ({
                         </span>
                     </div>
 
+                    {ratingSummary && ratingSummary.total_reviews > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                            <StarRating rate={ratingSummary.average_rating} starSize={12} />
+                            <span className="text-[9px] text-gray-500">
+                                ({ratingSummary.total_reviews})
+                            </span>
+                        </div>
+                    )}
+
                     <p
                         className="text-[9px] max-h-[32px] leading-snug mt-1 line-clamp-2"
                         style={{ color: "#768397" }}
@@ -228,10 +241,10 @@ export const HomeProductCard = ({
                         product={allProducts.length > 0 ? allProducts[currentModalProductIndex] : api_product}
                         cardPos={cardPos}
                         onClose={() => setShowModal(false)}
-                        // categoryId={ api_product?.categories && api_product?.categories[0]?.id || ""}
                         products={allProducts.length > 0 ? allProducts : [api_product]}
                         currentProductIndex={currentModalProductIndex}
                         onProductChange={(newIndex) => setCurrentModalProductIndex(newIndex)}
+                        ratingSummary={ratingSummary}
                     />
                 )}
             </div>

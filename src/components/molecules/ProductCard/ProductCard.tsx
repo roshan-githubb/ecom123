@@ -8,7 +8,7 @@ import { useInventoryStore } from "@/store/useInventoryStore"
 import { cartToast } from "@/lib/cart-toast"
 import { useState, useRef, useEffect } from "react"
 import { AddVariantSheet } from "../AddVariantModal/AddVariantModal"
-import { RatingSummary } from "@/types/reviews"
+import { RatingSummary, SimpleRatingSummary } from "@/types/reviews"
 import { motion } from "framer-motion"
 import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
 import { useInventorySync } from "@/hooks/useInventorySync"
@@ -22,7 +22,7 @@ export const ProductCard = ({
 }: {
   api_product: HttpTypes.StoreProduct | null
   locale: string
-  ratingSummary?: RatingSummary
+  ratingSummary?: SimpleRatingSummary
   allProducts?: HttpTypes.StoreProduct[]
   productIndex?: number
 }) => {
@@ -194,7 +194,7 @@ export const ProductCard = ({
             {api_product.title}
           </h2>
 
-          {total_reviews > 0 ? (
+          {total_reviews > 0 && (
             <div className="flex items-center gap-1">
               <span className="font-bold text-[#222222]">
                 {average_rating.toFixed(1)}
@@ -206,10 +206,6 @@ export const ProductCard = ({
                 ({total_reviews} {total_reviews === 1 ? "review" : "reviews"})
               </span>
             </div>
-          ) : (
-            <span className="text-[#777777] text-[clamp(10px,1.2vw,14px)]">
-              No reviews yet
-            </span>
           )}
 
           <p className="text-[clamp(10px,1vw,12px)] font-normal text-[#777777]">

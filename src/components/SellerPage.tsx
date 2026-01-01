@@ -8,7 +8,7 @@ import { cartToast } from "@/lib/cart-toast"
 import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
 import { useInventoryStore } from "@/store/useInventoryStore"
 import { useInventorySync } from "@/hooks/useInventorySync"
-import { RatingSummary } from "@/types/reviews"
+import { RatingSummary, SimpleRatingSummary } from "@/types/reviews"
 import { AddVariantSheet } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { motion } from "framer-motion"
 
@@ -64,7 +64,7 @@ export interface Seller {
 interface SellerPageProps {
     seller?: Seller;
     products: MedusaProduct[];
-    ratingsMap?: Record<string, RatingSummary>;
+    ratingsMap?: Record<string, SimpleRatingSummary>;
 }
 
 
@@ -87,7 +87,7 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
 );
 
 
-const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { product: MedusaProduct, ratingSummary?: RatingSummary, allProducts: MedusaProduct[], productIndex: number }) => {
+const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { product: MedusaProduct, ratingSummary?: SimpleRatingSummary, allProducts: MedusaProduct[], productIndex: number }) => {
     const addToCart = useCartStore((state) => state.add);
     const { getAdjustedInventory } = useInventoryStore();
     const [isAddingToCart, setIsAddingToCart] = useState(false);

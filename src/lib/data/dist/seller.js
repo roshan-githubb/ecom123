@@ -47,8 +47,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.getSellerByHandle = void 0;
+exports.getProductsBySellerId = exports.getSellerByHandle = void 0;
 var config_1 = require("../config");
+var products_1 = require("./products");
 exports.getSellerByHandle = function (handle) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, config_1.sdk.client
@@ -63,6 +64,20 @@ exports.getSellerByHandle = function (handle) { return __awaiter(void 0, void 0,
                 var seller = _a.seller;
                 var response = __assign(__assign({}, seller), { reviews: (_c = (_b = seller.reviews) === null || _b === void 0 ? void 0 : _b.filter(function (item) { return item !== null; })) !== null && _c !== void 0 ? _c : [] });
                 return response;
-            })["catch"](function () { return []; })];
+            })["catch"](function () { return null; })];
     });
 }); };
+exports.getProductsBySellerId = function (_a) {
+    var sellerId = _a.sellerId, _b = _a.page, page = _b === void 0 ? 1 : _b, _c = _a.limit, limit = _c === void 0 ? 12 : _c, _d = _a.sortBy, sortBy = _d === void 0 ? "created_at" : _d, _e = _a.countryCode, countryCode = _e === void 0 ? "np" : _e;
+    return __awaiter(void 0, void 0, void 0, function () {
+        return __generator(this, function (_f) {
+            return [2 /*return*/, products_1.listProductsWithSort({
+                    page: page,
+                    queryParams: { limit: limit },
+                    sortBy: sortBy,
+                    countryCode: countryCode,
+                    seller_id: sellerId
+                })];
+        });
+    });
+};

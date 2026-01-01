@@ -286,7 +286,7 @@ export const RememberUserInfo = () => {
   }
   return (
     <>
-      <div className="max-w-md mx-auto mt-4">
+      {/* <div className="max-w-md mx-auto mt-4">
         <label className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -298,7 +298,7 @@ export const RememberUserInfo = () => {
             Save my information for a faster checkout
           </span>
         </label>
-      </div>
+      </div> */}
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
         <Button variant="primary" onClick={handlePayment}>
