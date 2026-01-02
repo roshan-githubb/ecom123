@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { ProductsList } from "@/components/organisms"
 import { getTopProducts } from "@/lib/data/top-products"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
+import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 
 
 export const revalidate = 60
@@ -53,7 +54,9 @@ async function TopProducts({
 }) {
     const topProducts = await getTopProducts({ limit: 16 })
     const sortedProducts = sortProductsByInventory(topProducts?.products)
-
+    
+    const productIds = sortedProducts?.map((p: any) => p.id) || []
+    const ratingsMap = await getProductRatingSummaries(productIds)
 
     return (
         <main className="container">
@@ -61,7 +64,7 @@ async function TopProducts({
             <h1 className="heading-md uppercase mb-4">Top Products</h1>
 
             <Suspense fallback={<ProductListingSkeleton />}>
-                <ProductsList products={sortedProducts} locale={"np"} />
+                <ProductsList products={sortedProducts} locale={"np"} ratingsMap={ratingsMap} />
 
             </Suspense>
         </main>

@@ -15,11 +15,12 @@ import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
 import { useInventoryStore } from "@/store/useInventoryStore"
 import { useInventorySync } from "@/hooks/useInventorySync"
-import { Review } from "@/types/reviews"
+import { Review, SimpleRatingSummary } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
 import { StoreIcon } from "lucide-react"
 import SimilarProducts from "../SimilarProducts/SimilarProduct"
+import { StarRating } from "@/components/atoms"
 
 interface ProductOptionValue {
   id: string
@@ -65,7 +66,7 @@ interface ColorOption {
 interface AddVariantSheetProps {
   product: Product | HttpTypes.StoreProduct
   reviews?: Review[]
-  ratingSummary?: { average_rating: number; total_reviews: number }
+  ratingSummary?: SimpleRatingSummary
   cardPos: { top: number; left: number; width: number; height: number }
   onClose: () => void
   products?: any[]
@@ -90,7 +91,7 @@ function ProductCardInternal({
   onScrollChange: (isAtTop: boolean) => void
   onOverscrollUp?: () => void
   overscrollY?: any
-  ratingSummary?: { average_rating: number; total_reviews: number }
+  ratingSummary?: SimpleRatingSummary
   onToggleMode?: () => void
   locale?: string
 }) {
@@ -99,6 +100,8 @@ function ProductCardInternal({
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
   const [isAtTop, setIsAtTop] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null)
   
   const { getAdjustedInventory } = useInventoryStore()
@@ -110,6 +113,27 @@ function ProductCardInternal({
   useEffect(() => {
     setIsHydrated(true)
   }, [])
+
+  // Fetch reviews when product changes
+  useEffect(() => {
+    if (product?.id && isFullScreen) {
+      setLoadingReviews(true)
+      import('@/lib/data/reviews').then(({ getProductReviews }) => {
+        getProductReviews(product.id, 10, 0)
+          .then(response => {
+            const reviews = response?.data?.reviews || []
+            setReviews(reviews)
+          })
+          .catch(error => {
+            console.error('Failed to fetch reviews:', error)
+            setReviews([])
+          })
+          .finally(() => {
+            setLoadingReviews(false)
+          })
+      })
+    }
+  }, [product?.id, isFullScreen])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const atTop = e.currentTarget.scrollTop <= 5
@@ -505,43 +529,28 @@ function ProductCardInternal({
 
         {/* Product Info */}
         <div className="px-4 py-3 border-b border-gray-200">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold">
+          <div className={`flex items-center mb-2 ${isFullScreen? 'gap-2': 'gap-0'}`}>
+            <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold flex-shrink-0">
               #Best Seller
             </span>
-            <span className="text-sm font-medium text-blue-600">
+            <div className={`flex ${isFullScreen? 'gap-16':'gap-4'}`}>
+            <span className="text-xs ml-1 font-medium text-blue-600 min-w-0 truncate flex-1">
               in {product.collection?.title}
             </span>
-
-            {/* Star Rating and Reviews */}
+            <div className="flex ml-6 flex-shrink-0">
             {ratingSummary && ratingSummary.total_reviews > 0 && (
               <div className="flex items-center gap-1">
                 <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg
-                      key={star}
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className={`w-3 h-3 ${
-                        star <= ratingSummary.average_rating
-                          ? "text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ))}
+                  <StarRating rate={ratingSummary.average_rating} starSize={12} />
                 </div>
                 <span className="text-xs text-gray-600">
                   ({ratingSummary.total_reviews})
                 </span>
               </div>
+              
             )}
+            </div>
+            </div>
           </div>
           <div className="text-sm text-gray-800">
             <span className="font-semibold">
@@ -689,10 +698,38 @@ function ProductCardInternal({
 
           <details className="py-2" open={isFullScreen}>
             <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
-              <span>Questions & Reviews</span>
+              <span>Questions & Reviews ({reviews.length})</span>
               <MdOutlineKeyboardArrowDown />
             </summary>
-            <div className="mt-2 text-sm text-gray-600">No reviews yet</div>
+            <div className="mt-2">
+              {loadingReviews ? (
+                <div className="text-sm text-gray-600">Loading reviews...</div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                      <div className="items-center gap-2 mb-2">
+                        <div className="flex gap-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          {review.customer?.first_name} {review.customer?.last_name}
+                        </span>
+                        <div className="flex mt-1">
+                          <StarRating rate={review.rating} starSize={12} />
+                        </div>
+                        </div>
+                        
+                      </div>
+                      <p className="text-sm text-gray-700">{review.customer_note}</p>
+                      <span className="text-xs text-gray-500">
+                        Posted on {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-600">No reviews yet</div>
+              )}
+            </div>
           </details>
 
           <hr className="border-gray-300" />

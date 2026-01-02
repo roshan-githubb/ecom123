@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getBanners } from "@/lib/get-banners";
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts";
+import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers";
 
 
 interface CategoryItemMetadata {
@@ -80,7 +81,9 @@ export default async function HomePage({ params }: { params: Params }) {
   })
   
   const sortedProducts = sortProductsByInventory(jsonLdProducts)
- 
+  
+  const productIds = sortedProducts?.map((p: any) => p.id) || []
+  const ratingSummaryMap = await getProductRatingSummaries(productIds)
 
   // console.log("item list and origianl list ",  jsonLdProducts)
   const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
@@ -158,6 +161,7 @@ export default async function HomePage({ params }: { params: Params }) {
                   api_product={r}
                   allProducts={sortedProducts}
                   productIndex={index}
+                  ratingSummary={ratingSummaryMap[r.id]}
                 // hasOfferSticker={true}
                 />
 
@@ -186,6 +190,7 @@ export default async function HomePage({ params }: { params: Params }) {
                   api_product={r} 
                   allProducts={sortedProducts}
                   productIndex={index}
+                  ratingSummary={ratingSummaryMap[r.id]}
                 />
               </div>
             ))}

@@ -3,6 +3,7 @@ import { HomeProductCard } from '@/components/molecules/HomeProductCard/HomeProd
 // import { getFlashSaleProducts } from '@/lib/data/flash-products'
 import { listProducts } from '@/lib/data/products'
 import { sortProductsByInventory } from '@/lib/sortProducts/sortProducts'
+import { getProductRatingSummaries } from '@/lib/helpers/rating-helpers'
 import React from 'react'
 
 export default async function FlashItems() {
@@ -14,6 +15,9 @@ export default async function FlashItems() {
 
     })
     const sortedProducts = sortProductsByInventory(jsonLdProducts)
+
+    const productIds = sortedProducts?.map((p: any) => p.id) || []
+    const ratingSummaryMap = await getProductRatingSummaries(productIds)
 
     // const flashProducts = await getFlashSaleProducts({})
     // console.log("Flash sale products: ", flashProducts);
@@ -31,6 +35,7 @@ export default async function FlashItems() {
                                 hasOfferSticker={true}
                                 allProducts={sortedProducts}
                                 productIndex={index}
+                                ratingSummary={ratingSummaryMap[r.id]}
                             />
                         </div>
                     ))}

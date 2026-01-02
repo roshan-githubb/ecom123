@@ -1,13 +1,16 @@
 import { ProductCard } from "@/components/molecules/ProductCard/ProductCard"
 import { HttpTypes } from "@medusajs/types"
 import { SkeletonProductCard } from "../ProductCard/SkeletonProductCard"
+import { SimpleRatingSummary } from "@/types/reviews"
 
 export const ProductsList = ({
   products,
   locale,
+  ratingsMap = {}
 }: {
   products: HttpTypes.StoreProduct[]
   locale: string
+  ratingsMap?: Record<string, SimpleRatingSummary>
 }) => {
   return (
     <>
@@ -22,6 +25,7 @@ export const ProductsList = ({
             locale={locale}
             allProducts={products}
             productIndex={index}
+            ratingSummary={ratingsMap[product.id]}
           />
         ))}
       </div>

@@ -1,11 +1,16 @@
 import { SectionHeader } from '@/components/atoms/SectionHeader/SectionHeader'
 import { HomeProductCard } from '@/components/molecules/HomeProductCard/HomeProductCard'
 import { getTopProducts } from '@/lib/data/top-products'
+import { getProductRatingSummaries } from '@/lib/helpers/rating-helpers'
 import React from 'react'
 
 export default async function TopProducts() {
 
     const topProducts = await getTopProducts({ limit: 20 })
+    
+    const productIds = topProducts?.products?.map((p: any) => p.id) || []
+    const ratingsMap = await getProductRatingSummaries(productIds)
+    
     // console.log("top sale products: ", topProducts );
 
     return (
@@ -24,6 +29,7 @@ export default async function TopProducts() {
                                     api_product={r}
                                     allProducts={topProducts?.products || []}
                                     productIndex={index}
+                                    ratingSummary={ratingsMap[r.id]}
                                 />
 
                             </div>

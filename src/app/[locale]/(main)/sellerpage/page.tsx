@@ -1,6 +1,6 @@
 import { SellerPage, Seller } from "@/components/SellerPage";
-import { fetchProductRatingSummary } from "@/lib/api/reviews";
-import { RatingSummary } from "@/types/reviews";
+import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers";
+import { SimpleRatingSummary } from "@/types/reviews";
 import { getSellerByHandle, getProductsBySellerId } from "@/lib/data/seller";
 import { SortOptions } from "@/types/product";
 
@@ -100,13 +100,8 @@ export default async function Page({
         );
     }
 
-    // Fetch ratings for all products
-    const ratingsMap: Record<string, RatingSummary> = await Promise.all(
-        products.map(async (product: any) => {
-            const summary = await fetchProductRatingSummary(product.id);
-            return [product.id, summary] as const;
-        })
-    ).then(Object.fromEntries);
+    const productIds = products.map((product: any) => product.id);
+    const ratingsMap: Record<string, SimpleRatingSummary> = await getProductRatingSummaries(productIds);
 
     // Apply client-side filtering
     let filteredProducts = products;

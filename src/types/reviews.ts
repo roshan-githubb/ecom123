@@ -48,10 +48,39 @@ export interface SellerRatingSummary {
 }
 
 export type RatingSummary = {
+  product_id?: string;
+  seller_id?: string;
+  average_rating: number;
+  total_reviews: number;
+  rating_distribution: {
+    "1": number;
+    "2": number;
+    "3": number;
+    "4": number;
+    "5": number;
+  };
+  last_month_sales?: number;
+};
+
+export type SimpleRatingSummary = {
   average_rating: number;
   total_reviews: number;
   last_month_sales?: number;
 };
+
+export interface ProductRatingSummaryResponse {
+  product_id: string;
+  average_rating: number;
+  total_reviews: number;
+  rating_distribution: {
+    "1": number;
+    "2": number;
+    "3": number;
+    "4": number;
+    "5": number;
+  };
+  last_month_sales: number;
+}
 
 export interface ProductReview {
   id: string;

@@ -6,14 +6,19 @@ export const fetchProductReviews = async (
   offset = 0
 ): Promise<ProductReviewsResponse> => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${productId}/reviews?limit=${limit}&offset=${offset}`
+    `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${productId}/reviews?limit=${limit}&offset=${offset}`,
+    {
+      headers: {
+        "accept": "application/json",
+          "content-type": "application/json",
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+      }
+    }
   );
   if (!res.ok) throw new Error("Failed to fetch product reviews");
   const data: ProductReviewsResponse = await res.json();
   return data;
 };
-
-
 
 export const fetchProductRatingSummary = async (
   productId: string
@@ -22,7 +27,11 @@ export const fetchProductRatingSummary = async (
 
   if (!publishableKey) {
     console.warn("Missing NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY")
-    return { average_rating: 0, total_reviews: 0 }
+    return { 
+      average_rating: 0, 
+      total_reviews: 0,
+      rating_distribution: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 }
+    }
   }
 
   try {
@@ -39,7 +48,11 @@ export const fetchProductRatingSummary = async (
 
     if (!res.ok) {
       console.log(` Failed to fetch for ${productId}: ${res.status} ${res.statusText}`)
-      return { average_rating: 0, total_reviews: 0 }
+      return { 
+        average_rating: 0, 
+        total_reviews: 0,
+        rating_distribution: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 }
+      }
     }
 
     const data = await res.json()
@@ -49,10 +62,15 @@ export const fetchProductRatingSummary = async (
       average_rating: Number(payload.average_rating ?? 0),
       total_reviews: Number(payload.total_reviews ?? 0),
       last_month_sales: Number(payload.last_month_sales ?? 0),
+      rating_distribution: payload.rating_distribution || { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 }
     }
   } catch (err) {
     console.error(`[fetchProductRatingSummary] Error for ${productId}`, err)
-    return { average_rating: 0, total_reviews: 0 }
+    return { 
+      average_rating: 0, 
+      total_reviews: 0,
+      rating_distribution: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 }
+    }
   }
 }
 
