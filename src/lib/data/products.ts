@@ -5,12 +5,7 @@ import { sortProducts } from "@/lib/helpers/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@/types/product"
 import { getRegion } from "./regions"
-
-
-type ListProductsResponse = {
-  response: { products: any[]; count: number }
-  nextPage: number | null
-}
+import { safeDataFetch, safeAccess } from "@/lib/utils/safe-data"
 
 
 export const listProducts = async ({
@@ -24,37 +19,52 @@ export const listProducts = async ({
   countryCode?: string
   regionId?: string
 }) => {
-  const limit = queryParams?.limit || 12
-  const offset = (pageParam - 1) * limit
+  const result = await safeDataFetch(
+    async () => {
+      const limit = queryParams?.limit || 12
+      const offset = (pageParam - 1) * limit
 
-  let regionId = providedRegionId
-  if (!regionId && countryCode) {
-    const region = await getRegion(countryCode)
-    regionId = region?.id
-  }
+      let regionId = providedRegionId
+      if (!regionId && countryCode) {
+        const region = await getRegion(countryCode)
+        regionId = region?.id
+      }
 
-  if (!regionId) {
-    console.warn("No region_id - prices will be missing!")
-    // regionId = process.env.NEXT_PUBLIC_REGION_ID;
+      if (!regionId) {
+        console.warn("No region_id - prices will be missing!")
+      }
 
-  }
+      const response = await publicProductClient.store.product.list({
+        limit,
+        offset,
+        region_id: regionId!,
+        fields: ["*variants.calculated_price", "+variants.inventory_quantity", "*seller", "*categories", "*variants", "*seller.products", "*seller.reviews", "*seller.reviews.customer",].join(","),
+        ...queryParams,
+      })
 
-  const { products = [], count = 0 } = await publicProductClient.store.product.list({
-    limit,
-    offset,
-    region_id: regionId!,
-    fields: ["*variants.calculated_price", "+variants.inventory_quantity", "*seller", "*categories", "*variants", "*seller.products", "*seller.reviews", "*seller.reviews.customer",].join(","),
-    ...queryParams,
-  })
+      const products = safeAccess(response, 'products', [], 'listProducts')
+      const count = safeAccess(response, 'count', 0, 'listProducts')
 
-  // Filter out products with no price
-  const validProducts = products.filter((p: any) =>
-    p.variants?.some((v: any) => v.calculated_price?.calculated_amount != null)
+      // Filter out products with no price
+      const validProducts = products.filter((p: any) =>
+        p.variants?.some((v: any) => v.calculated_price?.calculated_amount != null)
+      )
+
+      return {
+        response: { products: validProducts, count: validProducts.length },
+        nextPage: count > offset + limit ? pageParam + 1 : null,
+      }
+    },
+    {
+      response: { products: [], count: 0 },
+      nextPage: null,
+    },
+    'listProducts'
   )
 
-  return {
-    response: { products: validProducts, count: validProducts.length },
-    nextPage: count > offset + limit ? pageParam + 1 : null,
+  return result.data || {
+    response: { products: [], count: 0 },
+    nextPage: null,
   }
 }
 
@@ -77,42 +87,53 @@ export const listProductsWithSort = async ({
   seller_id?: string
   collection_id?: string
 }): Promise<any> => {
-  const limit = queryParams?.limit || 12
+  const result = await safeDataFetch(
+    async () => {
+      const limit = queryParams?.limit || 12
+      const fetchLimit = seller_id ? 1000 : 200
 
-  // For seller queries, fetch more products to ensure we get all seller products
-  const fetchLimit = seller_id ? 1000 : 200
+      const { response: { products } } = await listProducts({
+        pageParam: 1,
+        queryParams: {
+          ...queryParams,
+          limit: fetchLimit,
+          category_id,
+          collection_id,
+        },
+        countryCode,
+      })
 
-  const { response: { products } } = await listProducts({
-    pageParam: 1,
-    queryParams: {
-      ...queryParams,
-      limit: fetchLimit,
-      category_id,
-      collection_id,
-      // Don't pass seller_id to API as it's not supported
+      let filtered = seller_id
+        ? products.filter((p: any) => safeAccess(p, 'seller.id', null, 'listProductsWithSort') === seller_id)
+        : products
+
+      filtered = filtered.filter((p: any) =>
+        p.variants?.some((v: any) => v.calculated_price != null)
+      )
+
+      console.log(`Seller ${seller_id} products found:`, filtered.length, "out of", products.length, "total products");
+
+      const sorted = sortProducts(filtered, sortBy)
+      const start = (page - 1) * limit
+      const end = start + limit
+
+      return {
+        response: {
+          products: sorted.slice(start, end),
+          count: filtered.length,
+        },
+        nextPage: end < filtered.length ? page + 1 : null,
+      }
     },
-    countryCode,
-  })
-
-  let filtered = seller_id
-    ? products.filter((p: any) => p.seller?.id === seller_id)
-    : products
-
-  filtered = filtered.filter((p: any) =>
-    p.variants?.some((v: any) => v.calculated_price != null)
+    {
+      response: { products: [], count: 0 },
+      nextPage: null,
+    },
+    'listProductsWithSort'
   )
 
-  console.log(`Seller ${seller_id} products found:`, filtered.length, "out of", products.length, "total products");
-
-  const sorted = sortProducts(filtered, sortBy)
-  const start = (page - 1) * limit
-  const end = start + limit
-
-  return {
-    response: {
-      products: sorted.slice(start, end),
-      count: filtered.length,
-    },
-    nextPage: end < filtered.length ? page + 1 : null,
+  return result.data || {
+    response: { products: [], count: 0 },
+    nextPage: null,
   }
 }

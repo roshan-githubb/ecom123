@@ -20,37 +20,75 @@ function calculateRatingSummary(reviews: Review[]): SimpleRatingSummary {
   }
 }
 
-export async function getProductRatingSummaries(productIds: string[]): Promise<Record<string, SimpleRatingSummary>> {
+// export async function getProductRatingSummaries(productIds: string[]): Promise<Record<string, SimpleRatingSummary>> {
+//   const ratingsMap: Record<string, SimpleRatingSummary> = {}
+  
+//   productIds.forEach(productId => {
+//     ratingsMap[productId] = getDefaultRatingSummary()
+//   })
+  
+//   const promises = productIds.map(async (productId) => {
+//     try {
+//       const response = await getProductRatingSummary(productId)
+//       const ratingSummaryResponse = response?.data || response
+      
+//       if (ratingSummaryResponse && typeof ratingSummaryResponse === 'object') {
+//         const ratingSummary: SimpleRatingSummary = {
+//           average_rating: ratingSummaryResponse.average_rating || 0,
+//           total_reviews: ratingSummaryResponse.total_reviews || 0,
+//           last_month_sales: ratingSummaryResponse.last_month_sales || 0
+//         }
+//         ratingsMap[productId] = ratingSummary
+//       }
+      
+//       return { productId, ratingSummary: ratingsMap[productId] }
+//     } catch (error) {
+//       return { productId, ratingSummary: ratingsMap[productId] }
+//     }
+//   })
+  
+//   await Promise.all(promises)
+  
+//   return ratingsMap
+// }
+
+export async function getProductRatingSummaries(
+  productIds: string[]
+): Promise<Record<string, SimpleRatingSummary>> {
+
   const ratingsMap: Record<string, SimpleRatingSummary> = {}
-  
-  productIds.forEach(productId => {
+
+  // Initialize defaults
+  for (const productId of productIds) {
     ratingsMap[productId] = getDefaultRatingSummary()
-  })
-  
-  const promises = productIds.map(async (productId) => {
-    try {
+  }
+
+  const results = await Promise.allSettled(
+    productIds.map(async (productId) => {
       const response = await getProductRatingSummary(productId)
-      const ratingSummaryResponse = response?.data || response
-      
-      if (ratingSummaryResponse && typeof ratingSummaryResponse === 'object') {
-        const ratingSummary: SimpleRatingSummary = {
-          average_rating: ratingSummaryResponse.average_rating || 0,
-          total_reviews: ratingSummaryResponse.total_reviews || 0,
-          last_month_sales: ratingSummaryResponse.last_month_sales || 0
+      const data = response?.data ?? response
+
+      return {
+        productId,
+        ratingSummary: {
+          average_rating: data?.average_rating ?? 0,
+          total_reviews: data?.total_reviews ?? 0,
+          last_month_sales: data?.last_month_sales ?? 0
         }
-        ratingsMap[productId] = ratingSummary
       }
-      
-      return { productId, ratingSummary: ratingsMap[productId] }
-    } catch (error) {
-      return { productId, ratingSummary: ratingsMap[productId] }
+    })
+  )
+
+  // Apply only successful ones
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      ratingsMap[result.value.productId] = result.value.ratingSummary
     }
-  })
-  
-  await Promise.all(promises)
-  
+  }
+
   return ratingsMap
 }
+
 
 export async function getProductRatingSummaryById(productId: string): Promise<SimpleRatingSummary> {
   try {

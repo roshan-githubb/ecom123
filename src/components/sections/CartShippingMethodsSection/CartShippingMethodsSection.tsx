@@ -4,17 +4,16 @@ import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
 import { setShippingMethod } from "@/lib/data/cart"
 import { calculatePriceForShippingOption } from "@/lib/data/fulfillment"
 import { convertToLocale } from "@/lib/helpers/money"
-import { CheckCircleSolid, ChevronUpDown, Loader } from "@medusajs/icons"
+import { CheckCircleSolid, ChevronUpDown } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { clx, Heading, Text } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Fragment, useEffect, useState } from "react"
-import { Button } from "@/components/atoms"
-import { Modal, SelectField } from "@/components/molecules"
+import { Modal } from "@/components/molecules"
 import { CartShippingMethodRow } from "./CartShippingMethodRow"
 import { Listbox, Transition } from "@headlessui/react"
-import clsx from "clsx"
 import { Truck } from "lucide-react"
+import { removeFromCart, getCart } from "@/services/cart"
+import { useCartStore } from "@/store/useCartStore"
 
 // Extended cart item product type to include seller
 type ExtendedStoreProduct = HttpTypes.StoreProduct & {
@@ -24,9 +23,9 @@ type ExtendedStoreProduct = HttpTypes.StoreProduct & {
   }
 }
 
-
 // Cart item type definition
 type CartItem = {
+  id?: string
   product?: ExtendedStoreProduct
   // Include other cart item properties as needed
 }
@@ -64,10 +63,66 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   const [missingShippingSellers, setMissingShippingSellers] = useState<
     string[]
   >([])
+  const [isRemovingItems, setIsRemovingItems] = useState(false)
 
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
+  const { fetchCart } = useCartStore()
+
+  // Lock/unlock body scroll when modal opens/closes
+  useEffect(() => {
+    if (missingModal) {
+      // Lock scroll
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${window.scrollY}px`
+      document.body.style.width = '100%'
+    } else {
+      // Unlock scroll and restore position
+      const scrollY = document.body.style.top
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+    }
+  }, [missingModal])
+
+  // Function to remove all items from specific sellers
+  const removeSellerItems = async (sellerIds: string[]) => {
+    setIsRemovingItems(true)
+    try {
+      // Get all items that belong to the missing sellers
+      const itemsToRemove = cart.items?.filter(item => 
+        item.product?.seller?.id && sellerIds.includes(item.product.seller.id)
+      ) || []
+
+      for (const item of itemsToRemove) {
+        if (item.id) {
+          await removeFromCart(item.id)
+        }
+      }
+
+      await fetchCart()
+      
+      setMissingModal(false)
+      router.push("/check")
+    } catch (error) {
+      console.error("Error removing seller items:", error)
+      setError("Failed to remove items. Please try again.")
+    } finally {
+      setIsRemovingItems(false)
+    }
+  }
 
 
 
@@ -168,26 +223,75 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
       {missingModal && (
         <Modal
-          heading="Missing seller shipping option"
+          heading=""
           onClose={() => router.push("/")}
         >
-          <div className="p-4">
-            <h2 className="heading-sm">
-              Some of the sellers in your cart do not have shipping options.
+          <div className="px-6 py-8 max-w-sm mx-auto">
+          
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                <Truck className="w-8 h-8 text-orange-600" />
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-3">
+              Shipping Not Available
             </h2>
 
-            <p className="text-md mt-3">
-              Please remove the{" "}
-              <span className="font-bold">
-                {missingSellers?.map(
-                  (seller, index) =>
-                    `${seller}${index === missingSellers.length - 1 ? " " : ", "
-                    }`
+            <p className="text-gray-600 text-center text-sm mb-6 leading-relaxed">
+              Some sellers in your cart don't offer shipping to your location yet.
+            </p>
+
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 mb-6">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                Affected Sellers
+              </h3>
+              <div className="space-y-1">
+                {missingSellers?.map((seller, index) => (
+                  <div key={index} className="flex items-center text-sm text-gray-700">
+                    <span className="w-1 h-1 bg-gray-400 rounded-full mr-2"></span>
+                    {seller}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-red-500 rounded-full mr-2 flex-shrink-0"></div>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <button
+                onClick={() => removeSellerItems(missingShippingSellers)}
+                disabled={isRemovingItems}
+                className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-red-300 disabled:to-red-400 text-white px-6 py-4 rounded-xl font-semibold text-sm shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed"
+              >
+                {isRemovingItems ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Removing Items...
+                  </div>
+                ) : (
+                  "Remove These Items"
                 )}
-              </span>{" "}
-              items or contact{" "}
-              {missingSellers && missingSellers?.length > 1 ? "them" : "him"} to
-              get the shipping options.
+              </button>
+              
+              <button
+                onClick={() => router.push("/")}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-4 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-[1.02]"
+              >
+                Go to homepage
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center mt-4 leading-relaxed">
+              You can also contact the sellers directly to request shipping to your area.
             </p>
           </div>
         </Modal>
