@@ -239,7 +239,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
             </h2>
 
             <p className="text-gray-600 text-center text-sm mb-6 leading-relaxed">
-              Some sellers in your cart don't offer shipping to your location yet.
+              Some sellers in your cart don&apos;t offer shipping to your location yet.
             </p>
 
             <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 mb-6">

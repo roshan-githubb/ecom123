@@ -117,12 +117,15 @@ async function Category({
     
   })
 
-  const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
-    "@type": "ListItem",
-    position: idx + 1,
-    url: `${baseUrl}/${locale}/products/${p.handle}`,
-    name: p.title,
-  }))
+  const itemList = jsonLdProducts
+    .slice(0, 8)
+    .filter((p: any) => p && p.handle && p.title) // Filter out invalid products
+    .map((p: any, idx: number) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      url: `${baseUrl}/${locale}/products/${p.handle}`,
+      name: p.title,
+    }))
 
   return (
     <main className="container">

@@ -42,8 +42,8 @@ export const HomeProductsCarousel = async ({
               product={product}
               api_product={
                 home
-                  ? (product as HttpTypes.StoreProduct)
-                  : products.find((p) => {
+                  ? (product as unknown as HttpTypes.StoreProduct)
+                  : products.find((p: any) => {
                       const { cheapestPrice } = getProductPrice({
                         product: p,
                       })
