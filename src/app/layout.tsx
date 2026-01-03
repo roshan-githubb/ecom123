@@ -144,7 +144,7 @@ export default async function RootLayout({
         className={`${poppins.variable} antialiased bg-primary text-secondary relative`}
       >
         <Script
-          src="/flutter-listeners.js"
+          src="/flutter-listener.js"
           strategy="beforeInteractive"
         />
         <Providers cart={mappedCart}>{children}</Providers>

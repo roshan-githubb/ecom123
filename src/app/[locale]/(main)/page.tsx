@@ -149,7 +149,20 @@ export default async function HomePage({ params }: { params: Params }) {
               </div>
             ))}
           </div>
-          <FlashItems/>
+          
+          {/* Flash Sale Section */}
+          <Suspense fallback={
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+              <div className="flex gap-2 overflow-hidden">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="w-[180px] h-48 bg-gray-200 rounded flex-shrink-0"></div>
+                ))}
+              </div>
+            </div>
+          }>
+            <FlashItems locale={locale} />
+          </Suspense>
          
 
           {/* Recommended for you — horizontal, hidden scrollbar */}
