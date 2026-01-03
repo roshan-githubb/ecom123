@@ -98,7 +98,7 @@ async function AllCategories({
     queryParams: { limit: 8, order: "created_at", fields: "id,title,handle" },
   })
 
-  const itemList = jsonLdProducts.slice(0, 8).map((p, idx) => ({
+  const itemList = jsonLdProducts.slice(0, 8).map((p : any, idx) => ({
     "@type": "ListItem",
     position: idx + 1,
     url: `${baseUrl}/${locale}/products/${p.handle}`,
