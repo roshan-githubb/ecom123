@@ -25,6 +25,11 @@ export const listCategories = async ({
       next: { revalidate: 3600 },
     })
     .then(({ product_categories }) => product_categories)
+    .catch((error) => {
+      console.log("categories fetch error ", error)
+      return []
+    })
+
 
   const parentCategories = categories.filter(({ name }) =>
     headingCategories.includes(name.toLowerCase())
