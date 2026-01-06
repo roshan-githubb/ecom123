@@ -9,9 +9,9 @@
       }
 
       console.log("[FlutterBridge] Token received from Flutter:", token);
-      alert("Flutter token received:\n" + token);
+      // alert("Flutter token received:\n" + token);
 
-      const res = await fetch("/api/auth/flutter", {
+      const res = await fetch("/api/flutter", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
