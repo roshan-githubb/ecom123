@@ -9,7 +9,7 @@
       }
 
       console.log("[FlutterBridge] Token received from Flutter:", token);
-      alert("Flutter token received:\n" + token);
+      // alert("Flutter token received:\n" + token);
 
       const res = await fetch("/api/flutter", {
         method: "POST",
