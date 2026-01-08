@@ -145,17 +145,9 @@ export function OrderSummary() {
   const cartSummary = mapCartToOrderSummary(summary)
 
   if (cartSummary && !cartSummary?.items.length) {
-    return <div className="text-center mt-10">Your cart is empty</div>
+    return <div className="text-center mt-10">Your cart is empty.</div>
   }
-  // console.log('order summary prop received ', summary)
 
-  // const subtotal = items.reduce(
-  //   (acc, item) => acc + item.price * item.quantity,
-  //   0
-  // )
-  // const deliveryCharge = 100
-  // const serviceFee = 50
-  // const totalPayable = subtotal + deliveryCharge + serviceFee
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6">
@@ -269,6 +261,8 @@ export const RememberUserInfo = () => {
       setHasAddress(false)
     }
   }
+  if (!cartId) return null;
+
 
 
 
