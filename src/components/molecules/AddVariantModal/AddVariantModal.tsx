@@ -1034,7 +1034,7 @@ function ProductCardInternal({
               {/* Questions Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-800 text-sm">Qsns ({questions.length})</h3>
+                  <h3 className="font-semibold text-gray-800 text-sm">QnA ({questions.length})</h3>
                   {isLoggedIn && !showQuestionForm && (
                     <button
                       onClick={handleAskSeller}
@@ -1122,7 +1122,7 @@ function ProductCardInternal({
                             </p>
                             
                             {question.answer ? (
-                              <div className="bg-green-50 border-l-4 border-green-400 p-3 mb-3">
+                              <div className="bg-green-50 border-green-400 p-3 mb-3">
                                 <div className="flex items-start gap-2">
                                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1195,11 +1195,6 @@ function ProductCardInternal({
                                             reply.isVendor ? 'text-green-700' : 'text-gray-700'
                                           }`}>
                                             {reply.author}
-                                            {reply.isVendor && (
-                                              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                                                Vendor
-                                              </span>
-                                            )}
                                           </span>
                                           <span className="text-xs text-gray-500">
                                             {new Date(reply.createdAt).toLocaleDateString()}

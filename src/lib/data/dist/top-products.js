@@ -37,36 +37,55 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 exports.getTopProducts = void 0;
+var safe_data_1 = require("@/lib/utils/safe-data");
 function getTopProducts(_a) {
-    var region_id = _a.region_id, _b = _a.currency_code, currency_code = _b === void 0 ? 'npr' : _b, category_id = _a.category_id, _c = _a.limit, limit = _c === void 0 ? 20 : _c, _d = _a.offset, offset = _d === void 0 ? 0 : _d, _e = _a.fields, fields = _e === void 0 ? "*variants.calculated_price,+variants.inventory_quantity,*variants,*options.values,*options" : _e;
+    var region_id = _a.region_id, _b = _a.currency_code, currency_code = _b === void 0 ? "npr" : _b, category_id = _a.category_id, _c = _a.limit, limit = _c === void 0 ? 20 : _c, _d = _a.offset, offset = _d === void 0 ? 0 : _d, _e = _a.fields, fields = _e === void 0 ? "*seller,*seller.reviews,*seller.reviews.customer" : _e;
     return __awaiter(this, void 0, void 0, function () {
-        var params, res;
+        var result;
+        var _this = this;
         return __generator(this, function (_f) {
             switch (_f.label) {
-                case 0:
-                    params = new URLSearchParams();
-                    region_id = region_id || process.env.NEXT_PUBLIC_REGION_ID;
-                    if (region_id)
-                        params.append("region_id", region_id);
-                    if (currency_code)
-                        params.append("currency_code", currency_code);
-                    if (category_id)
-                        params.append("category_id", category_id);
-                    params.append("limit", limit.toString());
-                    params.append("offset", offset.toString());
-                    params.append("fields", fields);
-                    return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL + "/store/top-products?" + params.toString(), {
-                            method: "GET",
-                            headers: {
-                                "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
-                                "Content-Type": "application/json"
+                case 0: return [4 /*yield*/, safe_data_1.safeDataFetch(function () { return __awaiter(_this, void 0, void 0, function () {
+                        var params, res, _a, _b, data;
+                        return __generator(this, function (_c) {
+                            switch (_c.label) {
+                                case 0:
+                                    params = new URLSearchParams();
+                                    region_id = region_id || process.env.NEXT_PUBLIC_REGION_ID;
+                                    if (region_id)
+                                        params.append("region_id", region_id);
+                                    if (currency_code)
+                                        params.append("currency_code", currency_code);
+                                    if (category_id)
+                                        params.append("category_id", category_id);
+                                    params.append("limit", limit.toString());
+                                    params.append("offset", offset.toString());
+                                    params.append("fields", fields);
+                                    return [4 /*yield*/, fetch(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL + "/store/top-products?" + params.toString(), {
+                                            method: "GET",
+                                            headers: {
+                                                "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+                                                "Content-Type": "application/json"
+                                            },
+                                            next: { revalidate: 60 }
+                                        })];
+                                case 1:
+                                    res = _c.sent();
+                                    if (!!res.ok) return [3 /*break*/, 3];
+                                    _a = Error.bind;
+                                    _b = "HTTP " + res.status + ": ";
+                                    return [4 /*yield*/, res.text()];
+                                case 2: throw new (_a.apply(Error, [void 0, _b + (_c.sent())]))();
+                                case 3: return [4 /*yield*/, res.json()];
+                                case 4:
+                                    data = _c.sent();
+                                    return [2 /*return*/, data || { products: [] }];
                             }
-                        })];
+                        });
+                    }); }, { products: [] }, 'getTopProducts')];
                 case 1:
-                    res = _f.sent();
-                    if (!res.ok)
-                        throw new Error("Failed to fetch top products ");
-                    return [2 /*return*/, res.json()];
+                    result = _f.sent();
+                    return [2 /*return*/, result.data || { products: [] }];
             }
         });
     });
