@@ -29,6 +29,7 @@ const DeliveryAddress = () => {
         async function checkAddress() {
             if (!cartId) {
                 setHasAddress(false)
+                setLoading(false)
                 return
             }
 
@@ -58,14 +59,8 @@ const DeliveryAddress = () => {
     // Trigger address re-check
     setAddressCheckTrigger((prev) => prev + 1)
   }
-  if(loading) {
-    return (
-        <>
-        {/* <DeliveryAddressSkeleton/> */}
-        <CheckoutSkeleton/>
-        </>
-    )
-  }
+  if(loading)  <CheckoutSkeleton/>
+  if(!loading && !cartId)  return ;
  
 
     return (

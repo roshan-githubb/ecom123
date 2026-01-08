@@ -6,13 +6,13 @@ import { calculatePriceForShippingOption } from "@/lib/data/fulfillment"
 import { convertToLocale } from "@/lib/helpers/money"
 import { CheckCircleSolid, ChevronUpDown } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Fragment, useEffect, useState } from "react"
 import { Modal } from "@/components/molecules"
 import { CartShippingMethodRow } from "./CartShippingMethodRow"
 import { Listbox, Transition } from "@headlessui/react"
 import { Truck } from "lucide-react"
-import { removeFromCart, getCart } from "@/services/cart"
+import { removeFromCart } from "@/services/cart"
 import { useCartStore } from "@/store/useCartStore"
 
 // Extended cart item product type to include seller
@@ -66,7 +66,8 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   const [isRemovingItems, setIsRemovingItems] = useState(false)
 
   const router = useRouter()
-  const { fetchCart } = useCartStore()
+  const fetchCart = useCartStore(state => state.fetchCart)
+
 
   // Lock/unlock body scroll when modal opens/closes
   useEffect(() => {
@@ -102,7 +103,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     setIsRemovingItems(true)
     try {
       // Get all items that belong to the missing sellers
-      const itemsToRemove = cart.items?.filter(item => 
+      const itemsToRemove = cart.items?.filter(item =>
         item.product?.seller?.id && sellerIds.includes(item.product.seller.id)
       ) || []
 
@@ -113,7 +114,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       }
 
       await fetchCart()
-      
+
       setMissingModal(false)
       router.push("/check")
     } catch (error) {
@@ -185,13 +186,19 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       return
     }
 
-    await setShippingMethod({ cartId: cart.id, shippingMethodId: id }).catch(
-      (err) => {
-        setError(err.message)
-      }
-    )
-    setIsOpen(false)
-    setIsLoadingPrices(false)
+    try {
+      await setShippingMethod({
+        cartId: cart.id,
+        shippingMethodId: id,
+      })
+
+      await fetchCart()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsOpen(false)
+      setIsLoadingPrices(false)
+    }
   }
 
   useEffect(() => {
@@ -227,7 +234,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           onClose={() => router.push("/")}
         >
           <div className="px-6 py-8 max-w-sm mx-auto">
-          
+
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
                 <Truck className="w-8 h-8 text-orange-600" />
@@ -281,7 +288,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
                   "Remove These Items"
                 )}
               </button>
-              
+
               <button
                 onClick={() => router.push("/")}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-4 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-[1.02]"
