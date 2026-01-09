@@ -183,26 +183,6 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
               </div>
             </div>
           </div>
-          
-          <div
-            className="flex items-start gap-3 pl-[52px] cursor-pointer"
-            onClick={() => router.push("/np/pickupaddress")}
-          >
-            <div className="flex-1 border-t border-gray-200 pt-3 min-w-0">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-black font-medium leading-tight mb-1">
-                    Collect your parcels from a nearby location at a minimal
-                    delivery fee.
-                  </p>
-                  <p className="text-[11px] text-gray-400">
-                    9 suggested collection point(s) nearby
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              </div>
-            </div>
-          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-6">

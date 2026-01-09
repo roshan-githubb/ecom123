@@ -88,7 +88,7 @@ function mapCart(cart: any): { items: CartItem[] } & CartSummary {
 
     items: cart.items?.map((item: any) => ({
       id: item.id,
-      title: item.title,
+      title: item.product_title || item.title,
       price: item.unit_price,
       image:
         item.thumbnail ??
@@ -97,7 +97,7 @@ function mapCart(cart: any): { items: CartItem[] } & CartSummary {
       quantity: item.quantity,
       variantId: item.variant_id,
       productId: item.product_id,
-      variantTitle: item.variant?.title || item.variant_title || "",
+      variantTitle: item.variant_title || item.variant?.title || "",
       totalPrice: item.quantity * item.unit_price,
 
 

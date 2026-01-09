@@ -89,10 +89,11 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
             {item.title}
           </p>
         </Link>
-        <p className="text-xs text-gray-500">
-          {item.quantity} {item.quantity === 1 ? "Item" : "Items"}
-        </p>
-
+        {item.variantTitle && (
+          <p className="text-xs text-gray-600 font-medium">
+            {item.variantTitle}
+          </p>
+        )}
       </div>
       <div className="mr-5">
         <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} />
@@ -105,7 +106,7 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
 }
 
 export function OrderSummary() {
-  // const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   const {
     cartId,
@@ -120,6 +121,7 @@ export function OrderSummary() {
     discountTotal,
     promotions
   } = useCartStore()
+  
   const summary = {
     currency,
     subtotal,
@@ -132,18 +134,63 @@ export function OrderSummary() {
     cartId,
     promotions
   }
+  
   useEffect(() => {
     const fetchCartData = async () => {
+      setLoading(true)
       await fetchCart();
+      setLoading(false)
     }
     fetchCartData()
   }, [fetchCart])
 
   console.log('delivery fee ', deliveryFee)
 
-  // if (loading) return <CheckoutSkeleton />
+  // Show loading skeleton while fetching
+  if (loading || !cartId) {
+    return (
+      <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 animate-pulse">
+        <div className="h-5 w-32 bg-gray-200 rounded mb-4"></div>
+        
+        {/* Item rows skeleton */}
+        {[1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-2 mb-3">
+            <div className="w-[35px] h-[35px] bg-gray-200 rounded-lg"></div>
+            <div className="flex-1">
+              <div className="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+              <div className="h-3 w-16 bg-gray-200 rounded"></div>
+            </div>
+            <div className="h-6 w-20 bg-gray-200 rounded"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+
+        <div className="border-t pt-4 mt-4 space-y-3">
+          <div className="flex justify-between">
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+            <div className="h-4 w-12 bg-gray-200 rounded"></div>
+          </div>
+          <div className="flex justify-between">
+            <div className="h-4 w-28 bg-gray-200 rounded"></div>
+            <div className="h-4 w-14 bg-gray-200 rounded"></div>
+          </div>
+          <div className="flex justify-between">
+            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            <div className="h-4 w-12 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4 mt-4 flex justify-between">
+          <div className="h-5 w-24 bg-gray-200 rounded"></div>
+          <div className="h-5 w-16 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+
   const cartSummary = mapCartToOrderSummary(summary)
 
+  // Only show empty message after loading is complete
   if (cartSummary && !cartSummary?.items.length) {
     return <div className="text-center mt-10">Your cart is empty.</div>
   }
