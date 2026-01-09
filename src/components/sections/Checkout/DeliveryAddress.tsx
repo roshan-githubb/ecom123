@@ -1,5 +1,5 @@
 'use client'
-import { CheckoutSkeleton, DeliveryAddressSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
+import { DeliveryAddressSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 import { useAddressStore } from "@/store/addressStore"
 import { MapPin, ChevronRight } from "lucide-react"
 import { AddressForm } from "@/app/[locale]/(checkout)/shippinginfo/addressform/page"
@@ -8,69 +8,14 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/navigation"
 
 const DeliveryAddress = () => {
-    const [loading, setLoading] = useState(true)
-     const [hasAddress, setHasAddress] = useState(false)
-    const [addressCheckTrigger, setAddressCheckTrigger] = useState(0)
-    const {
-        cartId,
-        fetchCart,
-    } = useCartStore()
-
-    // useEffect(() => {
-    //     async function load() {
-    //         await fetchCart()
-    //         setLoading(false)
-    //     }
-    //     load()
-    // }, [fetchCart])
-
-    // Check if address exists
-    useEffect(() => {
-        async function checkAddress() {
-            if (!cartId) {
-                setHasAddress(false)
-                setLoading(false)
-                return
-            }
-
-            try {
-                const res = await fetch("/api/cart/get", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ cart_id: cartId }),
-                })
-                const data = await res.json()
-                const shippingAddr = data?.cart?.shipping_address
-                // Check if address exists AND has actual data (not just null properties)
-                const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
-                setHasAddress(!!isValid)
-                setLoading(false)
-                console.log("delivery Address check:", { shippingAddr, isValid })
-            } catch (err) {
-                console.error("Failed to check address:", err)
-                setHasAddress(false)
-            }
-        }
-
-        checkAddress()
-    }, [cartId, addressCheckTrigger])
-
-     const handleAddressUpdate = () => {
-    // Trigger address re-check
-    setAddressCheckTrigger((prev) => prev + 1)
-  }
-  if(loading)  <CheckoutSkeleton/>
-  if(!loading && !cartId)  return ;
- 
-
     return (
-        <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
+        <UserDetailsSection />
     )
 }
 
 export default DeliveryAddress
 
-const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddressUpdate }) => {
+const UserDetailsSection: React.FC = () => {
   const router = useRouter()
   const addresses = useAddressStore((state) => state.addresses)
   const selectedIndex = useAddressStore((state) => state.selectedAddressIndex)
@@ -79,12 +24,17 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   // Get cart to check for shipping address
   const [cartAddress, setCartAddress] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
+  const [isLoadingAddress, setIsLoadingAddress] = useState(true) // Add loading state
   const { cartId } = useCartStore()
 
   useEffect(() => {
     async function fetchCartAddress() {
-      if (!cartId) return
+      if (!cartId) {
+        setIsLoadingAddress(false)
+        return
+      }
       
+      setIsLoadingAddress(true)
       try {
         const res = await fetch("/api/cart/get", {
           method: "POST",
@@ -97,6 +47,8 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         }
       } catch (err) {
         console.error("Failed to fetch cart address:", err)
+      } finally {
+        setIsLoadingAddress(false)
       }
     }
     
@@ -112,10 +64,16 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
     (localAddr && localAddr.name)
   )
 
+  // Show loading skeleton while fetching address
+  if (isLoadingAddress) {
+    return <DeliveryAddressSkeleton />
+  }
+
   const handleFormClose = () => {
     setShowForm(false)
     // Refresh cart address after form closes
     if (cartId) {
+      setIsLoadingAddress(true)
       fetch("/api/cart/get", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,10 +84,10 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
           if (data?.cart?.shipping_address) {
             setCartAddress(data.cart.shipping_address)
           }
-          // Notify parent to re-check address
-          onAddressUpdate?.()
+          // No need to notify parent anymore since we're handling loading internally
         })
         .catch((err) => console.error("Failed to refresh cart address:", err))
+        .finally(() => setIsLoadingAddress(false))
     }
   }
 
