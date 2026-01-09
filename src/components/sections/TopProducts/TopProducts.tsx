@@ -32,12 +32,60 @@ export default async function TopProducts() {
     
     const ratingsMap = ratingsResult.data || {}
 
+    // Sort products: in-stock first, out-of-stock last
+    const sortedProducts = topProducts.products.sort((a: any, b: any) => {
+        // Calculate inventory for product A
+        const inventoryA = a?.variants?.reduce((sum: number, variant: any) => {
+            if (variant.inventory_quantity !== undefined) {
+                return sum + (variant.inventory_quantity || 0)
+            }
+            
+            const inventoryItem = variant.inventory_items?.[0]
+            if (inventoryItem?.inventory?.location_levels) {
+                const totalFromLocations = inventoryItem.inventory.location_levels.reduce(
+                    (locationSum: number, locationLevel: any) => {
+                        return locationSum + (locationLevel.available_quantity || 0)
+                    },
+                    0
+                )
+                return sum + totalFromLocations
+            }
+            
+            return sum
+        }, 0) || 0
+
+        // Calculate inventory for product B
+        const inventoryB = b?.variants?.reduce((sum: number, variant: any) => {
+            if (variant.inventory_quantity !== undefined) {
+                return sum + (variant.inventory_quantity || 0)
+            }
+            
+            const inventoryItem = variant.inventory_items?.[0]
+            if (inventoryItem?.inventory?.location_levels) {
+                const totalFromLocations = inventoryItem.inventory.location_levels.reduce(
+                    (locationSum: number, locationLevel: any) => {
+                        return locationSum + (locationLevel.available_quantity || 0)
+                    },
+                    0
+                )
+                return sum + totalFromLocations
+            }
+            
+            return sum
+        }, 0) || 0
+
+        // Sort: in-stock (> 0) first, out-of-stock (0) last
+        if (inventoryA > 0 && inventoryB <= 0) return -1
+        if (inventoryA <= 0 && inventoryB > 0) return 1
+        return 0 // Keep original order for products with same stock status
+    })
+
     return (
         <div>
             <SectionHeader title="Top products" actionLabel="See All" link='/top-products' />
             <div className="my-2"></div>
             <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-                {topProducts.products.map((r: any, index: number) => {
+                {sortedProducts.map((r: any, index: number) => {
                     try {
                         const currentPrice = r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
                         if (currentPrice === 0) return null
