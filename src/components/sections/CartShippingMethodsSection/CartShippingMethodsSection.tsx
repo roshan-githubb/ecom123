@@ -157,6 +157,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
 
   useEffect(() => {
     if (_shippingMethods?.length) {
+      setIsLoadingPrices(true)
       const promises = _shippingMethods
         .filter((sm) => sm.price_type === "calculated")
         .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
@@ -171,6 +172,8 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           setCalculatedPricesMap(pricesMap)
           setIsLoadingPrices(false)
         })
+      } else {
+        setIsLoadingPrices(false)
       }
     }
   }, [availableShippingMethods])
@@ -232,10 +235,11 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
         <Modal
           heading=""
           onClose={() => router.push("/")}
+          showCloseButton={false}
         >
-          <div className="px-6 py-8 max-w-sm mx-auto">
+          <div className="px-6 pb-8 max-w-sm mx-5">
 
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-3">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
                 <Truck className="w-8 h-8 text-orange-600" />
               </div>
@@ -249,7 +253,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
               Some sellers in your cart don&apos;t offer shipping to your location yet.
             </p>
 
-            <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 mb-3">
               <h3 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
                 <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
                 Affected Sellers
@@ -303,106 +307,144 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           </div>
         </Modal>
       )}
-      <div className="space-y-4 px-4 md:px-0 mt-4">
-        {/* Header */}
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]" />
-            <Truck className="w-5 h-5 text-[#2b5bf7] relative z-10" />
-          </div>
-
-          <div className="flex-1">
-            <div className="flex justify-between items-start">
-              <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+      
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]" />
+          <Truck className="w-5 h-5 text-[#2b5bf7] relative z-10" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-gray-900">
                 Shipping Method
-                {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-                  <CheckCircleSolid className="w-4 h-4 text-[#2b5bf7]" />
-                )}
               </h2>
-
-              {!isOpen && (
-                <button
-                  onClick={handleEdit}
-                  className="text-[13px] font-medium text-[#2b5bf7]"
-                >
-                  Edit
-                </button>
+              {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
+                <CheckCircleSolid className="w-4 h-4 text-[#2b5bf7]" />
               )}
             </div>
-
-            {/* Content */}
-            <div className="mt-2 border-t border-gray-200 pt-3">
-              {isOpen ? (
-                <div className="space-y-4">
-                  {Object.keys(groupedBySellerId).map((key) => (
-                    <div key={key}>
-                      <p className="text-[13px] font-medium text-gray-900 mb-1">
-                        {groupedBySellerId[key][0].seller_name}
-                      </p>
-
-                      <Listbox
-                        value={cart.shipping_methods?.[0]?.id}
-                        onChange={handleSetShippingMethod}
-                      >
-                        <div className="relative">
-                          <Listbox.Button className="w-full h-11 px-3 border border-gray-200 rounded-md text-[13px] text-gray-600 flex justify-between items-center">
-                            Choose shipping option
-                            <ChevronUpDown className="w-4 h-4 text-gray-400" />
-                          </Listbox.Button>
-
-                          <Transition as={Fragment}>
-                            <Listbox.Options className="absolute z-20 w-full bg-white border border-gray-200 rounded-md mt-1 max-h-56 overflow-auto">
-                              {groupedBySellerId[key].map((option: any) => (
-                                <Listbox.Option
-                                  key={option.id}
-                                  value={option.id}
-                                  className="px-4 py-3 text-[13px] text-gray-700 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                                >
-                                  {option.name} —{" "}
-                                  {convertToLocale({
-                                    amount: option.amount!,
-                                    currency_code: cart.currency_code,
-                                  })}
-                                </Listbox.Option>
-                              ))}
-                            </Listbox.Options>
-                          </Transition>
-                        </div>
-                      </Listbox>
-                    </div>
-                  ))}
-                  {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-                    <div className="flex flex-col">
-                      {cart.shipping_methods?.map((method) => (
-                        <CartShippingMethodRow
-                          key={method.id}
-                          method={method}
-                          currency_code={cart.currency_code}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <ErrorMessage error={error} />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {cart.shipping_methods?.map((method) => (
-                    <div key={method.id}>
-                      <p className="text-[13px] text-gray-700">
-                        {method.name} —{" "}
-                        {convertToLocale({
-                          amount: method.amount!,
-                          currency_code: cart.currency_code,
-                        })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
+              <button
+                onClick={handleEdit}
+                className="text-[13px] font-medium text-[#2b5bf7]"
+              >
+                Edit
+              </button>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="border-t border-gray-200 pt-3">
+        {isOpen ? (
+          <div className="space-y-6">
+            {Object.keys(groupedBySellerId).map((key) => (
+              <div key={key} className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {groupedBySellerId[key][0].seller_name}
+                  </p>
+                </div>
+
+                <Listbox
+                  value={cart.shipping_methods?.[0]?.id}
+                  onChange={handleSetShippingMethod}
+                >
+                  <div className="relative">
+                    <Listbox.Button 
+                      disabled={isLoadingPrices}
+                      className="w-full h-12 px-4 border border-gray-200 rounded-xl text-sm text-gray-700 flex justify-between items-center hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span>{isLoadingPrices ? "Loading options..." : "Choose shipping option"}</span>
+                      <ChevronUpDown className="w-5 h-5 text-gray-400" />
+                    </Listbox.Button>
+
+                    <Transition as={Fragment}>
+                      <Listbox.Options className="absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 max-h-60 overflow-auto shadow-xl">
+                        {groupedBySellerId[key].map((option: any) => (
+                          <Listbox.Option
+                            key={option.id}
+                            value={option.id}
+                            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium">{option.name}</span>
+                              <span className="text-blue-600 font-semibold">
+                                {option.price_type === "calculated" && calculatedPricesMap[option.id] 
+                                  ? convertToLocale({
+                                      amount: calculatedPricesMap[option.id],
+                                      currency_code: cart.currency_code,
+                                    })
+                                  : convertToLocale({
+                                      amount: option.amount!,
+                                      currency_code: cart.currency_code,
+                                    })
+                                }
+                              </span>
+                            </div>
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Transition>
+                  </div>
+                </Listbox>
+              </div>
+            ))}
+            
+            {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
+              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                <h3 className="text-sm font-medium text-green-800 mb-2">Selected Methods</h3>
+                <div className="space-y-2">
+                  {cart.shipping_methods?.map((method) => (
+                    <CartShippingMethodRow
+                      key={method.id}
+                      method={method}
+                      currency_code={cart.currency_code}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <ErrorMessage error={error} />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {(cart.shipping_methods?.length ?? 0) > 0 ? (
+              cart.shipping_methods?.map((method) => (
+                <div key={method.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-gray-900">{method.name}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-blue-600">
+                    {convertToLocale({
+                      amount: method.amount!,
+                      currency_code: cart.currency_code,
+                    })}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Truck className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500 mb-4">No shipping method selected</p>
+                <button
+                  onClick={handleEdit}
+                  disabled={isLoadingPrices}
+                  className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoadingPrices ? "Loading..." : "Select Shipping Method"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
