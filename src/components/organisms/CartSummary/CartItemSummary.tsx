@@ -375,7 +375,7 @@ export const RememberUserInfo = () => {
 
   }
 
-  const handlePayment = () => {
+  const handlePlaceOrderClick = () => {
     onPaymentCompleted()
 
   }
