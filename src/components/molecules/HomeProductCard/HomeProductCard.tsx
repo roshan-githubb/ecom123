@@ -229,7 +229,7 @@ export const HomeProductCard = ({
                     className={`flex items-center justify-center mt-auto text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
             ${isAddingToCart || totalInventory <= 0
                             ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
+                            : "bg-myBlue hover:bg-blue-700 active:bg-blue-800"
                         } text-[#FFFFFF]`}
                 >
                     <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} />

@@ -8,64 +8,62 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/navigation"
 
 const DeliveryAddress = () => {
-    const [loading, setLoading] = useState(true)
-     const [hasAddress, setHasAddress] = useState(false)
-    const [addressCheckTrigger, setAddressCheckTrigger] = useState(0)
-    const {
-        cartId,
-        fetchCart,
-    } = useCartStore()
+  const [loading, setLoading] = useState(true)
+  const [hasAddress, setHasAddress] = useState(false)
+  const [addressCheckTrigger, setAddressCheckTrigger] = useState(0)
+  const {
+    cartId,
+    fetchCart,
+  } = useCartStore()
 
-    // useEffect(() => {
-    //     async function load() {
-    //         await fetchCart()
-    //         setLoading(false)
-    //     }
-    //     load()
-    // }, [fetchCart])
+  // useEffect(() => {
+  //     async function load() {
+  //         await fetchCart()
+  //         setLoading(false)
+  //     }
+  //     load()
+  // }, [fetchCart])
 
-    // Check if address exists
-    useEffect(() => {
-        async function checkAddress() {
-            if (!cartId) {
-                setHasAddress(false)
-                setLoading(false)
-                return
-            }
+  // Check if address exists
+  useEffect(() => {
+    async function checkAddress() {
+      if (!cartId) {
+        setHasAddress(false)
+        setLoading(false)
+        return
+      }
 
-            try {
-                const res = await fetch("/api/cart/get", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ cart_id: cartId }),
-                })
-                const data = await res.json()
-                const shippingAddr = data?.cart?.shipping_address
-                // Check if address exists AND has actual data (not just null properties)
-                const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
-                setHasAddress(!!isValid)
-                setLoading(false)
-                console.log("delivery Address check:", { shippingAddr, isValid })
-            } catch (err) {
-                console.error("Failed to check address:", err)
-                setHasAddress(false)
-            }
-        }
+      try {
+        const res = await fetch("/api/cart/get", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_id: cartId }),
+        })
+        const data = await res.json()
+        const shippingAddr = data?.cart?.shipping_address
+        // Check if address exists AND has actual data (not just null properties)
+        const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
+        setHasAddress(!!isValid)
+        setLoading(false)
+        console.log("delivery Address check:", { shippingAddr, isValid })
+      } catch (err) {
+        console.error("Failed to check address:", err)
+        setHasAddress(false)
+      }
+    }
 
-        checkAddress()
-    }, [cartId, addressCheckTrigger])
+    checkAddress()
+  }, [cartId, addressCheckTrigger])
 
-     const handleAddressUpdate = () => {
+  const handleAddressUpdate = () => {
     // Trigger address re-check
     setAddressCheckTrigger((prev) => prev + 1)
   }
-  if(loading)  <CheckoutSkeleton/>
-  if(!loading && !cartId)  return ;
- 
-
-    return (
-        <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
-    )
+  if (loading) <CheckoutSkeleton />
+  if (!loading && !cartId) return;
+  return (
+    <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
+  )
 }
 
 export default DeliveryAddress
@@ -75,7 +73,8 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   const addresses = useAddressStore((state) => state.addresses)
   const selectedIndex = useAddressStore((state) => state.selectedAddressIndex)
   const localAddr = selectedIndex !== undefined ? addresses[selectedIndex] : null
-  
+  const [loading, setLoading] = useState(true)
+
   // Get cart to check for shipping address
   const [cartAddress, setCartAddress] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
@@ -84,7 +83,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   useEffect(() => {
     async function fetchCartAddress() {
       if (!cartId) return
-      
+
       try {
         const res = await fetch("/api/cart/get", {
           method: "POST",
@@ -94,21 +93,23 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         const data = await res.json()
         if (data?.cart?.shipping_address) {
           setCartAddress(data.cart.shipping_address)
+          setLoading(false)
         }
       } catch (err) {
         console.error("Failed to fetch cart address:", err)
       }
     }
-    
+
     fetchCartAddress()
   }, [cartId])
+  if (!cartId) return null
 
   // Use cart address if available, otherwise use local address
   const addr = cartAddress || localAddr
-  
+
   // Check if address has actual data (not just null properties)
   const hasValidAddress = addr && (
-    (cartAddress && cartAddress.first_name) || 
+    (cartAddress && cartAddress.first_name) ||
     (localAddr && localAddr.name)
   )
 
@@ -132,6 +133,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         .catch((err) => console.error("Failed to refresh cart address:", err))
     }
   }
+  if (loading) return;;
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
@@ -158,7 +160,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-bold text-sm text-gray-900">
-                      {cartAddress 
+                      {cartAddress
                         ? `${cartAddress.first_name} ${cartAddress.last_name}`
                         : addr.name}
                     </span>
@@ -183,7 +185,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
               </div>
             </div>
           </div>
-          
+
           <div
             className="flex items-start gap-3 pl-[52px] cursor-pointer"
             onClick={() => router.push("/np/pickupaddress")}

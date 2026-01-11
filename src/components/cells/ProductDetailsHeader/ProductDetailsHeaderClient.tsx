@@ -171,7 +171,7 @@ export const ProductDetailsHeaderClient = ({
                 onClick={handleAddToCart}
                 disabled={!variantStock || !variantHasPrice || !hasAnyPrice}
                 loading={isAdding}
-                className="w-full uppercase mb-4 py-3 flex justify-center"
+                className="w-full uppercase mb-4 py-3 flex justify-center bg-myBlue"
                 size="large"
             >
                 {!hasAnyPrice

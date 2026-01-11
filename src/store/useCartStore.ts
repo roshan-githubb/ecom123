@@ -147,6 +147,7 @@ export const useCartStore = create<CartState>()(
       },
 
       increase: async (lineItemId, currentQty) => {
+        console.log('increase item ', lineItemId, currentQty)
         const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
         if (data?.cart) {
           set(mapCart(data.cart));

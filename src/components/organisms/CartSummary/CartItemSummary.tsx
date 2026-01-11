@@ -1,5 +1,6 @@
 "use client"
 
+import { FiShoppingCart } from "react-icons/fi"
 import React, { useEffect, useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
 import { mapCartToOrderSummary, OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
@@ -9,6 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/sections/Checkout/DeliveryAddress";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/lib/data/cart";
+import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -145,7 +147,7 @@ export function OrderSummary() {
   const cartSummary = mapCartToOrderSummary(summary)
 
   if (cartSummary && !cartSummary?.items.length) {
-    return <div className="text-center mt-10">Your cart is empty.</div>
+    return <EmptyCartCard />
   }
 
 
@@ -214,15 +216,25 @@ export const RememberUserInfo = () => {
   const [hasAddress, setHasAddress] = useState(false)
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
 
   const onPaymentCompleted = async () => {
-    await placeOrder().catch((err) => {
+    try {
+      const res = await placeOrder()
+      if (res?.status === 401) {
+        console.log("401 received on client", res)
+        setShowAuthInvalidModal(true)
+      }
+    }
+    catch (err: any) {
       setErrorMessage(err.message !== "NEXT_REDIRECT" ? err.message : null)
-    })
+    }
+
   }
 
   const handlePayment = () => {
     onPaymentCompleted()
+
   }
 
   const {
@@ -265,40 +277,48 @@ export const RememberUserInfo = () => {
 
 
 
-
-  const handlePlaceOrder = async () => {
-    console.log("Place order clicked, hasAddress:", hasAddress)
-    await checkAddress()
-    if (!hasAddress) {
-      // Use the existing cart toast system
-      const { cartToast } = require("@/lib/cart-toast")
-      cartToast.showErrorToast("Please add a delivery address first")
-      return
-    }
-
-    router.push("/np/payment")
-  }
   return (
     <>
-      {/* <div className="max-w-md mx-auto mt-4">
-        <label className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={(e) => setChecked(e.target.checked)}
-            className="w-6 h-6 accent-blue-600 rounded border-gray-300"
-          />
-          <span className="text-[#555] font-poppins text-sm font-normal leading-[1.4em]">
-            Save my information for a faster checkout
-          </span>
-        </label>
-      </div> */}
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
         <Button variant="primary" onClick={handlePayment}>
           Place Order
         </Button>
       </div>
+      <AuthErrorModal
+        open={showAuthInvalidModal}
+        onOpenChange={setShowAuthInvalidModal}
+      />
     </>
+  )
+}
+
+
+export function EmptyCartCard() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+        {/* Icon */}
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+          <FiShoppingCart className="h-8 w-8 text-gray-400" />
+        </div>
+
+        {/* Text */}
+        <h2 className="mb-2 text-lg font-semibold text-myBlue">
+          Your cart is empty
+        </h2>
+        <p className="mb-6 text-sm text-gray-500">
+          Looks like you haven’t added anything to your cart yet.
+        </p>
+
+        {/* CTA */}
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-lg bg-myBlue px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+        >
+          Continue shopping
+        </button>
+      </div>
+    </div>
   )
 }
