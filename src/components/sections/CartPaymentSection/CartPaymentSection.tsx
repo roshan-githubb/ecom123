@@ -39,7 +39,7 @@ const CartPaymentSection = ({
   const [error, setError] = useState<string | null>(null)
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
+  const [isConfirmed, setIsConfirmed] = useState(false) // Track if payment method is confirmed
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     activeSession?.provider_id ?? ""
   )
@@ -53,7 +53,6 @@ const CartPaymentSection = ({
 
   const setPaymentMethod = async (method: string) => {
     setError(null)
-    setIsOpen(false)
     setSelectedPaymentMethod(method)
     if (isStripeFunc(method)) {
       await initiatePaymentSession(cart, {
@@ -78,13 +77,8 @@ const CartPaymentSection = ({
     [searchParams]
   )
 
-  const handleEdit = () => {
-    setIsOpen(true)
-  }
-
   const handleSubmit = async () => {
     setIsLoading(true)
-    setIsOpen(false)
     try {
       const shouldInputCard =
         isStripeFunc(selectedPaymentMethod) && !activeSession
@@ -97,6 +91,9 @@ const CartPaymentSection = ({
           provider_id: selectedPaymentMethod,
         })
       }
+
+      // Mark as confirmed after successful processing
+      setIsConfirmed(true)
 
       if (!shouldInputCard) {
         // return router.push(
@@ -113,9 +110,17 @@ const CartPaymentSection = ({
     }
   }
 
+  const handleChangePayment = () => {
+    setIsConfirmed(false)
+    setError(null)
+  }
+
   useEffect(() => {
     setError(null)
-  }, [isOpen])
+  }, [selectedPaymentMethod])
+
+  // Check if we should show confirmed state
+  const showConfirmedState = isConfirmed && selectedPaymentMethod && !error
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
@@ -129,18 +134,18 @@ const CartPaymentSection = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-gray-900">
-                Payment
+                Payment Method
               </h2>
-              {!isOpen && paymentReady && (
+              {showConfirmedState && (
                 <CheckCircleSolid className="w-4 h-4 text-[#2b5bf7]" />
               )}
             </div>
-            {!isOpen && activeSession && (
+            {showConfirmedState && (
               <button
-                onClick={handleEdit}
-                className="text-[13px] font-medium text-[#2b5bf7]"
+                onClick={handleChangePayment}
+                className="text-[13px] font-medium text-[#2b5bf7] hover:text-blue-800 transition-colors"
               >
-                Edit
+                Change
               </button>
             )}
           </div>
@@ -148,9 +153,24 @@ const CartPaymentSection = ({
       </div>
 
       {/* Content */}
-      <div className="border-t border-gray-200 pt-3">
-        {isOpen ? (
-          <div className="space-y-6">
+      <div className="border-t border-gray-200 pt-4">
+        {showConfirmedState ? (
+          // Confirmed state - show selected payment method summary
+          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Selected Payment Method</p>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {paymentInfoMap[selectedPaymentMethod]?.title || selectedPaymentMethod}
+                </p>
+              </div>
+            </div>
+            <CheckCircleSolid className="w-5 h-5 text-green-500" />
+          </div>
+        ) : (
+          // Selection state - show payment method options
+          <>
             {!paidByGiftcard && availablePaymentMethods?.length ? (
               <div className="space-y-4">
                 <RadioGroup
@@ -159,26 +179,77 @@ const CartPaymentSection = ({
                   className="space-y-3"
                 >
                   {availablePaymentMethods.map((method) => (
-                    <div key={method.id} className="border border-gray-200 rounded-xl overflow-hidden hover:border-blue-300 transition-colors">
-                      {isStripeFunc(method.id) ? (
-                        <StripeCardContainer 
-                          paymentProviderId={method.id} 
-                          selectedPaymentOptionId={selectedPaymentMethod} 
-                          paymentInfoMap={paymentInfoMap} 
-                          setCardBrand={setCardBrand} 
-                          setError={setError} 
-                          setCardComplete={setCardComplete} 
-                        />
-                      ) : (
-                        <PaymentContainer
-                          paymentProviderId={method.id}
-                          paymentInfoMap={paymentInfoMap}
-                          selectedPaymentOptionId={selectedPaymentMethod}
-                        />
-                      )}
+                    <div key={method.id} className="relative">
+                      <RadioGroup.Option value={method.id}>
+                        {({ checked }) => (
+                          <div className={`
+                            border-2 rounded-xl overflow-hidden transition-all duration-200 cursor-pointer
+                            ${checked 
+                              ? 'border-blue-500 bg-blue-50 shadow-sm' 
+                              : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                            }
+                          `}>
+                            {isStripeFunc(method.id) ? (
+                              <StripeCardContainer 
+                                paymentProviderId={method.id} 
+                                selectedPaymentOptionId={selectedPaymentMethod} 
+                                paymentInfoMap={paymentInfoMap} 
+                                setCardBrand={setCardBrand} 
+                                setError={setError} 
+                                setCardComplete={setCardComplete} 
+                              />
+                            ) : (
+                              <PaymentContainer
+                                paymentProviderId={method.id}
+                                paymentInfoMap={paymentInfoMap}
+                                selectedPaymentOptionId={selectedPaymentMethod}
+                              />
+                            )}
+                            {/* Selection indicator */}
+                            {checked && (
+                              <div className="absolute top-3 right-3">
+                                <CheckCircleSolid className="w-5 h-5 text-blue-600" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </RadioGroup.Option>
                     </div>
                   ))}
                 </RadioGroup>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 bg-red-500 rounded-full flex-shrink-0 mt-0.5"></div>
+                      <div>
+                        <p className="text-sm font-medium text-red-800">Payment Error</p>
+                        <p className="text-sm text-red-600 mt-1">{error}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Show continue button only when a method is selected */}
+                {selectedPaymentMethod && (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={
+                      isLoading ||
+                      (isStripe && !cardComplete)
+                    }
+                    className="w-full h-12 rounded-xl bg-blue-600 text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      "Continue to Review"
+                    )}
+                  </button>
+                )}
               </div>
             ) : paidByGiftcard ? (
               <div className="bg-green-50 rounded-xl p-4 border border-green-200">
@@ -198,81 +269,10 @@ const CartPaymentSection = ({
                   <CreditCard className="w-6 h-6 text-gray-400" />
                 </div>
                 <p className="text-sm text-gray-500">No payment methods available</p>
+                <p className="text-xs text-gray-400 mt-1">Please contact support if you need assistance</p>
               </div>
             )}
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex-shrink-0 mt-0.5"></div>
-                  <div>
-                    <p className="text-sm font-medium text-red-800">Payment Error</p>
-                    <p className="text-sm text-red-600 mt-1">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={handleSubmit}
-              disabled={
-                isLoading ||
-                (isStripe && !cardComplete) ||
-                (!selectedPaymentMethod && !paidByGiftcard)
-              }
-              className="w-full h-12 rounded-xl bg-blue-600 text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processing...
-                </>
-              ) : (
-                "Continue to Review"
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {activeSession ? (
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Payment Method</p>
-                    <p className="text-sm font-medium text-gray-900 mt-1">
-                      {paymentInfoMap[activeSession?.provider_id]?.title || activeSession?.provider_id}
-                    </p>
-                  </div>
-                </div>
-                <CheckCircleSolid className="w-5 h-5 text-green-500" />
-              </div>
-            ) : paidByGiftcard ? (
-              <div className="flex justify-between items-center p-4 bg-green-50 rounded-xl border border-green-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="text-xs text-green-600 uppercase tracking-wide">Payment Status</p>
-                    <p className="text-sm font-medium text-green-800 mt-1">Paid by Gift Card</p>
-                  </div>
-                </div>
-                <CheckCircleSolid className="w-5 h-5 text-green-500" />
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CreditCard className="w-6 h-6 text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-500 mb-4">No payment method selected</p>
-                <button
-                  onClick={handleEdit}
-                  className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Select Payment Method
-                </button>
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
     </div>

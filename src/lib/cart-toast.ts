@@ -58,22 +58,53 @@ class CartToastService {
   }
 
   showErrorToast(message: string = "Failed to add to cart") {
-    toast.error(message, {
-      duration: 3000,
-      position: 'top-right',
-      style: {
-        background: '#EF4444',
-        color: 'white',
-        fontWeight: '500',
-        borderRadius: '8px',
-        padding: '12px 16px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      },
-      iconTheme: {
-        primary: 'white',
-        secondary: '#EF4444',
-      },
-    })
+    // Dismiss any existing toast
+    if (this.state.toastId) {
+      toast.dismiss(this.state.toastId)
+    }
+
+    // Show custom error toast using the CartToast component with progress bar
+    this.state.toastId = toast.custom(
+      (t) => createElement(CartToast, {
+        message,
+        isVisible: t.visible,
+        duration: this.TOAST_DURATION,
+        onDismiss: () => {
+          toast.dismiss(t.id)
+          this.resetState()
+        },
+        variant: 'error'
+      }),
+      {
+        duration: this.TOAST_DURATION,
+        position: 'top-right',
+      }
+    )
+  }
+
+  showOutOfStockToast(message: string = "This product is out of stock") {
+    // Dismiss any existing toast
+    if (this.state.toastId) {
+      toast.dismiss(this.state.toastId)
+    }
+
+    // Show custom out of stock toast using the same CartToast component
+    this.state.toastId = toast.custom(
+      (t) => createElement(CartToast, {
+        message,
+        isVisible: t.visible,
+        duration: this.TOAST_DURATION,
+        onDismiss: () => {
+          toast.dismiss(t.id)
+          this.resetState()
+        },
+        variant: 'error' // Add variant prop for different styling
+      }),
+      {
+        duration: this.TOAST_DURATION,
+        position: 'top-right',
+      }
+    )
   }
 
   private resetState() {

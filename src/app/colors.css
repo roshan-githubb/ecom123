@@ -15,17 +15,17 @@
     --neutral-1000: 9, 9, 9;
 
     /* Brand colors are used across all interactive elements such as buttons, links, inputs, etc. This color can define the overall feel and can elicit emotion. */
-    --brand-25: 247, 247, 247;
-    --brand-50: 238, 238, 238;
-    --brand-100: 226, 226, 226;
-    --brand-200: 198, 198, 198;
-    --brand-300: 163, 163, 163;
-    --brand-400: 115, 115, 115;
-    --brand-500: 82, 82, 82;
-    --brand-600: 64, 64, 64;
-    --brand-700: 27, 27, 27;
-    --brand-800: 22, 22, 22;
-    --brand-900: 9, 9, 9;
+    --brand-25: 248, 248, 252;
+    --brand-50: 240, 240, 249;
+    --brand-100: 225, 225, 242;
+    --brand-200: 195, 195, 228;
+    --brand-300: 150, 150, 204;
+    --brand-400: 105, 105, 180;
+    --brand-500: 75, 75, 165;
+    --brand-600: 58, 58, 153;
+    --brand-700: 46, 46, 122;
+    --brand-800: 37, 37, 97;
+    --brand-900: 28, 28, 73;
     
     /* Red colors are used across error states and in "destructive" actions. */
     --red-25: 254, 243, 242;

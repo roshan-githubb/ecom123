@@ -186,7 +186,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   }
 
   return (
-    <form className="bg-white p-4 rounded-md space-y-3" onSubmit={handleSubmit}>
+    <form className="bg-white text-sm p-4 rounded-md space-y-3" onSubmit={handleSubmit}>
       {saveError && (
         <div className="bg-red-100 text-red-700 p-2 rounded text-sm">
           {saveError}
@@ -197,7 +197,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         type="button"
         onClick={handleUseCurrentLocation}
         disabled={isLoadingLocation}
-        className="w-full border-2 border-myBlue text-myBlue font-bold text-[14px] py-2.5 flex items-center justify-center gap-2 rounded hover:bg-[#00bfa5] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full border-2 border-myBlue text-myBlue font-bold text-sm py-2.5 flex items-center justify-center gap-2 rounded hover:bg-myBlue hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoadingLocation ? (
           <>
@@ -297,7 +297,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         <button
           type="submit"
           disabled={isSaving}
-          className="bg-[#00bfa5] text-white py-2 flex-1 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-myBlue text-white py-2 flex-1 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="text-sm flex items-center justify-center gap-2">
             {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}

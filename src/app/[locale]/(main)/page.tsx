@@ -3,8 +3,6 @@ import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard";
 import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel";
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard";
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
-import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
-import HomePageSkeleton from "@/components/organisms/HomepageSkeleton/HomepageSkeleton";
 import { 
   TopCategoriesSkeleton, 
   BannerSkeleton, 
@@ -16,6 +14,7 @@ import {
 } from "@/components/organisms/HomepageSkeleton/SectionSkeletons";
 import FlashItems from "@/components/sections/FlashItems/FlashItems";
 import TopProducts from "@/components/sections/TopProducts/TopProducts";
+import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -56,17 +55,6 @@ const topSectionProducts = [
   { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
   { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
   { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
-]
-
-const categories = [
-  { category: "Kitchen Essentials", image: "/images/categories/kitchen-essentials.png" },
-  { category: "Decor", image: "/images/categories/decor.png" },
-  { category: "Lighting Lamps", image: "/images/categories/lighting-lamps.png" },
-  { category: "Bags & Wallets", image: "/images/categories/bags-&-wallets.png" },
-  { category: "Makeup", image: "/images/categories/makeup.png" },
-  { category: "Clothing", image: "/images/categories/clothing.png" },
-  { category: "Skincare", image: "/images/categories/skincare.png" },
-  { category: "Electronics", image: "/images/categories/electronics.png" },
 ];
 
 
@@ -185,7 +173,7 @@ interface Params {
   locale: string;
 }
 
-export default async function HomePage({ params }: { params: Params }) {
+export default async function HomePage({ params }: { params: Promise<Params> }) {
   const { locale } = await params;
 
   try {

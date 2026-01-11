@@ -147,55 +147,79 @@ export const useCartStore = create<CartState>()(
       },
 
       increase: async (lineItemId, currentQty) => {
-        const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
-        if (data?.cart) {
-          set(mapCart(data.cart));
-          // Find the variant ID for this line item and decrease inventory
-          const item = data.cart.items?.find((item: any) => item.id === lineItemId);
-          if (item?.variant_id) {
-            useInventoryStore.getState().decreaseInventory(item.variant_id, 1);
+        // No optimistic update for increase - let API validate stock availability
+        try {
+          const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
+          if (data?.cart) {
+            set(mapCart(data.cart));
+            // Find the variant ID for this line item and decrease inventory
+            const item = data.cart.items?.find((item: any) => item.id === lineItemId);
+            if (item?.variant_id) {
+              useInventoryStore.getState().decreaseInventory(item.variant_id, 1);
+            }
           }
+        } catch (error) {
+          throw error;
         }
       },
 
       decrease: async (lineItemId, currentQuantity) => {
+        const currentItems = get().items;
+        
         if (currentQuantity <= 1) {
-          // Remove item
-          const data = await removeFromCart(lineItemId);
-          console.log('remove item response ', data)
-          if (data?.deleted == true) {
-            const cartData = await getCart();
-            if (cartData?.cart) {
-              set(mapCart(cartData.cart));
-              // Find the variant ID and increase inventory back
-              const currentItems = get().items;
+          const optimisticItems = currentItems.filter(i => i.id !== lineItemId);
+          set({ items: optimisticItems });
+
+          try {
+            const data = await removeFromCart(lineItemId);
+            console.log('remove item response ', data)
+            if (data?.deleted == true) {
+              const cartData = await getCart();
+              if (cartData?.cart) {
+                set(mapCart(cartData.cart));
+                const item = currentItems.find(i => i.id === lineItemId);
+                if (item?.variantId) {
+                  useInventoryStore.getState().increaseInventory(item.variantId, 1);
+                }
+              }
+            } else {
+              // If API returns nothing, keep the optimistic update
               const item = currentItems.find(i => i.id === lineItemId);
               if (item?.variantId) {
                 useInventoryStore.getState().increaseInventory(item.variantId, 1);
               }
             }
-          } else {
-            // If API returns nothing, manually remove from state
-            const currentItems = get().items;
-            const item = currentItems.find(i => i.id === lineItemId);
-            if (item?.variantId) {
-              useInventoryStore.getState().increaseInventory(item.variantId, 1);
-            }
-            set({ items: currentItems.filter(i => i.id !== lineItemId) });
+          } catch (error) {
+            // Revert optimistic update on error
+            set({ items: currentItems });
+            throw error;
           }
           return;
         }
 
-        // Decrement quantity
-        const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
-        console.log('decrement item ', data)
-        if (data?.cart) {
-          set(mapCart(data.cart));
-          // Find the variant ID for this line item and increase inventory
-          const item = data.cart.items?.find((item: any) => item.id === lineItemId);
-          if (item?.variant_id) {
-            useInventoryStore.getState().increaseInventory(item.variant_id, 1);
+        // Optimistic decrement
+        const optimisticItems = currentItems.map(item => 
+          item.id === lineItemId 
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        );
+        set({ items: optimisticItems });
+
+        try {
+          const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
+          console.log('decrement item ', data)
+          if (data?.cart) {
+            set(mapCart(data.cart));
+            // Find the variant ID for this line item and increase inventory
+            const item = data.cart.items?.find((item: any) => item.id === lineItemId);
+            if (item?.variant_id) {
+              useInventoryStore.getState().increaseInventory(item.variant_id, 1);
+            }
           }
+        } catch (error) {
+          // Revert optimistic update on error
+          set({ items: currentItems });
+          throw error;
         }
       },
 
