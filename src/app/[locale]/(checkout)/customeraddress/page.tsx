@@ -43,20 +43,6 @@ export default function CustomerAddress() {
           </div>
         </div>
 
-        <div className="flex items-start gap-3 pl-[52px]">
-          <div className="flex-1 border-t border-gray-50 pt-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[13px] text-[#2b5bf7] font-medium leading-tight mb-0.5">
-                  Collect your parcels from a nearby location at a minimal delivery fee.
-                </p>
-                <p className="text-[11px] text-gray-400">9 suggested collection point(s) nearby</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   );

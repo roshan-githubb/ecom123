@@ -47,8 +47,8 @@ export function mapCartToOrderSummary(cart: any): OrderSummaryData {
         lineId: item.id,
         productId: item.productId,
         variantId: item.variantId,
-        title: item.title,
-        variantTitle: item.variantTitle,
+        title: item.title, // This will now be the product_title from the fixed useCartStore
+        variantTitle: item.variantTitle, // This will be the variant_title (color)
         thumbnail: item.image ?? "/images/not-available/not-available.png",
         quantity: item.quantity,
         unitPrice: item.price || 0,

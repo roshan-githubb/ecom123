@@ -659,7 +659,7 @@ export default function ProductDetailClient({
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={handleAddToCart}
-            className="w-[180px] h-[40px] md:flex-1 md:w-auto md:h-[48px] bg-myBlue text-white rounded-[24px] font-medium flex items-center justify-center gap-2 shadow"
+            className="w-[180px] h-[40px] md:flex-1 md:w-auto md:h-[48px] bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566] text-white rounded-[24px] font-medium flex items-center justify-center gap-2 shadow transition-colors"
           >
             <Image
               src="/images/icons/cart.png"

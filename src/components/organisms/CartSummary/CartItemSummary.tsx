@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 // import { CheckoutSkeleton } from "../CartSkeleton/CartSkeleton";
 import { Button } from "@/components/sections/Checkout/DeliveryAddress";
+import { Modal } from "@/components/molecules/Modal/Modal";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/lib/data/cart";
 import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal";
@@ -28,46 +29,139 @@ export interface OrderItem {
 }
 
 
-const ItemCounter: React.FC<{ quantity: number; lineItemId: string; }> = ({
+const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: string; }> = ({
   quantity,
-  lineItemId
+  lineItemId,
+  variantId
 }) => {
+  const [optimisticQuantity, setOptimisticQuantity] = useState(quantity)
+  const [updateTimeout, setUpdateTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [isIncreasing, setIsIncreasing] = useState(false)
 
   const increase = useCartStore((s) => s.increase)
   const decrease = useCartStore((s) => s.decrease)
 
+  // Update optimistic quantity when prop changes
+  useEffect(() => {
+    setOptimisticQuantity(quantity)
+  }, [quantity])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeout) {
+        clearTimeout(updateTimeout)
+      }
+    }
+  }, [updateTimeout])
+
+  const handleQuantityChange = async (newQuantity: number, action: 'increase' | 'decrease') => {
+    // Clear existing timeout
+    if (updateTimeout) {
+      clearTimeout(updateTimeout)
+    }
+
+    // For decrease operations, we can still do optimistic updates since we're reducing quantity
+    if (action === 'decrease') {
+      setOptimisticQuantity(newQuantity)
+
+      // Debounce API call
+      const timeout = setTimeout(async () => {
+        try {
+          await decrease(lineItemId, quantity)
+        } catch (error) {
+          // Revert optimistic update on error
+          setOptimisticQuantity(quantity)
+          console.error('Failed to decrease quantity:', error)
+          
+          const { cartToast } = require("@/lib/cart-toast")
+          cartToast.showErrorToast("Failed to update quantity. Please try again.")
+        }
+      }, 300) // 300ms debounce
+
+      setUpdateTimeout(timeout)
+    }
+  }
+
+  const handleIncrease = async () => {
+    if (isIncreasing) return // Prevent multiple clicks
+    
+    setIsIncreasing(true)
+    const currentQuantity = optimisticQuantity
+    
+    try {
+      await increase(lineItemId, quantity)
+      
+      // Check if quantity actually increased after a short delay
+      setTimeout(() => {
+        const { items } = useCartStore.getState()
+        const updatedItem = items.find(item => item.id === lineItemId)
+        
+        if (updatedItem && updatedItem.quantity === currentQuantity) {
+          // Quantity didn't increase, show out of stock toast
+          const { cartToast } = require("@/lib/cart-toast")
+          cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
+        }
+        setIsIncreasing(false)
+      }, 200) // Small delay to let the store update
+      
+    } catch (error) {
+      console.error('Failed to increase quantity:', error)
+      
+      // Show toast for any API error
+      const { cartToast } = require("@/lib/cart-toast")
+      cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
+      setIsIncreasing(false)
+    }
+  }
+
+  const handleDecrease = () => {
+    if (optimisticQuantity > 1) {
+      handleQuantityChange(optimisticQuantity - 1, 'decrease')
+    } else {
+      // For quantity 1, handle removal immediately
+      decrease(lineItemId, quantity)
+    }
+  }
+
   return (
     <div className="flex items-center gap-1">
-
-
       <button
-        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => decrease(lineItemId, quantity)}
+        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
+        onClick={handleDecrease}
       >
         <svg width="6" height="2" viewBox="0 0 6 2" fill="none">
           <path
             d="M5.08844 0.000187397V1.41619H0.000437528V0.000187397H5.08844Z"
-            fill="#3E3E3E"
+            fill="currentColor"
           />
         </svg>
       </button>
 
-      <span className="text-sm font-semibold text-[#0000FF] w-4 text-center">
-        {quantity}
+      <span className="text-sm font-semibold text-myBlue w-4 text-center">
+        {optimisticQuantity}
       </span>
 
       <button
-        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => increase(lineItemId, quantity)}
+        className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${
+          isIncreasing 
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+            : 'text-black hover:bg-gray-50 active:scale-95'
+        }`}
+        onClick={handleIncrease}
+        disabled={isIncreasing}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M15.061 12.46H12.793V14.788H11.209V12.46H8.94103V10.996H11.209V8.668H12.793V10.996H15.061V12.46Z"
-            fill="#3E3E3E"
-          />
-        </svg>
+        {isIncreasing ? (
+          <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15.061 12.46H12.793V14.788H11.209V12.46H8.94103V10.996H11.209V8.668H12.793V10.996H15.061V12.46Z"
+              fill="currentColor"
+            />
+          </svg>
+        )}
       </button>
-
     </div>
   )
 }
@@ -91,13 +185,14 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
             {item.title}
           </p>
         </Link>
-        <p className="text-xs text-gray-500">
-          {item.quantity} {item.quantity === 1 ? "Item" : "Items"}
-        </p>
-
+        {item.variantTitle && (
+          <p className="text-xs text-gray-600 font-medium">
+            {item.variantTitle}
+          </p>
+        )}
       </div>
       <div className="mr-5">
-        <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} />
+        <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} variantId={item?.variantId} />
       </div>
       <span className="text-[#444444] font-semibold text-sm w-20 text-right">
         Rs {(item.unitPrice).toLocaleString()}
@@ -107,7 +202,7 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
 }
 
 export function OrderSummary() {
-  // const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   const {
     cartId,
@@ -122,6 +217,7 @@ export function OrderSummary() {
     discountTotal,
     promotions
   } = useCartStore()
+  
   const summary = {
     currency,
     subtotal,
@@ -134,18 +230,63 @@ export function OrderSummary() {
     cartId,
     promotions
   }
+  
   useEffect(() => {
     const fetchCartData = async () => {
+      setLoading(true)
       await fetchCart();
+      setLoading(false)
     }
     fetchCartData()
   }, [fetchCart])
 
   console.log('delivery fee ', deliveryFee)
 
-  // if (loading) return <CheckoutSkeleton />
+  // Show loading skeleton while fetching
+  if (loading || !cartId) {
+    return (
+      <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 animate-pulse">
+        <div className="h-5 w-32 bg-gray-200 rounded mb-4"></div>
+        
+        {/* Item rows skeleton */}
+        {[1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-2 mb-3">
+            <div className="w-[35px] h-[35px] bg-gray-200 rounded-lg"></div>
+            <div className="flex-1">
+              <div className="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+              <div className="h-3 w-16 bg-gray-200 rounded"></div>
+            </div>
+            <div className="h-6 w-20 bg-gray-200 rounded"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+
+        <div className="border-t pt-4 mt-4 space-y-3">
+          <div className="flex justify-between">
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+            <div className="h-4 w-12 bg-gray-200 rounded"></div>
+          </div>
+          <div className="flex justify-between">
+            <div className="h-4 w-28 bg-gray-200 rounded"></div>
+            <div className="h-4 w-14 bg-gray-200 rounded"></div>
+          </div>
+          <div className="flex justify-between">
+            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            <div className="h-4 w-12 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4 mt-4 flex justify-between">
+          <div className="h-5 w-24 bg-gray-200 rounded"></div>
+          <div className="h-5 w-16 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
+
   const cartSummary = mapCartToOrderSummary(summary)
 
+  // Only show empty message after loading is complete
   if (cartSummary && !cartSummary?.items.length) {
     return <EmptyCartCard />
   }
@@ -211,9 +352,11 @@ export function OrderSummary() {
 }
 
 export const RememberUserInfo = () => {
-
   const [checked, setChecked] = useState(false)
   const [hasAddress, setHasAddress] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [isCheckingAddress, setIsCheckingAddress] = useState(false)
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
@@ -240,12 +383,11 @@ export const RememberUserInfo = () => {
   const {
     cartId,
     fetchCart,
+    totalPayable
   } = useCartStore()
 
   // Check if address exists
   useEffect(() => {
-
-
     checkAddress()
   }, [cartId])
 
@@ -273,6 +415,7 @@ export const RememberUserInfo = () => {
       setHasAddress(false)
     }
   }
+  
   if (!cartId) return null;
 
 
@@ -281,8 +424,22 @@ export const RememberUserInfo = () => {
     <>
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
-        <Button variant="primary" onClick={handlePayment}>
-          Place Order
+        <Button 
+          variant="primary" 
+          onClick={handlePlaceOrderClick}
+          disabled={isCheckingAddress}
+          className={`flex items-center bg-myBlue justify-center gap-2 ${
+            isCheckingAddress ? 'bg-blue-400 cursor-not-allowed' : ''
+          }`}
+        >
+          {isCheckingAddress ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Checking...
+            </>
+          ) : (
+            'Place Order'
+          )}
         </Button>
       </div>
       <AuthErrorModal

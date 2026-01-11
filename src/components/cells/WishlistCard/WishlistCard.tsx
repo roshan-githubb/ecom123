@@ -67,8 +67,7 @@ export const WishlistCard = ({ product }: WishlistCardProps) => {
         </div>
 
         <div className="mt-auto pt-2 flex flex-col gap-2">
-    <button className="flex items-center justify-center w-full text-[12px] text-white py-2 px-3 rounded-md font-medium bg-myBlue"
-      >
+    <button className="flex items-center justify-center w-full text-[12px] text-white py-2 px-3 rounded-md font-medium bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]">
       <Image src="/images/icons/cart.png" alt="Cart" className="w-4 h-4 mr-2" height={16} width={16} />
       Add to Cart
     </button>
