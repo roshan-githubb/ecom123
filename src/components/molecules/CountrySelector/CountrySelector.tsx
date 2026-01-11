@@ -28,10 +28,7 @@ type CountrySelectProps = {
 }
 
 const CountrySelect = ({ regions }: CountrySelectProps) => {
-  const [current, setCurrent] = useState<
-    | { country: string | undefined; region: string; label: string | undefined }
-    | undefined
-  >(undefined)
+  const [current, setCurrent] = useState<CountryOption | undefined>(undefined)
 
   const { locale: countryCode } = useParams()
   const router = useRouter()
@@ -47,12 +44,17 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
         }))
       })
       .flat()
-      .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
+      .filter((option): option is CountryOption => 
+        option !== undefined && 
+        option.country !== undefined && 
+        option.label !== undefined
+      )
+      .sort((a, b) => a.label.localeCompare(b.label))
   }, [regions])
 
   useEffect(() => {
     if (countryCode) {
-      const option = options?.find((o) => o?.country === countryCode)
+      const option = options?.find((o) => o.country === countryCode)
       setCurrent(option)
     }
   }, [options, countryCode])
@@ -88,7 +90,7 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
           onChange={handleChange}
           defaultValue={
             countryCode
-              ? options?.find((o) => o?.country === countryCode)
+              ? options?.find((o) => o.country === countryCode)
               : undefined
           }
         >
