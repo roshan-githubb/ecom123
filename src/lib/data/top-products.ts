@@ -31,7 +31,7 @@ export async function getTopProducts({
       params.append("fields", fields)
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/top-products?${params.toString()}`,
+        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/top-products`,
         {
           method: "GET",
           headers: {
