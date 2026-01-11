@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 // import { CheckoutSkeleton } from "../CartSkeleton/CartSkeleton";
 import { Button } from "@/components/sections/Checkout/DeliveryAddress";
+import { Modal } from "@/components/molecules/Modal/Modal";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/lib/data/cart";
 
@@ -26,46 +27,139 @@ export interface OrderItem {
 }
 
 
-const ItemCounter: React.FC<{ quantity: number; lineItemId: string; }> = ({
+const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: string; }> = ({
   quantity,
-  lineItemId
+  lineItemId,
+  variantId
 }) => {
+  const [optimisticQuantity, setOptimisticQuantity] = useState(quantity)
+  const [updateTimeout, setUpdateTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [isIncreasing, setIsIncreasing] = useState(false)
 
   const increase = useCartStore((s) => s.increase)
   const decrease = useCartStore((s) => s.decrease)
 
+  // Update optimistic quantity when prop changes
+  useEffect(() => {
+    setOptimisticQuantity(quantity)
+  }, [quantity])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeout) {
+        clearTimeout(updateTimeout)
+      }
+    }
+  }, [updateTimeout])
+
+  const handleQuantityChange = async (newQuantity: number, action: 'increase' | 'decrease') => {
+    // Clear existing timeout
+    if (updateTimeout) {
+      clearTimeout(updateTimeout)
+    }
+
+    // For decrease operations, we can still do optimistic updates since we're reducing quantity
+    if (action === 'decrease') {
+      setOptimisticQuantity(newQuantity)
+
+      // Debounce API call
+      const timeout = setTimeout(async () => {
+        try {
+          await decrease(lineItemId, quantity)
+        } catch (error) {
+          // Revert optimistic update on error
+          setOptimisticQuantity(quantity)
+          console.error('Failed to decrease quantity:', error)
+          
+          const { cartToast } = require("@/lib/cart-toast")
+          cartToast.showErrorToast("Failed to update quantity. Please try again.")
+        }
+      }, 300) // 300ms debounce
+
+      setUpdateTimeout(timeout)
+    }
+  }
+
+  const handleIncrease = async () => {
+    if (isIncreasing) return // Prevent multiple clicks
+    
+    setIsIncreasing(true)
+    const currentQuantity = optimisticQuantity
+    
+    try {
+      await increase(lineItemId, quantity)
+      
+      // Check if quantity actually increased after a short delay
+      setTimeout(() => {
+        const { items } = useCartStore.getState()
+        const updatedItem = items.find(item => item.id === lineItemId)
+        
+        if (updatedItem && updatedItem.quantity === currentQuantity) {
+          // Quantity didn't increase, show out of stock toast
+          const { cartToast } = require("@/lib/cart-toast")
+          cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
+        }
+        setIsIncreasing(false)
+      }, 200) // Small delay to let the store update
+      
+    } catch (error) {
+      console.error('Failed to increase quantity:', error)
+      
+      // Show toast for any API error
+      const { cartToast } = require("@/lib/cart-toast")
+      cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
+      setIsIncreasing(false)
+    }
+  }
+
+  const handleDecrease = () => {
+    if (optimisticQuantity > 1) {
+      handleQuantityChange(optimisticQuantity - 1, 'decrease')
+    } else {
+      // For quantity 1, handle removal immediately
+      decrease(lineItemId, quantity)
+    }
+  }
+
   return (
     <div className="flex items-center gap-1">
-
-
       <button
-        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => decrease(lineItemId, quantity)}
+        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
+        onClick={handleDecrease}
       >
         <svg width="6" height="2" viewBox="0 0 6 2" fill="none">
           <path
             d="M5.08844 0.000187397V1.41619H0.000437528V0.000187397H5.08844Z"
-            fill="#3E3E3E"
+            fill="currentColor"
           />
         </svg>
       </button>
 
-      <span className="text-sm font-semibold text-[#0000FF] w-4 text-center">
-        {quantity}
+      <span className="text-sm font-semibold text-myBlue w-4 text-center">
+        {optimisticQuantity}
       </span>
 
       <button
-        className="flex justify-center items-center w-6 h-6 text-sm font-semibold text-black border border-gray-300 rounded-full"
-        onClick={() => increase(lineItemId, quantity)}
+        className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${
+          isIncreasing 
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+            : 'text-black hover:bg-gray-50 active:scale-95'
+        }`}
+        onClick={handleIncrease}
+        disabled={isIncreasing}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M15.061 12.46H12.793V14.788H11.209V12.46H8.94103V10.996H11.209V8.668H12.793V10.996H15.061V12.46Z"
-            fill="#3E3E3E"
-          />
-        </svg>
+        {isIncreasing ? (
+          <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15.061 12.46H12.793V14.788H11.209V12.46H8.94103V10.996H11.209V8.668H12.793V10.996H15.061V12.46Z"
+              fill="currentColor"
+            />
+          </svg>
+        )}
       </button>
-
     </div>
   )
 }
@@ -96,7 +190,7 @@ const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
         )}
       </div>
       <div className="mr-5">
-        <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} />
+        <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} variantId={item?.variantId} />
       </div>
       <span className="text-[#444444] font-semibold text-sm w-20 text-right">
         Rs {(item.unitPrice).toLocaleString()}
@@ -256,9 +350,11 @@ export function OrderSummary() {
 }
 
 export const RememberUserInfo = () => {
-
   const [checked, setChecked] = useState(false)
   const [hasAddress, setHasAddress] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [isCheckingAddress, setIsCheckingAddress] = useState(false)
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -275,12 +371,11 @@ export const RememberUserInfo = () => {
   const {
     cartId,
     fetchCart,
+    totalPayable
   } = useCartStore()
 
   // Check if address exists
   useEffect(() => {
-
-
     checkAddress()
   }, [cartId])
 
@@ -308,44 +403,130 @@ export const RememberUserInfo = () => {
       setHasAddress(false)
     }
   }
+  
   if (!cartId) return null;
 
+  const handlePlaceOrderClick = async () => {
+    setIsCheckingAddress(true)
+    
+    try {
+      console.log("Place order clicked, hasAddress:", hasAddress)
+      await checkAddress()
+      
+      if (!hasAddress) {
+        // Use the existing cart toast system
+        const { cartToast } = require("@/lib/cart-toast")
+        cartToast.showErrorToast("Please add a delivery address first")
+        return
+      }
 
-
-
-  const handlePlaceOrder = async () => {
-    console.log("Place order clicked, hasAddress:", hasAddress)
-    await checkAddress()
-    if (!hasAddress) {
-      // Use the existing cart toast system
-      const { cartToast } = require("@/lib/cart-toast")
-      cartToast.showErrorToast("Please add a delivery address first")
-      return
+      // Show confirmation modal
+      setShowConfirmModal(true)
+    } finally {
+      setIsCheckingAddress(false)
     }
-
-    router.push("/np/payment")
   }
+
+  const handleConfirmOrder = async () => {
+    setIsPlacingOrder(true)
+    
+    try {
+      // Call the original handlePayment function that was previously called by Place Order
+      await placeOrder()
+      
+      // If successful, close modal and the placeOrder function will handle navigation
+      setShowConfirmModal(false)
+    } catch (error) {
+      console.error('Failed to place order:', error)
+      
+      // Show error using the existing toast system
+      const { cartToast } = require("@/lib/cart-toast")
+      const errorMessage = error instanceof Error ? error.message : "Failed to place order. Please try again."
+      cartToast.showOutOfStockToast(errorMessage)
+      
+      // Keep modal open so user can try again
+    } finally {
+      setIsPlacingOrder(false)
+    }
+  }
+
+  const handleCancelOrder = () => {
+    setShowConfirmModal(false)
+  }
+
   return (
     <>
-      {/* <div className="max-w-md mx-auto mt-4">
-        <label className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={(e) => setChecked(e.target.checked)}
-            className="w-6 h-6 accent-blue-600 rounded border-gray-300"
-          />
-          <span className="text-[#555] font-poppins text-sm font-normal leading-[1.4em]">
-            Save my information for a faster checkout
-          </span>
-        </label>
-      </div> */}
-
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
-        <Button variant="primary" onClick={handlePayment}>
-          Place Order
+        <Button 
+          variant="primary" 
+          onClick={handlePlaceOrderClick}
+          disabled={isCheckingAddress}
+          className={`flex items-center bg-myBlue justify-center gap-2 ${
+            isCheckingAddress ? 'bg-blue-400 cursor-not-allowed' : ''
+          }`}
+        >
+          {isCheckingAddress ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Checking...
+            </>
+          ) : (
+            'Place Order'
+          )}
         </Button>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <Modal
+          heading="Confirm Order"
+          onClose={handleCancelOrder}
+          showCloseButton={false}
+        >
+          <div className="text-center space-y-4">
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                Are you sure you want to place this order?
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Total Amount: <span className="font-semibold text-myBlue">Rs {totalPayable.toLocaleString()}</span>
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <button
+                onClick={handleCancelOrder}
+                disabled={isPlacingOrder}
+                className={`flex-1 text-sm px-6 py-3 border border-gray-300 rounded-lg font-medium transition-colors duration-200 ${
+                  isPlacingOrder 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmOrder}
+                disabled={isPlacingOrder}
+                className={`flex-1 px-6 text-sm py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 ${
+                  isPlacingOrder 
+                    ? 'bg-blue-400 cursor-not-allowed' 
+                    : 'bg-myBlue hover:bg-blue-600'
+                } text-white`}
+              >
+                {isPlacingOrder ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Placing Order...
+                  </>
+                ) : (
+                  'Yes, Place Order'
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }

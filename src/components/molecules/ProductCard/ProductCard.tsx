@@ -265,7 +265,7 @@ export const ProductCard = ({
           className={`w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             ${isAddingToCart || totalInventory <= 0
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
+              : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
             } text-[#FFFFFF]`}
         >
           <Image

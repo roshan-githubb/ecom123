@@ -153,7 +153,7 @@ const UserDetailsSection: React.FC = () => {
           </div>
           <Button
             variant="primary"
-            className="px-6 py-2 text-sm"
+            className="px-6 py-2 bg-myBlue text-sm"
             onClick={() => setShowForm(true)}
           >
             Add Address

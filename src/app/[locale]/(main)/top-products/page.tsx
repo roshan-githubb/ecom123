@@ -47,11 +47,7 @@ export async function generateMetadata({
 }
 
 
-async function TopProducts({
-    params,
-}: {
-    params: Promise<{ locale: string }>
-}) {
+async function TopProducts() {
     const topProducts = await getTopProducts({ limit: 16 })
     const sortedProducts = sortProductsByInventory(topProducts?.products)
     
@@ -59,15 +55,13 @@ async function TopProducts({
     const ratingsMap = await getProductRatingSummaries(productIds)
 
     return (
-        <main className="container">
+            <main className="container">
+                <h1 className="heading-md uppercase mb-4">Top Products</h1>
 
-            <h1 className="heading-md uppercase mb-4">Top Products</h1>
-
-            <Suspense fallback={<ProductListingSkeleton />}>
-                <ProductsList products={sortedProducts} locale={"np"} ratingsMap={ratingsMap} />
-
-            </Suspense>
-        </main>
+                <Suspense fallback={<ProductListingSkeleton />}>
+                    <ProductsList products={sortedProducts} locale={"np"} ratingsMap={ratingsMap} />
+                </Suspense>
+            </main>
     )
 }
 

@@ -100,7 +100,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ initialData, index, on
       
     
       <input type="text" placeholder="Province" value={province} onChange={(e) => setProvince(e.target.value)} className="border p-2 w-full rounded" required />
-      <input type="text" placeholder="District / City" value={district} onChange={(e) => setDistrict(e.target.value)} className="border p-2 w-full rounded" required />
+      <input type="text" placeholder="District / City2" value={district} onChange={(e) => setDistrict(e.target.value)} className="border p-2 w-full rounded" required />
       <input type="text" placeholder="Address Line 1" value={line1} onChange={(e) => setLine1(e.target.value)} className="border p-2 w-full rounded" required />
       <input type="text" placeholder="Address Line 2 (Optional)" value={line2} onChange={(e) => setLine2(e.target.value)} className="border p-2 w-full rounded" />
       <input type="text" placeholder="Postal Code (Required)" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="border p-2 w-full rounded" required />
