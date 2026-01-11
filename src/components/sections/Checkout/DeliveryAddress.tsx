@@ -1,5 +1,5 @@
 'use client'
-import { DeliveryAddressSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
+import { CheckoutSkeleton, DeliveryAddressSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 import { useAddressStore } from "@/store/addressStore"
 import { MapPin, ChevronRight } from "lucide-react"
 import { AddressForm } from "@/app/[locale]/(checkout)/shippinginfo/addressform/page"
@@ -8,33 +8,82 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/navigation"
 
 const DeliveryAddress = () => {
-    return (
-        <UserDetailsSection />
-    )
+  const [loading, setLoading] = useState(true)
+  const [hasAddress, setHasAddress] = useState(false)
+  const [addressCheckTrigger, setAddressCheckTrigger] = useState(0)
+  const {
+    cartId,
+    fetchCart,
+  } = useCartStore()
+
+  // useEffect(() => {
+  //     async function load() {
+  //         await fetchCart()
+  //         setLoading(false)
+  //     }
+  //     load()
+  // }, [fetchCart])
+
+  // Check if address exists
+  useEffect(() => {
+    async function checkAddress() {
+      if (!cartId) {
+        setHasAddress(false)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const res = await fetch("/api/cart/get", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_id: cartId }),
+        })
+        const data = await res.json()
+        const shippingAddr = data?.cart?.shipping_address
+        // Check if address exists AND has actual data (not just null properties)
+        const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
+        setHasAddress(!!isValid)
+        setLoading(false)
+        console.log("delivery Address check:", { shippingAddr, isValid })
+      } catch (err) {
+        console.error("Failed to check address:", err)
+        setHasAddress(false)
+      }
+    }
+
+    checkAddress()
+  }, [cartId, addressCheckTrigger])
+
+  const handleAddressUpdate = () => {
+    // Trigger address re-check
+    setAddressCheckTrigger((prev) => prev + 1)
+  }
+  if (loading) <CheckoutSkeleton />
+  if (!loading && !cartId) return;
+  return (
+    <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
+  )
 }
 
 export default DeliveryAddress
 
-const UserDetailsSection: React.FC = () => {
+const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddressUpdate }) => {
   const router = useRouter()
   const addresses = useAddressStore((state) => state.addresses)
   const selectedIndex = useAddressStore((state) => state.selectedAddressIndex)
   const localAddr = selectedIndex !== undefined ? addresses[selectedIndex] : null
-  
+  const [loading, setLoading] = useState(true)
+
   // Get cart to check for shipping address
   const [cartAddress, setCartAddress] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
-  const [isLoadingAddress, setIsLoadingAddress] = useState(true) // Add loading state
   const { cartId } = useCartStore()
 
   useEffect(() => {
     async function fetchCartAddress() {
-      if (!cartId) {
-        setIsLoadingAddress(false)
-        return
-      }
-      
-      setIsLoadingAddress(true)
+      if (!cartId) return
+
       try {
         const res = await fetch("/api/cart/get", {
           method: "POST",
@@ -44,36 +93,30 @@ const UserDetailsSection: React.FC = () => {
         const data = await res.json()
         if (data?.cart?.shipping_address) {
           setCartAddress(data.cart.shipping_address)
+          setLoading(false)
         }
       } catch (err) {
         console.error("Failed to fetch cart address:", err)
-      } finally {
-        setIsLoadingAddress(false)
       }
     }
-    
+
     fetchCartAddress()
   }, [cartId])
+  if (!cartId) return null
 
   // Use cart address if available, otherwise use local address
   const addr = cartAddress || localAddr
-  
+
   // Check if address has actual data (not just null properties)
   const hasValidAddress = addr && (
-    (cartAddress && cartAddress.first_name) || 
+    (cartAddress && cartAddress.first_name) ||
     (localAddr && localAddr.name)
   )
-
-  // Show loading skeleton while fetching address
-  if (isLoadingAddress) {
-    return <DeliveryAddressSkeleton />
-  }
 
   const handleFormClose = () => {
     setShowForm(false)
     // Refresh cart address after form closes
     if (cartId) {
-      setIsLoadingAddress(true)
       fetch("/api/cart/get", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,12 +127,13 @@ const UserDetailsSection: React.FC = () => {
           if (data?.cart?.shipping_address) {
             setCartAddress(data.cart.shipping_address)
           }
-          // No need to notify parent anymore since we're handling loading internally
+          // Notify parent to re-check address
+          onAddressUpdate?.()
         })
         .catch((err) => console.error("Failed to refresh cart address:", err))
-        .finally(() => setIsLoadingAddress(false))
     }
   }
+  if (loading) return;;
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
@@ -116,7 +160,7 @@ const UserDetailsSection: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-bold text-sm text-gray-900">
-                      {cartAddress 
+                      {cartAddress
                         ? `${cartAddress.first_name} ${cartAddress.last_name}`
                         : addr.name}
                     </span>
@@ -141,6 +185,26 @@ const UserDetailsSection: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div
+            className="flex items-start gap-3 pl-[52px] cursor-pointer"
+            onClick={() => router.push("/np/pickupaddress")}
+          >
+            <div className="flex-1 border-t border-gray-200 pt-3 min-w-0">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] text-black font-medium leading-tight mb-1">
+                    Collect your parcels from a nearby location at a minimal
+                    delivery fee.
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    9 suggested collection point(s) nearby
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-6">
@@ -153,7 +217,7 @@ const UserDetailsSection: React.FC = () => {
           </div>
           <Button
             variant="primary"
-            className="px-6 py-2 bg-myBlue text-sm"
+            className="px-6 py-2 text-sm"
             onClick={() => setShowForm(true)}
           >
             Add Address

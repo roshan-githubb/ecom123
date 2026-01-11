@@ -1,5 +1,6 @@
 "use client"
 
+import { FiShoppingCart } from "react-icons/fi"
 import React, { useEffect, useState } from "react"
 import { useCartStore } from "@/store/useCartStore"
 import { mapCartToOrderSummary, OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
@@ -10,6 +11,7 @@ import { Button } from "@/components/sections/Checkout/DeliveryAddress";
 import { Modal } from "@/components/molecules/Modal/Modal";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/lib/data/cart";
+import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -286,7 +288,7 @@ export function OrderSummary() {
 
   // Only show empty message after loading is complete
   if (cartSummary && !cartSummary?.items.length) {
-    return <div className="text-center mt-10">Your cart is empty.</div>
+    return <EmptyCartCard />
   }
 
 
@@ -357,15 +359,25 @@ export const RememberUserInfo = () => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false)
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
 
   const onPaymentCompleted = async () => {
-    await placeOrder().catch((err) => {
+    try {
+      const res = await placeOrder()
+      if (res?.status === 401) {
+        console.log("401 received on client", res)
+        setShowAuthInvalidModal(true)
+      }
+    }
+    catch (err: any) {
       setErrorMessage(err.message !== "NEXT_REDIRECT" ? err.message : null)
-    })
+    }
+
   }
 
-  const handlePayment = () => {
+  const handlePlaceOrderClick = () => {
     onPaymentCompleted()
+
   }
 
   const {
@@ -406,56 +418,11 @@ export const RememberUserInfo = () => {
   
   if (!cartId) return null;
 
-  const handlePlaceOrderClick = async () => {
-    setIsCheckingAddress(true)
-    
-    try {
-      console.log("Place order clicked, hasAddress:", hasAddress)
-      await checkAddress()
-      
-      if (!hasAddress) {
-        // Use the existing cart toast system
-        const { cartToast } = require("@/lib/cart-toast")
-        cartToast.showErrorToast("Please add a delivery address first")
-        return
-      }
 
-      // Show confirmation modal
-      setShowConfirmModal(true)
-    } finally {
-      setIsCheckingAddress(false)
-    }
-  }
-
-  const handleConfirmOrder = async () => {
-    setIsPlacingOrder(true)
-    
-    try {
-      // Call the original handlePayment function that was previously called by Place Order
-      await placeOrder()
-      
-      // If successful, close modal and the placeOrder function will handle navigation
-      setShowConfirmModal(false)
-    } catch (error) {
-      console.error('Failed to place order:', error)
-      
-      // Show error using the existing toast system
-      const { cartToast } = require("@/lib/cart-toast")
-      const errorMessage = error instanceof Error ? error.message : "Failed to place order. Please try again."
-      cartToast.showOutOfStockToast(errorMessage)
-      
-      // Keep modal open so user can try again
-    } finally {
-      setIsPlacingOrder(false)
-    }
-  }
-
-  const handleCancelOrder = () => {
-    setShowConfirmModal(false)
-  }
 
   return (
     <>
+
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
         <Button 
           variant="primary" 
@@ -475,58 +442,40 @@ export const RememberUserInfo = () => {
           )}
         </Button>
       </div>
-
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <Modal
-          heading="Confirm Order"
-          onClose={handleCancelOrder}
-          showCloseButton={false}
-        >
-          <div className="text-center space-y-4">
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-800 mb-2">
-                Are you sure you want to place this order?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Total Amount: <span className="font-semibold text-myBlue">Rs {totalPayable.toLocaleString()}</span>
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button
-                onClick={handleCancelOrder}
-                disabled={isPlacingOrder}
-                className={`flex-1 text-sm px-6 py-3 border border-gray-300 rounded-lg font-medium transition-colors duration-200 ${
-                  isPlacingOrder 
-                    ? 'text-gray-400 cursor-not-allowed' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmOrder}
-                disabled={isPlacingOrder}
-                className={`flex-1 px-6 text-sm py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 ${
-                  isPlacingOrder 
-                    ? 'bg-blue-400 cursor-not-allowed' 
-                    : 'bg-myBlue hover:bg-blue-600'
-                } text-white`}
-              >
-                {isPlacingOrder ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Placing Order...
-                  </>
-                ) : (
-                  'Yes, Place Order'
-                )}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <AuthErrorModal
+        open={showAuthInvalidModal}
+        onOpenChange={setShowAuthInvalidModal}
+      />
     </>
+  )
+}
+
+
+export function EmptyCartCard() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+        {/* Icon */}
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+          <FiShoppingCart className="h-8 w-8 text-gray-400" />
+        </div>
+
+        {/* Text */}
+        <h2 className="mb-2 text-lg font-semibold text-myBlue">
+          Your cart is empty
+        </h2>
+        <p className="mb-6 text-sm text-gray-500">
+          Looks like you haven’t added anything to your cart yet.
+        </p>
+
+        {/* CTA */}
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-lg bg-myBlue px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+        >
+          Continue shopping
+        </button>
+      </div>
+    </div>
   )
 }
