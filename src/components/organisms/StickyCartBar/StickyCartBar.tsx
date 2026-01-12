@@ -1,11 +1,12 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useCartStore } from "@/store/useCartStore"
 import { convertToLocale } from "@/lib/helpers/money"
 import Image from "next/image"
 import StickyCartBarSkeleton from "../StickyCartBarSkeleton/StickyCartBarSkeleton"
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
 
 const shouldHideStickyBar = (pathname: string) => {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "")
@@ -26,6 +27,10 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
   const [shouldRender, setShouldRender] = useState(false)
   const [isAnimatingOut, setIsAnimatingOut] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [dragY, setDragY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartY = useRef(0)
+  const expandedPanelRef = useRef<HTMLDivElement>(null)
 
   const items = useCartStore((s) => s.items)
   const increase = useCartStore((s) => s.increase)
@@ -35,12 +40,18 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
 
   const isLoading = items === undefined;
 
-
-
   const itemCount = useMemo(
     () => items.reduce((sum, i) => sum + (i.quantity || 0), 0),
     [items]
   )
+
+  const isVisible = useMemo(() => {
+    if (itemCount === 0) return false
+    if (shouldHideStickyBar(pathname)) return false
+    return true
+  }, [itemCount, pathname])
+
+  useBodyScrollLock(isExpanded && isVisible)
 
   const smallStack = itemCount < 5
   const backGap = smallStack
@@ -51,12 +62,6 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
     : "-translate-x-0.5 -translate-y-0.5"
 
   useEffect(() => setIsNavigating(false), [pathname])
-
-  const isVisible = useMemo(() => {
-    if (itemCount === 0) return false
-    if (shouldHideStickyBar(pathname)) return false
-    return true
-  }, [itemCount, pathname])
 
   useEffect(() => {
     if (isVisible) {
@@ -72,8 +77,6 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
     }
   }, [isVisible, shouldRender])
 
-  if (!shouldRender) return null
-
   const handleCheckoutClick = () => {
     try {
       setIsNavigating(true)
@@ -86,6 +89,77 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
     }
   }
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isExpanded) return
+    dragStartY.current = e.touches[0].clientY
+    setIsDragging(true)
+    setDragY(0)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !isExpanded) return
+    
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - dragStartY.current
+    
+    if (deltaY > 0) {
+      setDragY(deltaY)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (!isDragging || !isExpanded) return
+    
+    setIsDragging(false)
+    
+    if (dragY > 100) {
+      setIsExpanded(false)
+    }
+    
+    setDragY(0)
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isExpanded) return
+    dragStartY.current = e.clientY
+    setIsDragging(true)
+    setDragY(0)
+  }
+
+  useEffect(() => {
+    const handleMouseMoveWrapper = (e: MouseEvent) => {
+      if (!isDragging || !isExpanded) return
+      
+      const deltaY = e.clientY - dragStartY.current
+      
+      if (deltaY > 0) {
+        setDragY(deltaY)
+      }
+    }
+
+    const handleMouseUpWrapper = () => {
+      if (!isDragging || !isExpanded) return
+      
+      setIsDragging(false)
+      
+      if (dragY > 100) {
+        setIsExpanded(false)
+      }
+      
+      setDragY(0)
+    }
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMoveWrapper)
+      document.addEventListener('mouseup', handleMouseUpWrapper)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMoveWrapper)
+        document.removeEventListener('mouseup', handleMouseUpWrapper)
+      }
+    }
+  }, [isDragging, isExpanded, dragY])
+
   const firstItemImage = items[0]?.image || "/product-placeholder.png"
   const totalSavings = 3266
 
@@ -95,6 +169,8 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
 
   return (
     <>
+      {shouldRender && (
+        <>
       {isExpanded && (
         <div
           className="fixed inset-0 z-40 bg-black/55 transition-opacity duration-300"
@@ -103,11 +179,25 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
       )}
 
       <div
+        ref={expandedPanelRef}
         className={`fixed left-0 right-0 bottom-[70px] z-50 pointer-events-auto transition-transform duration-300 ${isExpanded ? "translate-y-0" : "translate-y-[calc(100%+88px)]"
           }`}
+        style={{
+          transform: `translateY(${isExpanded ? dragY : 'calc(100% + 88px)'})`,
+          transition: isDragging ? 'none' : 'transform 300ms ease-out'
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
       >
         <div className="w-full bg-[#F4F6FB] rounded-t-[24px] shadow-[0_-20px_40px_rgba(6,23,60,0.12)] pb-6 relative overflow-hidden">
-          <div className="flex items-center justify-between px-5 pt-6 pb-4">
+          {/* Drag handle indicator */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-gray-300 rounded-full cursor-grab active:cursor-grabbing" />
+          </div>
+          
+          <div className="flex items-center justify-between px-5 pt-3 pb-4">
             <h3 className="text-[18px] font-semibold text-black">
               Review Items
             </h3>
@@ -124,7 +214,7 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Delivery in</p>
                 <p className="text-base font-semibold text-black leading-none">
-                  16 Mins
+                  2 days
                 </p>
               </div>
               <p className="text-sm text-gray-500">{itemCount} items</p>
@@ -156,7 +246,7 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
           router.push(`/products/${item.productId}`);
           setIsExpanded(false)}}
         >
-                      <h4 className="text-[13px] font-medium line-clamp-2 leading-tight mb-0.5">
+                      <h4 className="text-[13px] font-medium line-clamp-1 leading-tight mb-0.5">
                         {item.title}
                       </h4>
                       </button>
@@ -280,6 +370,10 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
           </button>
         </div>
       </div>
+        </>
+      )}
+      
+      {isLoading && <StickyCartBarSkeleton />}
     </>
   )
 }
