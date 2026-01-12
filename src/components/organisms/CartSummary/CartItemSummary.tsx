@@ -367,10 +367,19 @@ export const RememberUserInfo = () => {
       if (res?.status === 401) {
         console.log("401 received on client", res)
         setShowAuthInvalidModal(true)
+      } else if (!res?.error) {
+        const { useCartStore } = await import("@/store/useCartStore");
+        useCartStore.getState().clearLocal();
       }
     }
     catch (err: any) {
-      setErrorMessage(err.message !== "NEXT_REDIRECT" ? err.message : null)
+      if (err.message === "NEXT_REDIRECT") {
+        // Order was successful and redirecting, clear cart
+        const { useCartStore } = await import("@/store/useCartStore");
+        useCartStore.getState().clearLocal();
+      } else {
+        setErrorMessage(err.message)
+      }
     }
 
   }
