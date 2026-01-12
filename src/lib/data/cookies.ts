@@ -93,4 +93,8 @@ export const removeCartId = async () => {
   cookies.set('_medusa_cart_id', '', {
     maxAge: -1,
   });
+  if (typeof window !== "undefined") {
+    localStorage.removeItem('medusa_cart_id');  
+    localStorage.removeItem('medusa_cart'); 
+  }
 };

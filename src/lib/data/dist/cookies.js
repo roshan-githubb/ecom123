@@ -39,23 +39,27 @@ exports.__esModule = true;
 exports.removeCartId = exports.setCartId = exports.getCartId = exports.removeAuthToken = exports.setAuthToken = exports.getCacheOptions = exports.getCacheTag = exports.getAuthHeaders = void 0;
 require("server-only");
 var headers_1 = require("next/headers");
-// export const getAuthHeaders = async (): Promise<
-//   { authorization: string } | {}
-// > => {
-//   const cookies = await nextCookies();
-//   const token = cookies.get('_medusa_jwt')?.value;
-//   if (!token) {
-//     return {};
-//   }
-//   return { authorization: `Bearer ${token}` };
-// };
-exports.getAuthHeaders = function () { return __awaiter(void 0, void 0, void 0, function () {
-    return __generator(this, function (_a) {
-        // For storefront (products, categories, homepage, etc)
-        // NEVER send authorization header
-        return [2 /*return*/, {}];
+exports.getAuthHeaders = function () { return __awaiter(void 0, void 0, Promise, function () {
+    var cookies, token;
+    var _a;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0: return [4 /*yield*/, headers_1.cookies()];
+            case 1:
+                cookies = _b.sent();
+                token = (_a = cookies.get('_medusa_jwt')) === null || _a === void 0 ? void 0 : _a.value;
+                if (!token) {
+                    return [2 /*return*/, {}];
+                }
+                return [2 /*return*/, { authorization: "Bearer " + token }];
+        }
     });
 }); };
+// export const getAuthHeaders = async () => {
+//   // For storefront (products, categories, homepage, etc)
+//   // NEVER send authorization header
+//   return {};
+// };
 exports.getCacheTag = function (tag) { return __awaiter(void 0, void 0, Promise, function () {
     var cookies, cacheId, error_1;
     var _a;
@@ -166,6 +170,10 @@ exports.removeCartId = function () { return __awaiter(void 0, void 0, void 0, fu
                 cookies.set('_medusa_cart_id', '', {
                     maxAge: -1
                 });
+                if (typeof window !== "undefined") {
+                    localStorage.removeItem('medusa_cart_id');
+                    localStorage.removeItem('medusa_cart');
+                }
                 return [2 /*return*/];
         }
     });
