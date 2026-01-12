@@ -519,6 +519,14 @@ export async function placeOrder(cartId?: string) {
 
   if (cartRes?.order_set) {
     removeCartId()
+    
+    // Clear Zustand cart store on client side
+    if (typeof window !== "undefined") {
+      // Import and clear the cart store
+      const { useCartStore } = await import("@/store/useCartStore");
+      useCartStore.getState().clearLocal();
+    }
+    
     redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
   }
 
