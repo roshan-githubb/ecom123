@@ -60,6 +60,28 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes
 }
 
+export const updateCustomerAvatar = async (avatarUrl: string) => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const updateRes = await sdk.store.customer
+    .update({
+      metadata: {
+        avatar: avatarUrl
+      }
+    }, {}, headers)
+    .then(({ customer }) => customer)
+    .catch((err) => {
+      throw new Error(err.message)
+    })
+
+  const cacheTag = await getCacheTag("customers")
+  revalidateTag(cacheTag)
+
+  return updateRes
+}
+
 export async function signup(formData: FormData) {
   const password = formData.get("password") as string
   const customerForm = {

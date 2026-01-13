@@ -2,6 +2,7 @@
 
 import { CartProvider } from "@/components/providers"
 import { InventorySyncProvider } from "@/components/providers/InventorySyncProvider"
+import { WishlistProvider } from "@/components/providers/WishlistProvider"
 import { Cart } from "@/types/cart"
 import type React from "react"
 
@@ -15,7 +16,9 @@ export function Providers({ children, cart }: ProvidersProps) {
   return (
     <CartProvider cart={cart}>
       <InventorySyncProvider>
-        {children}
+        <WishlistProvider>
+          {children}
+        </WishlistProvider>
       </InventorySyncProvider>
     </CartProvider>
   )

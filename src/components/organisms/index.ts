@@ -25,6 +25,7 @@ import { ReviewsToWrite } from "./Reviews/ReviewsToWrite"
 import { ReviewsWritten } from "./Reviews/ReviewsWritten"
 import { CartEmpty } from "./CartEmpty/CartEmpty"
 import StickyCartBar from "./StickyCartBar/StickyCartBar"
+import { ProfileOverview } from "./ProfileOverview/ProfileOverview"
 
 
 export {
@@ -55,4 +56,5 @@ export {
   ReviewsWritten,
   CartEmpty,
   StickyCartBar,
+  ProfileOverview,
 }

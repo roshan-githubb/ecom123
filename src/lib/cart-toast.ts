@@ -57,6 +57,31 @@ class CartToastService {
     }, this.TOAST_DURATION)
   }
 
+  showSuccessToast(message: string = "Success!") {
+    // Dismiss any existing toast
+    if (this.state.toastId) {
+      toast.dismiss(this.state.toastId)
+    }
+
+    // Show custom success toast using the CartToast component
+    this.state.toastId = toast.custom(
+      (t) => createElement(CartToast, {
+        message,
+        isVisible: t.visible,
+        duration: this.TOAST_DURATION,
+        onDismiss: () => {
+          toast.dismiss(t.id)
+          this.resetState()
+        },
+        variant: 'success'
+      }),
+      {
+        duration: this.TOAST_DURATION,
+        position: 'top-right',
+      }
+    )
+  }
+
   showErrorToast(message: string = "Failed to add to cart") {
     // Dismiss any existing toast
     if (this.state.toastId) {
