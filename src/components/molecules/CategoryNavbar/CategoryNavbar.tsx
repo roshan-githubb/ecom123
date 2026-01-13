@@ -26,13 +26,13 @@ export const CategoryNavbar = ({
         All Products
       </LocalizedClientLink> */}
       <LocalizedClientLink
-        href="/recommended"
+        href="/products"
         onClick={() => (onClose ? onClose(false) : null)}
         className={cn(
           "label-md uppercase px-4 my-3 md:my-0 flex items-center justify-between"
         )}
       >
-        Recommended
+        All Products
       </LocalizedClientLink>
       {categories?.map(({ id, handle, name }) => (
         <LocalizedClientLink

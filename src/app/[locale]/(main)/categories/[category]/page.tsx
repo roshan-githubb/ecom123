@@ -105,17 +105,9 @@ async function Category({
       <h1 className="heading-md uppercase">{category.name}</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
-        {bot || !ALGOLIA_ID || !ALGOLIA_SEARCH_KEY ? (
           <div className="">
             <ProductListing category_id={category.id}  />
           </div>
-        ) : (
-          <AlgoliaProductsListing
-            category_id={category.id}
-            locale={locale}
-            currency_code={currency_code}
-          />
-        )}
       </Suspense>
     </main>
   )

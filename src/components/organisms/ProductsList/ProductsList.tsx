@@ -12,6 +12,8 @@ export const ProductsList = ({
   locale: string
   ratingsMap?: Record<string, SimpleRatingSummary>
 }) => {
+
+  
   return (
     <>
       <div

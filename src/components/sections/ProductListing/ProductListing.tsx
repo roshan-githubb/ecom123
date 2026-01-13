@@ -6,8 +6,11 @@ import {
   ProductsPagination,
 } from "@/components/organisms"
 import { PRODUCT_LIMIT } from "@/const"
+import { fetchProductRatingSummary } from "@/lib/api/reviews"
 import { listProducts } from "@/lib/data/products"
-import { getRegion } from "@/lib/data/regions"  
+import { getRegion } from "@/lib/data/regions"
+import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
+import { RatingSummary } from "@/types/reviews"
 
 
 export const ProductListing = async ({
@@ -39,6 +42,15 @@ export const ProductListing = async ({
     regionId: region.id,   // ← THIS IS THE ONLY CHANGE INSIDE listProducts call
   })
 
+  const ratingsMap: Record<string, RatingSummary> = await Promise.all(
+    response.products.map(async (product: any) => {
+      const summary = await fetchProductRatingSummary(product.id)
+      return [product.id, summary] as const
+    })
+  ).then(Object.fromEntries)
+  const sortedProducts = sortProductsByInventory(response?.products)
+
+
   const { products, count } = response
   const pages = Math.ceil(count / PRODUCT_LIMIT) || 1
 
@@ -49,10 +61,10 @@ export const ProductListing = async ({
         <ProductListingActiveFilters />
       </div> */}
       <div className="grid grid-cols-1 md:grid-cols-4 mt-6 gap-4">
-        {showSidebar && <ProductSidebar />}
+        {/* {showSidebar && <ProductSidebar />} */}
         <section className={showSidebar ? "col-span-3" : "col-span-4"}>
           <div className="flex flex-wrap gap-4">
-            <ProductsList products={products} locale={locale}/>
+            <ProductsList products={sortedProducts} locale={locale} />
           </div>
           <ProductsPagination pages={pages} />
         </section>

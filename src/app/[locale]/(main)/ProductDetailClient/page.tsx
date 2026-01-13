@@ -9,6 +9,8 @@ import { Review } from "@/types/reviews"
 import { cartToast } from "@/lib/cart-toast"
 import { motion } from "framer-motion"
 import { Toaster } from "react-hot-toast"
+import { NoQuestions, NoReviews } from "@/components/molecules/AddVariantModal/AddVariantModal"
+import { useInventoryStore } from "@/store/useInventoryStore"
 
 
 interface ProductOptionValue {
@@ -66,6 +68,11 @@ export default function ProductDetailClient({
   reviews: Review[]
 }) {
   const [index, setIndex] = useState(0)
+  const { getAdjustedInventory } = useInventoryStore()
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // console.log("Product in ProductDetailClient:", product) 
+  
 
   const averageRating = useMemo(() => {
     if (!reviews || reviews.length === 0) return 0
@@ -204,6 +211,40 @@ export default function ProductDetailClient({
     return hasColor && hasSize
   })
 
+
+  
+  // Calculate inventory for selected variant
+  const getVariantInventory = (variant: any) => {
+    if (!variant) return 0
+
+    // Try direct inventory_quantity first (regular products)
+    let originalInventory = 0
+    if (variant.inventory_quantity !== undefined) {
+      originalInventory = variant.inventory_quantity || 0
+    } else {
+      // Try nested inventory structure (top products API)
+      const inventoryItem = variant.inventory_items?.[0]
+      if (inventoryItem?.inventory?.location_levels) {
+        // Sum up available_quantity from all location levels
+        originalInventory = inventoryItem.inventory.location_levels.reduce(
+          (locationSum: number, locationLevel: any) => {
+            return locationSum + (locationLevel.available_quantity || 0)
+          },
+          0
+        )
+      }
+    }
+
+    return isHydrated
+      ? getAdjustedInventory(variant.id, originalInventory)
+      : originalInventory
+  }
+
+  
+
+  const selectedVariantInventory = getVariantInventory(selectedVariant)
+  const isSelectedVariantOutOfStock = selectedVariantInventory <= 0
+
   const price = selectedVariant?.calculated_price?.calculated_amount ?? 0
   const originalPrice =
     selectedVariant?.calculated_price?.original_amount ?? price
@@ -231,6 +272,8 @@ export default function ProductDetailClient({
       cartToast.showErrorToast()
     }
   }
+
+  
 
   const startX = useRef(0)
   const endX = useRef(0)
@@ -294,7 +337,7 @@ export default function ProductDetailClient({
               href={product.store?.url || "/coming-soon"}
               className="inline-flex mt-2 items-end w-full max-w-[163px] h-[21px] text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit  {product.store?.name || "Store"}
+              Visit the {product.store?.name || "Store"}
             </Link>
             {totalReviews > 0 && (
               <div className="flex items-center gap-3">
@@ -308,23 +351,44 @@ export default function ProductDetailClient({
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
             <div className="flex-1">
-              <h1 className="text-sm font-medium leading-[21px] text-[#666666] flex items-end">
+              <h1 className="text-lg capitalize font-medium leading-[21px] text-[#666666] flex items-end">
                 {product.title}
               </h1>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
-                  #Best Seller
-                </span>
-                <Link
-                  href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
-                  in {product?.collection?.title}
-                </Link>
-              </div>
-              <div className="mt-2 text-[#222222] text-sm">
-                <span className="font-semibold">
-                  {product.soldLastMonth || "0"}
-                </span>{" "}
-                Sold Out in past month
+              <div className="flex justify-between">
+                <div>{product.collection && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
+                      #Best Seller
+                    </span>
+                    <Link
+                      href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
+                      in {product?.collection?.title}
+                    </Link>
+                  </div>
+                )}
+                  {
+                    product.soldLastMonth && (
+                      <div className="mt-2 text-[#222222] text-sm">
+                        <span className="font-semibold">
+                          {product.soldLastMonth || "0"}
+                        </span>{" "}
+                        Sold in past month
+                      </div>
+                    )
+                  }</div>
+
+                <div>
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isSelectedVariantOutOfStock}
+                    className={`px-6  py-2 rounded-lg font-medium transition-colors shadow-md ${isSelectedVariantOutOfStock
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed text-[12px] "
+                      : "bg-myBlue text-white hover:opacity-90"
+                      }`}
+                  >
+                    {isSelectedVariantOutOfStock ? "OUT OF STOCK" : "ADD"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -395,73 +459,77 @@ export default function ProductDetailClient({
         </div>
 
 
-        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
-        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+        {colors.length > 0 || sizes.length > 0 ?
+          <>
+            <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+            <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {colors.length > 0 && (
-            <div>
-              <div className="text-[16px] font-normal text-black mb-2">
-                Color:{" "}
-                <span className="font-semibold text-[16px] text-black">
-                  {colors.find((c) => c.id === selectedColor)?.label}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                {colors.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedColor(c.id)}
-                    className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
-                      ? "border-2 border-[#1A315A]"
-                      : "border border-gray-300"
-                      }`}
-                  >
-                    <div className={`${c.bg} w-full h-full`} />
-                  </button>
-                ))}
-              </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              {colors.length > 0 && (
+                <div>
+                  <div className="text-[16px] font-normal text-black mb-2">
+                    Color:{" "}
+                    <span className="font-semibold text-[16px] text-black">
+                      {colors.find((c) => c.id === selectedColor)?.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {colors.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedColor(c.id)}
+                        className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
+                          ? "border-2 border-[#1A315A]"
+                          : "border border-gray-300"
+                          }`}
+                      >
+                        <div className={`${c.bg} w-full h-full`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {sizes.length > 0 && (
+                <div>
+                  <div className="text-base font-normal mb-2 text-[#222222]">
+                    Size:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {sizes.map((s, i) => {
+                      const shortLabel = sizeShortMap[s?.toLowerCase() ?? ""] || s
+
+                      return (
+                        <button
+                          key={`${s}-${i}`}
+                          onClick={() => setSelectedSize(s)}
+                          className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
+                            ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
+                            : "border border-[#333333] bg-transparent text-[#333333]"
+                            }`}
+                        >
+                          {shortLabel}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-
-          {sizes.length > 0 && (
-            <div>
-              <div className="text-base font-normal mb-2 text-[#222222]">
-                Size:
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((s, i) => {
-                  const shortLabel = sizeShortMap[s?.toLowerCase() ?? ""] || s
-
-                  return (
-                    <button
-                      key={`${s}-${i}`}
-                      onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
-                        ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
-                        : "border border-[#333333] bg-transparent text-[#333333]"
-                        }`}
-                    >
-                      {shortLabel}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+          </> : null
+        }
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         <div className="mt-3 flex flex-col gap-1">
-          <div className="bg-[#F80000] text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
+          {discountPercent > 0 && <div className="bg-[#F80000] text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
             {discountPercent}% OFF + Cash on Delivery
-          </div>
+          </div>}
           <div className="flex items-center pt-1">
-            <div className="pr-2 py-0.5 text-[32px] text-[#F80000] rounded-md font-medium">
+            {discountPercent > 0 && <div className="pr-2 py-0.5 text-[32px] text-[#F80000] rounded-md font-medium">
               -{discountPercent}%
-            </div>
+            </div>}
             <div className="px-2 rounded-md text-xs font-semibold flex items-baseline gap-1">
               <span className="text-[14px] leading-none self-start">
                 {currency}
@@ -472,7 +540,8 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+
+          {discountPercent > 0 && <div className="flex items-center gap-3">
             <div className="text-normal font-base text-gray-600">
               M.R.P.:{" "}
               <span className="line-through">
@@ -482,10 +551,10 @@ export default function ProductDetailClient({
             <div className="bg-[#EAEFFF] text-[#307345] text-base font-medium">
               Save {currency} {originalPrice - price}
             </div>
-          </div>
+          </div>}
         </div>
 
-        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        {/* <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         <details className="mt-4">
@@ -520,7 +589,7 @@ export default function ProductDetailClient({
               </tbody>
             </table>
           </div>
-        </details>
+        </details> */}
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
@@ -539,7 +608,7 @@ export default function ProductDetailClient({
           </div>
         </details>
 
-        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        {/* <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
 
@@ -567,14 +636,14 @@ export default function ProductDetailClient({
               </tbody>
             </table>
           </div>
-        </details>
+        </details> */}
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         <details className="mt-4">
           <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
-            <span>Questions & Reviews</span>
+            <span>Reviews</span>
             <Image
               src="/images/icons/arrow.png"
               alt="arrow"
@@ -596,11 +665,11 @@ export default function ProductDetailClient({
                 </span>
               </div>
             ) : (
-              <span className="text-[12px] font-normal">No reviews yet</span>
+              <NoReviews />
             )}
 
-            <div>
-              <p className="text-[14px] text-[#222222] font-medium">
+            {/*  <div>
+             <p className="text-[14px] text-[#222222] font-medium">
                 Customers say
               </p>
               {totalReviews > 0 && reviews[0]?.customer_note ? (
@@ -612,7 +681,7 @@ export default function ProductDetailClient({
                   &quot;No reviews yet.&quot;
                 </span>
               )}
-            </div>
+            </div> */}
 
             {reviews.map((review) => (
               <div key={review.id} className="rounded-md space-y-2">
@@ -655,7 +724,7 @@ export default function ProductDetailClient({
       <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
       <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">
+      {/* <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={handleAddToCart}
@@ -676,7 +745,7 @@ export default function ProductDetailClient({
             Buy now
           </button>
         </div>
-      </div>
+      </div> */}
     </main>
   )
 }
