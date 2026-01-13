@@ -9,6 +9,7 @@ import { Review } from "@/types/reviews"
 import { cartToast } from "@/lib/cart-toast"
 import { motion } from "framer-motion"
 import { Toaster } from "react-hot-toast"
+import { NoQuestions, NoReviews } from "@/components/molecules/AddVariantModal/AddVariantModal"
 
 
 interface ProductOptionValue {
@@ -294,7 +295,7 @@ export default function ProductDetailClient({
               href={product.store?.url || "/coming-soon"}
               className="inline-flex mt-2 items-end w-full max-w-[163px] h-[21px] text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit  {product.store?.name || "Store"}
+              Visit the {product.store?.name || "Store"}
             </Link>
             {totalReviews > 0 && (
               <div className="flex items-center gap-3">
@@ -308,24 +309,30 @@ export default function ProductDetailClient({
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
             <div className="flex-1">
-              <h1 className="text-sm font-medium leading-[21px] text-[#666666] flex items-end">
+              <h1 className="text-lg capitalize font-medium leading-[21px] text-[#666666] flex items-end">
                 {product.title}
               </h1>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
-                  #Best Seller
-                </span>
-                <Link
-                  href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
-                  in {product?.collection?.title}
-                </Link>
-              </div>
-              <div className="mt-2 text-[#222222] text-sm">
-                <span className="font-semibold">
-                  {product.soldLastMonth || "0"}
-                </span>{" "}
-                Sold Out in past month
-              </div>
+              {product.collection && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
+                    #Best Seller
+                  </span>
+                  <Link
+                    href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
+                    in {product?.collection?.title}
+                  </Link>
+                </div>
+              )}
+              {
+                product.soldLastMonth && (
+                  <div className="mt-2 text-[#222222] text-sm">
+                    <span className="font-semibold">
+                      {product.soldLastMonth || "0"}
+                    </span>{" "}
+                    Sold in past month
+                  </div>
+                )
+              }
             </div>
           </div>
         </div>
@@ -395,6 +402,8 @@ export default function ProductDetailClient({
         </div>
 
 
+        { colors.length > 0 || sizes.length > 0 ?
+          <>
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
@@ -450,18 +459,20 @@ export default function ProductDetailClient({
             </div>
           )}
         </div>
+        </>: null
+        }
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         <div className="mt-3 flex flex-col gap-1">
-          <div className="bg-[#F80000] text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
+          {discountPercent > 0 && <div className="bg-[#F80000] text-white px-3 py-1.5 rounded-sm text-sm font-semibold w-fit">
             {discountPercent}% OFF + Cash on Delivery
-          </div>
+          </div>}
           <div className="flex items-center pt-1">
-            <div className="pr-2 py-0.5 text-[32px] text-[#F80000] rounded-md font-medium">
+            {discountPercent > 0 && <div className="pr-2 py-0.5 text-[32px] text-[#F80000] rounded-md font-medium">
               -{discountPercent}%
-            </div>
+            </div>}
             <div className="px-2 rounded-md text-xs font-semibold flex items-baseline gap-1">
               <span className="text-[14px] leading-none self-start">
                 {currency}
@@ -472,7 +483,8 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+
+          {discountPercent > 0 && <div className="flex items-center gap-3">
             <div className="text-normal font-base text-gray-600">
               M.R.P.:{" "}
               <span className="line-through">
@@ -482,10 +494,10 @@ export default function ProductDetailClient({
             <div className="bg-[#EAEFFF] text-[#307345] text-base font-medium">
               Save {currency} {originalPrice - price}
             </div>
-          </div>
+          </div>}
         </div>
 
-        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        {/* <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         <details className="mt-4">
@@ -520,7 +532,7 @@ export default function ProductDetailClient({
               </tbody>
             </table>
           </div>
-        </details>
+        </details> */}
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
@@ -539,7 +551,7 @@ export default function ProductDetailClient({
           </div>
         </details>
 
-        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+        {/* <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
 
@@ -567,14 +579,14 @@ export default function ProductDetailClient({
               </tbody>
             </table>
           </div>
-        </details>
+        </details> */}
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
         <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
         <details className="mt-4">
           <summary className="cursor-pointer font-medium text-[18px] text-[#222222] flex justify-between items-center list-none">
-            <span>Questions & Reviews</span>
+            <span>Reviews</span>
             <Image
               src="/images/icons/arrow.png"
               alt="arrow"
@@ -596,11 +608,11 @@ export default function ProductDetailClient({
                 </span>
               </div>
             ) : (
-              <span className="text-[12px] font-normal">No reviews yet</span>
+              <NoReviews/>
             )}
 
-            <div>
-              <p className="text-[14px] text-[#222222] font-medium">
+            {/*  <div>
+             <p className="text-[14px] text-[#222222] font-medium">
                 Customers say
               </p>
               {totalReviews > 0 && reviews[0]?.customer_note ? (
@@ -612,7 +624,7 @@ export default function ProductDetailClient({
                   &quot;No reviews yet.&quot;
                 </span>
               )}
-            </div>
+            </div> */}
 
             {reviews.map((review) => (
               <div key={review.id} className="rounded-md space-y-2">

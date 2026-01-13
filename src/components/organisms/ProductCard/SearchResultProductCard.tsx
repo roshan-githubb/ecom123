@@ -57,7 +57,7 @@ export const SearchResultProductCard = ({
 
     const handleOpenProduct = () => {
         if (!product.handle) return
-        window.location.href = `/products/${product.handle}`
+        window.location.href = `/products/${product.id}`
     }
 
     return (

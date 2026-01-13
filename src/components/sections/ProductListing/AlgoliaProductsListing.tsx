@@ -43,8 +43,8 @@ export const AlgoliaProductsListing = ({
 
   const filters = `${seller_handle
     ? `NOT seller:null AND seller.handle:${seller_handle}`
-    : "NOT seller:null"
-    }${currency_code ? ` AND variants.prices.currency_code:${currency_code}` : ""}${category_id
+    : "NOT seller:null"}
+    ${currency_code ? ` AND variants.prices.currency_code:${currency_code}` : ""}${category_id
       ? ` AND categories.id:${category_id}${collection_id !== undefined
         ? ` AND collections.id:${collection_id}`
         : ""

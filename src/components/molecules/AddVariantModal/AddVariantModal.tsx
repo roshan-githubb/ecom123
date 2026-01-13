@@ -120,9 +120,9 @@ function ProductCardInternal({
   const [replyText, setReplyText] = useState('')
   const [isSubmittingReply, setIsSubmittingReply] = useState(false)
   const [expandedThreads, setExpandedThreads] = useState<Set<number>>(new Set())
-  
+
   const { getAdjustedInventory } = useInventoryStore()
-  
+
   // Sync inventory with cart state
   useInventorySync()
 
@@ -158,13 +158,13 @@ function ProductCardInternal({
       try {
         // Simple demo: assume user is logged in if there's any auth-related cookie or localStorage
         // In a real app, you'd check for a valid JWT token or session
-        const hasAuthCookie = document.cookie.includes('connect.sid') || 
-                             document.cookie.includes('session') ||
-                             document.cookie.includes('auth')
-        const hasAuthStorage = localStorage.getItem('user') || 
-                              localStorage.getItem('token') ||
-                              localStorage.getItem('session')
-        
+        const hasAuthCookie = document.cookie.includes('connect.sid') ||
+          document.cookie.includes('session') ||
+          document.cookie.includes('auth')
+        const hasAuthStorage = localStorage.getItem('user') ||
+          localStorage.getItem('token') ||
+          localStorage.getItem('session')
+
         // For demo purposes, let's assume user is logged in 50% of the time randomly
         // Replace this with your actual auth check
         setIsLoggedIn(!!(hasAuthCookie || hasAuthStorage || Math.random() > 0.5))
@@ -374,10 +374,10 @@ function ProductCardInternal({
     try {
       // TODO: Replace with actual API call to submit question
       // await submitQuestion(product.id, questionText)
-      
+
       // Simulate API call for now
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       // Add the new question to the list (mock behavior)
       const newQuestion = {
         id: questions.length + 1,
@@ -390,7 +390,7 @@ function ProductCardInternal({
         replies: [] // Initialize empty replies array
       }
       setQuestions([newQuestion, ...questions])
-      
+
       alert('Question submitted successfully! The vendor will respond soon.')
       setQuestionText('')
       setShowQuestionForm(false)
@@ -426,10 +426,10 @@ function ProductCardInternal({
     try {
       // TODO: Replace with actual API call to submit reply
       // await submitReply(questionId, replyText)
-      
+
       // Simulate API call for now
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       // Add the new reply to the question thread (mock behavior)
       const newReply = {
         id: Date.now(), // Simple ID for demo
@@ -438,18 +438,18 @@ function ProductCardInternal({
         createdAt: new Date().toISOString(),
         isVendor: false // In real app, check if current user is vendor
       }
-      
-      setQuestions(prevQuestions => 
-        prevQuestions.map(q => 
-          q.id === questionId 
+
+      setQuestions(prevQuestions =>
+        prevQuestions.map(q =>
+          q.id === questionId
             ? { ...q, replies: [...(q.replies || []), newReply] }
             : q
         )
       )
-      
+
       // Expand the thread to show the new reply
       setExpandedThreads(prev => new Set([...prev, questionId]))
-      
+
       alert('Reply posted successfully!')
       setReplyText('')
       setReplyingTo(null)
@@ -658,7 +658,7 @@ function ProductCardInternal({
   // Calculate inventory for selected variant
   const getVariantInventory = (variant: any) => {
     if (!variant) return 0
-    
+
     // Try direct inventory_quantity first (regular products)
     let originalInventory = 0
     if (variant.inventory_quantity !== undefined) {
@@ -676,8 +676,8 @@ function ProductCardInternal({
         )
       }
     }
-    
-    return isHydrated 
+
+    return isHydrated
       ? getAdjustedInventory(variant.id, originalInventory)
       : originalInventory
   }
@@ -743,9 +743,8 @@ function ProductCardInternal({
 
       <motion.div
         ref={scrollRef}
-        className={`flex-1 overflow-x-hidden ${
-          isFullScreen ? "overflow-y-auto" : "overflow-y-hidden"
-        }`}
+        className={`flex-1 overflow-x-hidden ${isFullScreen ? "overflow-y-auto" : "overflow-y-hidden"
+          }`}
         onScroll={handleScroll}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -803,9 +802,8 @@ function ProductCardInternal({
                   <button
                     key={i}
                     onClick={() => handleManualImageChange(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      i === imgIndex ? "bg-blue-800 w-4" : "bg-gray-300"
-                    }`}
+                    className={`w-2 h-2 rounded-full transition-all ${i === imgIndex ? "bg-blue-800 w-4" : "bg-gray-300"
+                      }`}
                   />
                 ))}
               </div>
@@ -832,9 +830,8 @@ function ProductCardInternal({
             <Link
               href={
                 (product as any).seller?.handle
-                  ? `/sellerpage?seller_handle=${
-                      (product as any).seller.handle
-                    }`
+                  ? `/sellerpage?seller_handle=${(product as any).seller.handle
+                  }`
                   : product.store?.url || "#"
               }
               className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
@@ -846,11 +843,10 @@ function ProductCardInternal({
           <button
             onClick={handleAddToCart}
             disabled={isSelectedVariantOutOfStock}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors shadow-md ${
-              isSelectedVariantOutOfStock
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-myBlue text-white hover:bg-blue-700"
-            }`}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors shadow-md ${isSelectedVariantOutOfStock
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-myBlue text-white hover:bg-blue-700"
+              }`}
           >
             ADD
           </button>
@@ -858,27 +854,27 @@ function ProductCardInternal({
 
         {/* Product Info */}
         <div className="px-4 py-3 border-b border-gray-200">
-          <div className={`flex items-center mb-2 ${isFullScreen? 'gap-2': 'gap-0'}`}>
+          <div className={`flex items-center mb-2 ${isFullScreen ? 'gap-2' : 'gap-0'}`}>
             <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold flex-shrink-0">
               #Best Seller
             </span>
-            <div className={`flex ${isFullScreen? 'gap-16':'gap-4'}`}>
-            <span className="text-xs ml-1 font-medium text-blue-600 min-w-0 truncate flex-1">
-              in {product.collection?.title}
-            </span>
-            <div className="flex ml-6 flex-shrink-0">
-            {ratingSummary && ratingSummary.total_reviews > 0 && (
-              <div className="flex items-center gap-1">
-                <div className="flex items-center">
-                  <StarRating rate={ratingSummary.average_rating} starSize={12} />
-                </div>
-                <span className="text-xs text-gray-600">
-                  ({ratingSummary.total_reviews})
-                </span>
+            <div className={`flex ${isFullScreen ? 'gap-16' : 'gap-4'}`}>
+              <span className="text-xs ml-1 font-medium text-blue-600 min-w-0 truncate flex-1">
+                in {product.collection?.title}
+              </span>
+              <div className="flex ml-6 flex-shrink-0">
+                {ratingSummary && ratingSummary.total_reviews > 0 && (
+                  <div className="flex items-center gap-1">
+                    <div className="flex items-center">
+                      <StarRating rate={ratingSummary.average_rating} starSize={12} />
+                    </div>
+                    <span className="text-xs text-gray-600">
+                      ({ratingSummary.total_reviews})
+                    </span>
+                  </div>
+
+                )}
               </div>
-              
-            )}
-            </div>
             </div>
           </div>
           <div className="text-sm text-gray-800">
@@ -906,11 +902,10 @@ function ProductCardInternal({
                   <button
                     key={c.id}
                     onClick={() => setSelectedColor(c.id)}
-                    className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${
-                      selectedColor === c.id
-                        ? "border-2 border-blue-800"
-                        : "border border-gray-300"
-                    }`}
+                    className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${selectedColor === c.id
+                      ? "border-2 border-blue-800"
+                      : "border border-gray-300"
+                      }`}
                   >
                     <div className={`${c.bg} w-full h-full`} />
                   </button>
@@ -929,11 +924,10 @@ function ProductCardInternal({
                   <button
                     key={s}
                     onClick={() => setSelectedSize(s)}
-                    className={`w-[50px] h-[40px] rounded-lg flex items-center justify-center text-sm uppercase ${
-                      selectedSize === s
-                        ? "border-2 border-blue-800 bg-white text-gray-800"
-                        : "border border-gray-800 bg-transparent text-gray-800"
-                    }`}
+                    className={`w-[50px] h-[40px] rounded-lg flex items-center justify-center text-sm uppercase ${selectedSize === s
+                      ? "border-2 border-blue-800 bg-white text-gray-800"
+                      : "border border-gray-800 bg-transparent text-gray-800"
+                      }`}
                   >
                     {sizeShortMap[s?.toLowerCase()] || s}
                   </button>
@@ -1031,7 +1025,7 @@ function ProductCardInternal({
               <MdOutlineKeyboardArrowDown />
             </summary>
             <div className="mt-4 space-y-6">
-              
+
               {/* Questions Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -1076,7 +1070,7 @@ function ProductCardInternal({
                         {questionText.length}/500 characters
                       </div>
                     </div>
-                    
+
                     <div className="flex gap-3">
                       <button
                         onClick={handleSubmitQuestion}
@@ -1121,7 +1115,7 @@ function ProductCardInternal({
                             <p className="text-xs text-gray-500 mb-3">
                               Asked by {question.askedBy} • {new Date(question.askedAt).toLocaleDateString()}
                             </p>
-                            
+
                             {question.answer ? (
                               <div className="bg-green-50 border-green-400 p-3 mb-3">
                                 <div className="flex items-start gap-2">
@@ -1157,7 +1151,7 @@ function ProductCardInternal({
                                   {expandedThreads.has(question.id) ? 'Hide' : 'Show'} {question.replies.length} {question.replies.length === 1 ? 'reply' : 'replies'}
                                 </button>
                               )}
-                              
+
                               {isLoggedIn && (
                                 <button
                                   onClick={() => handleReplyToQuestion(question.id)}
@@ -1177,9 +1171,8 @@ function ProductCardInternal({
                                 {question.replies.map((reply: any) => (
                                   <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
                                     <div className="flex items-start gap-2">
-                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                        reply.isVendor ? 'bg-green-100' : 'bg-blue-100'
-                                      }`}>
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${reply.isVendor ? 'bg-green-100' : 'bg-blue-100'
+                                        }`}>
                                         {reply.isVendor ? (
                                           <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1192,9 +1185,8 @@ function ProductCardInternal({
                                       </div>
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                          <span className={`text-xs font-medium ${
-                                            reply.isVendor ? 'text-green-700' : 'text-gray-700'
-                                          }`}>
+                                          <span className={`text-xs font-medium ${reply.isVendor ? 'text-green-700' : 'text-gray-700'
+                                            }`}>
                                             {reply.author}
                                           </span>
                                           <span className="text-xs text-gray-500">
@@ -1229,7 +1221,7 @@ function ProductCardInternal({
                                       {replyText.length}/300 characters
                                     </div>
                                   </div>
-                                  
+
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => handleSubmitReply(question.id)}
@@ -1271,23 +1263,22 @@ function ProductCardInternal({
                         >
                           Previous
                         </button>
-                        
+
                         <div className="flex gap-1">
                           {Array.from({ length: totalQuestionsPages }, (_, i) => i + 1).map((page) => (
                             <button
                               key={page}
                               onClick={() => handleQuestionsPageChange(page)}
-                              className={`px-3 py-1 text-sm rounded-md ${
-                                page === questionsPage
-                                  ? 'bg-blue-600 text-white'
-                                  : 'border border-gray-300 hover:bg-gray-50'
-                              }`}
+                              className={`px-3 py-1 text-sm rounded-md ${page === questionsPage
+                                ? 'bg-blue-600 text-white'
+                                : 'border border-gray-300 hover:bg-gray-50'
+                                }`}
                             >
                               {page}
                             </button>
                           ))}
                         </div>
-                        
+
                         <button
                           onClick={() => handleQuestionsPageChange(questionsPage + 1)}
                           disabled={questionsPage === totalQuestionsPages}
@@ -1299,12 +1290,7 @@ function ProductCardInternal({
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-sm">No questions yet. Be the first to ask!</p>
-                  </div>
+                  <NoQuestions />
                 )}
               </div>
 
@@ -1319,29 +1305,24 @@ function ProductCardInternal({
                       <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                         <div className="items-center gap-2 mb-2">
                           <div className="flex gap-4">
-                          <span className="text-sm font-medium text-gray-900">
-                            {review.customer?.first_name} {review.customer?.last_name}
-                          </span>
-                          <div className="flex mt-1">
-                            <StarRating rate={review.rating} starSize={12} />
+                            <span className="text-sm font-medium text-gray-900">
+                              {review.customer?.first_name} {review.customer?.last_name}
+                            </span>
+                            <div className="flex mt-1">
+                              <StarRating rate={review.rating} starSize={12} />
+                            </div>
                           </div>
-                          </div>
-                          
+
                         </div>
                         <p className="text-sm text-gray-700">{review.customer_note}</p>
                         <span className="text-xs text-gray-500">
                           Posted on {new Date(review.created_at).toLocaleDateString()}
-                          </span>
+                        </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                    </svg>
-                    <p className="text-sm">No reviews yet. Be the first to review!</p>
-                  </div>
+                  <NoReviews />
                 )}
               </div>
             </div>
@@ -1359,7 +1340,7 @@ function ProductCardInternal({
                 }
                 className="inline-flex items-center text-[14px] leading-[21px] font-medium text-[#425699] hover:underline"
               >
-                <span className="mr-2"><StoreIcon size={16} /></span> 
+                <span className="mr-2"><StoreIcon size={16} /></span>
                 Explore all {(product as any).seller?.name || product.store?.name || "Store"} products
               </Link>
             </summary>
@@ -1369,9 +1350,9 @@ function ProductCardInternal({
 
           {(product as any).categories?.length > 0 && (
             <div className="py-2">
-              <SimilarProducts 
-                categoryId={(product as any).categories[0]?.id} 
-                productId={(product as any)?.id} 
+              <SimilarProducts
+                categoryId={(product as any).categories[0]?.id}
+                productId={(product as any)?.id}
               />
             </div>
           )}
@@ -1402,9 +1383,9 @@ export function AddVariantSheet({
   const y = useMotionValue(window.innerHeight)
   const backdropOpacity = useMotionValue(0)
 
-  const cardWidth = useMotionValue(85) 
-  const cardScale = useTransform(cardWidth, [85, 100], [0.98, 1]) 
-  const cardBorderRadius = useTransform(cardWidth, [85, 100], [20, 0]) 
+  const cardWidth = useMotionValue(85)
+  const cardScale = useTransform(cardWidth, [85, 100], [0.98, 1])
+  const cardBorderRadius = useTransform(cardWidth, [85, 100], [20, 0])
 
   const activeCardY = useMotionValue(0)
   const fullscreenDragY = useMotionValue(0)
@@ -1417,7 +1398,7 @@ export function AddVariantSheet({
     [0, 16]
   )
 
-  
+
   const combinedScale = useTransform(
     [cardScale, sheetPreviewScale],
     ([card, preview]) => (card as number) * (preview as number)
@@ -1440,7 +1421,7 @@ export function AddVariantSheet({
 
     setActiveIndex(currentProductIndex)
 
-    
+
     if (scrollRef.current && products.length > 0) {
       requestAnimationFrame(() => {
         const container = scrollRef.current
@@ -1531,18 +1512,18 @@ export function AddVariantSheet({
       animate(cardWidth, 85, springConfig), // 85vw for main card
     ]).then(() => {
       setViewMode("sheet")
-      
+
       requestAnimationFrame(() => {
         if (scrollRef.current) {
           const container = scrollRef.current
           const card = container.children[activeIndex] as HTMLElement
           if (card) {
-            const offset = card.offsetLeft - 16 
+            const offset = card.offsetLeft - 16
             container.scrollLeft = offset
           }
         }
       })
-      
+
       setIsTransitioning(false)
     })
   }
@@ -1578,10 +1559,10 @@ export function AddVariantSheet({
       }
     }
 
-   
+
     if (closestIndex !== activeIndex) {
       setActiveIndex(closestIndex)
-      
+
     }
   }
 
@@ -1642,7 +1623,7 @@ export function AddVariantSheet({
 
               // More responsive thresholds for native feel
               if (offset.y < -40 || velocity.y < -300) {
-                
+
                 goToFullscreen()
                 return
               }
@@ -1655,9 +1636,8 @@ export function AddVariantSheet({
             }
           }}
           onClick={(e) => e.stopPropagation()}
-          className={`absolute bottom-0 w-full touch-none will-change-transform ${
-            viewMode === "fullscreen" ? "h-screen" : "h-[95vh] md:h-[90vh]"
-          }`}
+          className={`absolute bottom-0 w-full touch-none will-change-transform ${viewMode === "fullscreen" ? "h-screen" : "h-[95vh] md:h-[90vh]"
+            }`}
         >
           {/* Drag Handle Indicator */}
           <div className="absolute -top-12 w-full flex justify-center pointer-events-none">
@@ -1674,23 +1654,20 @@ export function AddVariantSheet({
           <div
             ref={scrollRef}
             onScroll={handleHorizontalScroll}
-            className={`flex h-full w-full overflow-y-hidden snap-x snap-mandatory pb-0 no-scrollbar items-end md:items-center will-change-scroll ${
-              viewMode === "fullscreen"
-                ? "overflow-x-hidden justify-center"
-                : activeProducts.length === 1
+            className={`flex h-full w-full overflow-y-hidden snap-x snap-mandatory pb-0 no-scrollbar items-end md:items-center will-change-scroll ${viewMode === "fullscreen"
+              ? "overflow-x-hidden justify-center"
+              : activeProducts.length === 1
                 ? "overflow-x-hidden justify-center"
                 : "overflow-x-auto pl-4 gap-2 touch-pan-x md:pl-[calc(50vw-200px)] md:pr-[calc(50vw-200px)]"
-            }`}
+              }`}
           >
             {viewMode === "fullscreen" ? (
               // Fullscreen: Show only active card with optimized transforms
               <motion.div
-                key={`fullscreen-${
-                  activeProducts[activeIndex]?.id || activeIndex
-                }`}
-                layoutId={`product-${
-                  activeProducts[activeIndex]?.id || activeIndex
-                }`}
+                key={`fullscreen-${activeProducts[activeIndex]?.id || activeIndex
+                  }`}
+                layoutId={`product-${activeProducts[activeIndex]?.id || activeIndex
+                  }`}
                 layout
                 style={{
                   scale: combinedScale,
@@ -1759,8 +1736,8 @@ export function AddVariantSheet({
                   style={{
                     scale: cardScale,
                     borderRadius: cardBorderRadius,
-                    width: "85vw", 
-                 }}
+                    width: "85vw",
+                  }}
                   transition={{
                     layout: {
                       type: "spring",
@@ -1791,3 +1768,27 @@ export function AddVariantSheet({
 }
 
 export { AddVariantSheet as AddVariantModal }
+
+
+export const NoReviews = () => {
+  return (
+    <div className="text-center py-8 text-gray-500">
+      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      </svg>
+      <p className="text-sm">No reviews yet. Be the first to review!</p>
+    </div>
+  )
+}
+
+
+export const NoQuestions = () => {
+  return (
+    <div className="text-center py-8 text-gray-500">
+      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p className="text-sm">No questions yet. Be the first to ask!</p>
+    </div>
+  )
+}

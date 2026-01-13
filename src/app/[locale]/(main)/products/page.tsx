@@ -26,11 +26,11 @@ async function AllCategories({
 
   return (
     <main className="container">
-      <div className="hidden md:block mb-2">
+      {/* <div className="hidden md:block mb-2">
         <Breadcrumbs items={breadcrumbsItems} />
-      </div>
+      </div> */}
 
-      <h1 className="heading-xl uppercase">All Products</h1>
+      <h1 className="heading-lg md:heading-xl uppercase">All Products</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
         {!ALGOLIA_ID || !ALGOLIA_SEARCH_KEY ? (
