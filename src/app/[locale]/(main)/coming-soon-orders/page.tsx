@@ -1,7 +1,7 @@
 import { ComingSoon } from "@/components/molecules/ComingSoon/ComingSoon"
 import { Package } from "lucide-react"
 
-export default async function OrdersPage() {
+export default function ComingSoonOrdersPage() {
   return (
     <ComingSoon 
       title="Orders"

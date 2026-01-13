@@ -1,7 +1,7 @@
 import { ComingSoon } from "@/components/molecules/ComingSoon/ComingSoon"
 import { Heart } from "lucide-react"
 
-export default async function Wishlist() {
+export default function ComingSoonWishlistPage() {
   return (
     <ComingSoon 
       title="Wishlist"

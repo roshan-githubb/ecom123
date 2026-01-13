@@ -11,6 +11,10 @@ import { usePathname } from "next/navigation"
 
 const navigationItems = [
   {
+    label: "Profile",
+    href: "/profile",
+  },
+  {
     label: "Orders",
     href: "/user/orders",
   },

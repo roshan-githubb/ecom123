@@ -9,9 +9,10 @@ import {
   useTransform,
 } from "framer-motion"
 import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md"
-import { FaRegBookmark } from "react-icons/fa"
+import { FaRegBookmark, FaBookmark } from "react-icons/fa"
 import { IoShareOutline } from "react-icons/io5"
 import { useCartStore } from "@/store/useCartStore"
+import { useWishlistStore } from "@/store/useWishlistStore"
 import { cartToast } from "@/lib/cart-toast"
 import { useInventoryStore } from "@/store/useInventoryStore"
 import { useInventorySync } from "@/hooks/useInventorySync"
@@ -123,12 +124,18 @@ function ProductCardInternal({
   
   const { getAdjustedInventory } = useInventoryStore()
   
+  // Wishlist functionality - disabled since backend APIs are not implemented
+  // const { isInWishlist, toggleWishlist, loadWishlist } = useWishlistStore()
+  // const [isWishlistLoading, setIsWishlistLoading] = useState(false)
+  
   // Sync inventory with cart state
   useInventorySync()
 
   // Handle hydration
   useEffect(() => {
     setIsHydrated(true)
+    // Disabled wishlist loading since backend APIs are not implemented
+    // loadWishlist()
   }, [])
 
   // Fetch reviews when product changes
@@ -710,6 +717,12 @@ function ProductCardInternal({
     }
   }
 
+  const handleWishlistToggle = async () => {
+    if (!product?.id) return
+    
+    cartToast.showErrorToast("Wishlist feature coming soon!")
+  }
+
   return (
     <div className="flex flex-col h-full bg-white relative">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white z-10 sticky top-0">
@@ -732,7 +745,10 @@ function ProductCardInternal({
         </div>
 
         <div className="flex gap-2 flex-shrink-0">
-          <button className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 flex-shrink-0">
+          <button 
+            onClick={handleWishlistToggle}
+            className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
+          >
             <FaRegBookmark size={14} />
           </button>
           <button className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 flex-shrink-0">
