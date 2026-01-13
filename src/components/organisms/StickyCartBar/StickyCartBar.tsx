@@ -1,12 +1,13 @@
 "use client"
 
 import { useMemo, useState, useEffect, useRef } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useParams } from "next/navigation"
 import { useCartStore } from "@/store/useCartStore"
 import { convertToLocale } from "@/lib/helpers/money"
 import Image from "next/image"
 import StickyCartBarSkeleton from "../StickyCartBarSkeleton/StickyCartBarSkeleton"
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
+import Link from "next/link"
 
 const shouldHideStickyBar = (pathname: string) => {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "")
@@ -24,7 +25,7 @@ interface StickyCartBarProps {
 
 export default function StickyCartBar({ className }: StickyCartBarProps) {
   const pathname = usePathname()
-  const router = useRouter()
+  const params = useParams()
 
   const [isNavigating, setIsNavigating] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
@@ -32,6 +33,7 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const dragStartY = useRef(0)
   const expandedPanelRef = useRef<HTMLDivElement>(null)
 
@@ -42,6 +44,12 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
   const currency = useCartStore((s) => s.currency)
 
   const isLoading = items === undefined;
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const locale = mounted ? params?.locale || 'en' : 'en'
 
 const itemCount = useMemo(() => {
   if (!items) return 0
@@ -79,18 +87,6 @@ const itemCount = useMemo(() => {
       return () => clearTimeout(t)
     }
   }, [isVisible, shouldRender])
-
-  const handleCheckoutClick = () => {
-    try {
-      setIsNavigating(true)
-      const localeMatch = pathname.match(/^\/([^\/]+)/)
-      const locale = localeMatch ? localeMatch[1] : "en"
-      router.push(`/${locale}/check`)
-    } catch (error) {
-      console.error("Navigation to cart failed:", error)
-      setIsNavigating(false)
-    }
-  }
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isExpanded) return
@@ -244,15 +240,15 @@ const itemCount = useMemo(() => {
                     </div>
 
                     <div className="flex-1 min-w-0">
-        <button 
-        onClick={() => {
-          router.push(`/products/${item.productId}`);
-          setIsExpanded(false)}}
-        >
-                      <h4 className="text-[13px] font-medium line-clamp-1 leading-tight mb-0.5">
-                        {item.title}
-                      </h4>
-                      </button>
+                      <Link 
+                        href={`/${locale}/products/${item.productId}`}
+                        onClick={() => setIsExpanded(false)}
+                        className="block"
+                      >
+                        <h4 className="text-[13px] font-medium line-clamp-1 leading-tight mb-0.5 hover:text-blue-600 transition-colors">
+                          {item.title}
+                        </h4>
+                      </Link>
                       <p className="text-xs text-gray-500">
                         {item.quantity} {item.quantity === 1 ? "Item" : "Items"}
                       </p>
@@ -364,13 +360,12 @@ const itemCount = useMemo(() => {
             </div>
           </button>
 
-          <button
-            onClick={handleCheckoutClick}
-            disabled={isNavigating}
-            className="bg-myBlue text-white px-4 py-3 rounded-xl font-normal text-sm"
+          <Link
+            href={`/${locale}/check`}
+            className="bg-myBlue text-white px-4 py-3 rounded-xl font-normal text-sm hover:bg-blue-700 transition-colors"
           >
             View Cart
-          </button>
+          </Link>
         </div>
       </div>
         </>

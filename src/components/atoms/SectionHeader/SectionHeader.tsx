@@ -1,11 +1,12 @@
 'use client'
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function SectionHeader({
   title,
   actionLabel,
-  //   onClickAction,
   titleSize = "text-[20px]",
   actionSize = "text-[14px]",
   titleColor = "#32425A",
@@ -14,27 +15,36 @@ export function SectionHeader({
 }: {
   title: string;
   actionLabel?: string;
-  //   onClickAction?: () => void;
   titleSize?: string;
   actionSize?: string;
   titleColor?: string;
   actionColor?: string;
   link?: string;
 }) {
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const params = useParams();
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const locale = mounted ? params?.locale || 'en' : 'en';
+  const href = link ? `/${locale}${link}` : `/${locale}/coming-soon`;
+
   return (
     <div className="flex items-center justify-between mb-1">
       <h3 className={`${titleSize} font-medium`} style={{ color: titleColor }}>
         {title}
       </h3>
       {actionLabel && (
-        <button
-          onClick={() => router.push(link?? "/coming-soon")}
-          className={`${actionSize} font-medium`}
+        <Link
+          href={href}
+          className={`${actionSize} font-medium transition-opacity hover:opacity-70 active:opacity-50`}
           style={{ color: actionColor }}
+          prefetch={true}
         >
           {actionLabel}
-        </button>
+        </Link>
       )}
     </div>
   );
