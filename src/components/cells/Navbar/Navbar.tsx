@@ -103,13 +103,13 @@ const showFAQLabel = pathname == "/np/footer/faq"
                   Home
                 </LocalizedClientLink>
                 <LocalizedClientLink
-                  key="recommended"
-                  href="/recommended"
+                  key="products"
+                  href="/products"
                   className={cn(
                     "label-md min-w-[24px] capitalize text-gray-300 hover:text-gray-300"
                   )}
                 >
-                  recommended
+                Products
                 </LocalizedClientLink>
 
 

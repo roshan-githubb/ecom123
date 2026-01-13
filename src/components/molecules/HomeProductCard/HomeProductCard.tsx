@@ -68,7 +68,7 @@ export const HomeProductCard = ({
             if (variant.inventory_quantity !== undefined) {
                 return sum + (variant.inventory_quantity || 0)
             }
-            
+
             // Try nested inventory structure (top products API)
             const inventoryItem = (variant as any).inventory_items?.[0]
             if (inventoryItem?.inventory?.location_levels) {
@@ -81,14 +81,14 @@ export const HomeProductCard = ({
                 )
                 return sum + totalFromLocations
             }
-            
+
             return sum
         },
         0
     ) || 0
 
     // Use hydration-safe inventory calculation
-    const totalInventory = isHydrated 
+    const totalInventory = isHydrated
         ? api_product?.variants?.reduce(
             (sum, variant) => {
                 // Try direct inventory_quantity first (regular products)
@@ -108,12 +108,12 @@ export const HomeProductCard = ({
                         )
                     }
                 }
-                
+
                 const adjustedInventory = getAdjustedInventory(variant.id, originalInventory)
                 return sum + adjustedInventory
             },
             0
-          ) || 0
+        ) || 0
         : originalTotalInventory
 
     // Get dynamic stock display information
@@ -140,9 +140,9 @@ export const HomeProductCard = ({
         setIsAddingToCart(true)
         try {
             await addToCart(api_product.variants[0].id, 1)
-            
+
             // Inventory is now handled in the cart store
-            
+
             cartToast.showCartToast()
         } catch (error) {
             cartToast.showErrorToast()
@@ -216,13 +216,13 @@ export const HomeProductCard = ({
                         {description}
                     </p>
 
-                    
+
                 </div>
                 {stockInfo.showWarning && (
-                        <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
-                            {stockInfo.message}
-                        </p>
-                    )}
+                    <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
+                        {stockInfo.message}
+                    </p>
+                )}
 
                 <button
                     onClick={handleAddToCart}

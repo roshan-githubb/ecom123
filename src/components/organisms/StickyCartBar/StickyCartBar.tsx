@@ -11,9 +11,9 @@ import Link from "next/link"
 
 const shouldHideStickyBar = (pathname: string) => {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "")
-  console.log("pathname, pathnamewithoutlocale, includes? ", pathWithoutLocale, pathname,  ["/cart", "/check", "/checkout", "/payment", "/order"].includes(
-    pathWithoutLocale
-  ))
+  // console.log("pathname, pathnamewithoutlocale, includes? ", pathWithoutLocale, pathname,  ["/cart", "/check", "/checkout", "/payment", "/order"].includes(
+  //   pathWithoutLocale
+  // ))
   return ["/cart", "/check", "/checkout", "/payment", "/order"].includes(
     pathWithoutLocale
   )

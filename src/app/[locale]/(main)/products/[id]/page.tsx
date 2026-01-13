@@ -13,8 +13,9 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
   const { id, locale } = await params;
 
 
-  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}?region_id=${process.env.NEXT_PUBLIC_REGION_ID}`;
-
+  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}?` +
+    `region_id=${process.env.NEXT_PUBLIC_REGION_ID}&` +
+    `fields=%2Avariants.calculated_price,%2Bvariants.inventory_quantity,%2Aseller,%2Acategories,%2Avariants,%2Aseller.products,%2Aseller.reviews,%2Aseller.reviews.customer`;
 
   try {
     const headers = {
@@ -51,7 +52,7 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
     }
 
 
-    const reviewUrl = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}/reviews?limit=10&offset=0`; 
+    const reviewUrl = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products/${id}/reviews?limit=10&offset=0`;
     const reviewRes = await fetch(reviewUrl, {
       method: "GET",
       cache: "no-store",

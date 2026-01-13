@@ -1,18 +1,14 @@
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { Suspense } from "react"
 
-import { AlgoliaProductsListing, ProductListing } from "@/components/sections"
+import { ProductListing } from "@/components/sections"
 import { getRegion } from "@/lib/data/regions"
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
-import type { Metadata } from "next"
 import Script from "next/script"
-import { listRegions } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
-import { toHreflang } from "@/lib/helpers/hreflang"
 
 export const revalidate = 60
-
 
 const ALGOLIA_ID = process.env.NEXT_PUBLIC_ALGOLIA_ID
 const ALGOLIA_SEARCH_KEY = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY
@@ -86,21 +82,12 @@ async function AllCategories({
           }),
         }}
       />
-      {/* <div className="hidden md:block mb-2">
-        <Breadcrumbs items={breadcrumbsItems} />
-      </div> */}
+      
 
       <h1 className="heading-md uppercase">All Products</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
-        {bot || !ALGOLIA_ID || !ALGOLIA_SEARCH_KEY ? (
           <ProductListing  locale={locale} />
-        ) : (
-          <AlgoliaProductsListing
-            locale={locale}
-            currency_code={currency_code}
-          />
-        )}
       </Suspense>
     </main>
   )

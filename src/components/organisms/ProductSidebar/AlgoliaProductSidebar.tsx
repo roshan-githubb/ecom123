@@ -19,25 +19,26 @@ const filters = [
   { label: "1", amount: 0 },
 ]
 
-export const AlgoliaProductSidebar = () => {
-  const [isMobile, setIsMobile] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-
+export const AlgoliaProductSidebar = ({isOpen, setIsOpen}: {isOpen: boolean, setIsOpen: (isOpen: boolean) => void}) => {
+  const [isMobile, setIsMobile] = useState(true)
   const { allSearchParams } = useGetAllSearchParams()
 
+
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+  const handleResize = () => {
+    setIsMobile(window.innerWidth < 768)
+  }
+
+  handleResize() 
+
+  window.addEventListener("resize", handleResize)
+  return () => window.removeEventListener("resize", handleResize)
+}, [])
+
 
   return isMobile ? (
     <>
-      <Button onClick={() => setIsOpen(true)} className="w-full uppercase mb-4">
-        Filters
-      </Button>
+      
       {isOpen && (
         <Modal heading="Filters" onClose={() => setIsOpen(false)}>
           <div className="px-4">
@@ -49,7 +50,7 @@ export const AlgoliaProductSidebar = () => {
             />
             <SizeFilter defaultOpen={Boolean(allSearchParams.size)} />
             <ColorFilter defaultOpen={Boolean(allSearchParams.color)} />
-            <ConditionFilter defaultOpen={Boolean(allSearchParams.condition)} />
+            {/* <ConditionFilter defaultOpen={Boolean(allSearchParams.condition)} /> */}
           </div>
         </Modal>
       )}
@@ -59,7 +60,7 @@ export const AlgoliaProductSidebar = () => {
       <PriceFilter />
       <SizeFilter />
       <ColorFilter />
-      <ConditionFilter />
+      {/* <ConditionFilter /> */}
       {/* <RatingFilter /> */}
     </div>
   )
