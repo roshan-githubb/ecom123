@@ -10,6 +10,7 @@ import { cartToast } from "@/lib/cart-toast"
 import { motion } from "framer-motion"
 import { Toaster } from "react-hot-toast"
 import { NoQuestions, NoReviews } from "@/components/molecules/AddVariantModal/AddVariantModal"
+import { useInventoryStore } from "@/store/useInventoryStore"
 
 
 interface ProductOptionValue {
@@ -67,6 +68,11 @@ export default function ProductDetailClient({
   reviews: Review[]
 }) {
   const [index, setIndex] = useState(0)
+  const { getAdjustedInventory } = useInventoryStore()
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // console.log("Product in ProductDetailClient:", product) 
+  
 
   const averageRating = useMemo(() => {
     if (!reviews || reviews.length === 0) return 0
@@ -205,6 +211,40 @@ export default function ProductDetailClient({
     return hasColor && hasSize
   })
 
+
+  
+  // Calculate inventory for selected variant
+  const getVariantInventory = (variant: any) => {
+    if (!variant) return 0
+
+    // Try direct inventory_quantity first (regular products)
+    let originalInventory = 0
+    if (variant.inventory_quantity !== undefined) {
+      originalInventory = variant.inventory_quantity || 0
+    } else {
+      // Try nested inventory structure (top products API)
+      const inventoryItem = variant.inventory_items?.[0]
+      if (inventoryItem?.inventory?.location_levels) {
+        // Sum up available_quantity from all location levels
+        originalInventory = inventoryItem.inventory.location_levels.reduce(
+          (locationSum: number, locationLevel: any) => {
+            return locationSum + (locationLevel.available_quantity || 0)
+          },
+          0
+        )
+      }
+    }
+
+    return isHydrated
+      ? getAdjustedInventory(variant.id, originalInventory)
+      : originalInventory
+  }
+
+  
+
+  const selectedVariantInventory = getVariantInventory(selectedVariant)
+  const isSelectedVariantOutOfStock = selectedVariantInventory <= 0
+
   const price = selectedVariant?.calculated_price?.calculated_amount ?? 0
   const originalPrice =
     selectedVariant?.calculated_price?.original_amount ?? price
@@ -232,6 +272,8 @@ export default function ProductDetailClient({
       cartToast.showErrorToast()
     }
   }
+
+  
 
   const startX = useRef(0)
   const endX = useRef(0)
@@ -312,27 +354,42 @@ export default function ProductDetailClient({
               <h1 className="text-lg capitalize font-medium leading-[21px] text-[#666666] flex items-end">
                 {product.title}
               </h1>
-              {product.collection && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
-                    #Best Seller
-                  </span>
-                  <Link
-                    href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
-                    in {product?.collection?.title}
-                  </Link>
-                </div>
-              )}
-              {
-                product.soldLastMonth && (
-                  <div className="mt-2 text-[#222222] text-sm">
-                    <span className="font-semibold">
-                      {product.soldLastMonth || "0"}
-                    </span>{" "}
-                    Sold in past month
+              <div className="flex justify-between">
+                <div>{product.collection && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-sm bg-[#F80000] text-white px-2 py-1 rounded-sm font-semibold">
+                      #Best Seller
+                    </span>
+                    <Link
+                      href={product.store?.url || "/coming-soon"} className="text-md font-medium mt-1 text-contentBlue">
+                      in {product?.collection?.title}
+                    </Link>
                   </div>
-                )
-              }
+                )}
+                  {
+                    product.soldLastMonth && (
+                      <div className="mt-2 text-[#222222] text-sm">
+                        <span className="font-semibold">
+                          {product.soldLastMonth || "0"}
+                        </span>{" "}
+                        Sold in past month
+                      </div>
+                    )
+                  }</div>
+
+                <div>
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isSelectedVariantOutOfStock}
+                    className={`px-6  py-2 rounded-lg font-medium transition-colors shadow-md ${isSelectedVariantOutOfStock
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed text-[12px] "
+                      : "bg-myBlue text-white hover:opacity-90"
+                      }`}
+                  >
+                    {isSelectedVariantOutOfStock ? "OUT OF STOCK" : "ADD"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -402,64 +459,64 @@ export default function ProductDetailClient({
         </div>
 
 
-        { colors.length > 0 || sizes.length > 0 ?
+        {colors.length > 0 || sizes.length > 0 ?
           <>
-        <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
-        <hr className="hidden lg:block border-t border-gray-300 mt-3" />
+            <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
+            <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {colors.length > 0 && (
-            <div>
-              <div className="text-[16px] font-normal text-black mb-2">
-                Color:{" "}
-                <span className="font-semibold text-[16px] text-black">
-                  {colors.find((c) => c.id === selectedColor)?.label}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                {colors.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedColor(c.id)}
-                    className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
-                      ? "border-2 border-[#1A315A]"
-                      : "border border-gray-300"
-                      }`}
-                  >
-                    <div className={`${c.bg} w-full h-full`} />
-                  </button>
-                ))}
-              </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              {colors.length > 0 && (
+                <div>
+                  <div className="text-[16px] font-normal text-black mb-2">
+                    Color:{" "}
+                    <span className="font-semibold text-[16px] text-black">
+                      {colors.find((c) => c.id === selectedColor)?.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {colors.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedColor(c.id)}
+                        className={`w-[84px] h-[74px] rounded-[8px] overflow-hidden flex items-center justify-center ${selectedColor === c.id
+                          ? "border-2 border-[#1A315A]"
+                          : "border border-gray-300"
+                          }`}
+                      >
+                        <div className={`${c.bg} w-full h-full`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {sizes.length > 0 && (
+                <div>
+                  <div className="text-base font-normal mb-2 text-[#222222]">
+                    Size:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {sizes.map((s, i) => {
+                      const shortLabel = sizeShortMap[s?.toLowerCase() ?? ""] || s
+
+                      return (
+                        <button
+                          key={`${s}-${i}`}
+                          onClick={() => setSelectedSize(s)}
+                          className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
+                            ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
+                            : "border border-[#333333] bg-transparent text-[#333333]"
+                            }`}
+                        >
+                          {shortLabel}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-
-          {sizes.length > 0 && (
-            <div>
-              <div className="text-base font-normal mb-2 text-[#222222]">
-                Size:
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((s, i) => {
-                  const shortLabel = sizeShortMap[s?.toLowerCase() ?? ""] || s
-
-                  return (
-                    <button
-                      key={`${s}-${i}`}
-                      onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] px-2 py-2 rounded-[8px] flex items-center justify-center text-sm uppercase tracking-wide ${selectedSize === s
-                        ? "border-2 border-[#1A315A] bg-white shadow text-[#333333]"
-                        : "border border-[#333333] bg-transparent text-[#333333]"
-                        }`}
-                    >
-                      {shortLabel}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-        </>: null
+          </> : null
         }
 
         <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
@@ -608,7 +665,7 @@ export default function ProductDetailClient({
                 </span>
               </div>
             ) : (
-              <NoReviews/>
+              <NoReviews />
             )}
 
             {/*  <div>
@@ -667,7 +724,7 @@ export default function ProductDetailClient({
       <hr className="block lg:hidden -mx-4 w-screen border-t border-gray-300 mt-3" />
       <hr className="hidden lg:block border-t border-gray-300 mt-3" />
 
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">
+      {/* <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-3 shadow-lg z-50">
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={handleAddToCart}
@@ -688,7 +745,7 @@ export default function ProductDetailClient({
             Buy now
           </button>
         </div>
-      </div>
+      </div> */}
     </main>
   )
 }
