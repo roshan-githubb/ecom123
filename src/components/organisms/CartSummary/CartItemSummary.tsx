@@ -73,7 +73,7 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
           // Revert optimistic update on error
           setOptimisticQuantity(quantity)
           console.error('Failed to decrease quantity:', error)
-          
+
           const { cartToast } = require("@/lib/cart-toast")
           cartToast.showErrorToast("Failed to update quantity. Please try again.")
         }
@@ -85,18 +85,18 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
 
   const handleIncrease = async () => {
     if (isIncreasing) return // Prevent multiple clicks
-    
+
     setIsIncreasing(true)
     const currentQuantity = optimisticQuantity
-    
+
     try {
       await increase(lineItemId, quantity)
-      
+
       // Check if quantity actually increased after a short delay
       setTimeout(() => {
         const { items } = useCartStore.getState()
         const updatedItem = items.find(item => item.id === lineItemId)
-        
+
         if (updatedItem && updatedItem.quantity === currentQuantity) {
           // Quantity didn't increase, show out of stock toast
           const { cartToast } = require("@/lib/cart-toast")
@@ -104,10 +104,10 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
         }
         setIsIncreasing(false)
       }, 200) // Small delay to let the store update
-      
+
     } catch (error) {
       console.error('Failed to increase quantity:', error)
-      
+
       // Show toast for any API error
       const { cartToast } = require("@/lib/cart-toast")
       cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
@@ -143,11 +143,10 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
       </span>
 
       <button
-        className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${
-          isIncreasing 
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+        className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${isIncreasing
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
             : 'text-black hover:bg-gray-50 active:scale-95'
-        }`}
+          }`}
         onClick={handleIncrease}
         disabled={isIncreasing}
       >
@@ -217,7 +216,8 @@ export function OrderSummary() {
     discountTotal,
     promotions
   } = useCartStore()
-  
+  // console.log('cart items in summary ', items)
+
   const summary = {
     currency,
     subtotal,
@@ -230,7 +230,7 @@ export function OrderSummary() {
     cartId,
     promotions
   }
-  
+
   useEffect(() => {
     const fetchCartData = async () => {
       setLoading(true)
@@ -247,7 +247,7 @@ export function OrderSummary() {
     return (
       <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 animate-pulse">
         <div className="h-5 w-32 bg-gray-200 rounded mb-4"></div>
-        
+
         {/* Item rows skeleton */}
         {[1, 2].map((i) => (
           <div key={i} className="flex items-center gap-2 mb-3">
@@ -283,6 +283,8 @@ export function OrderSummary() {
       </div>
     )
   }
+
+
 
   const cartSummary = mapCartToOrderSummary(summary)
 
@@ -360,6 +362,11 @@ export const RememberUserInfo = () => {
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
+  const {
+    cartId,
+    fetchCart,
+    totalPayable
+  } = useCartStore()
 
   const onPaymentCompleted = async () => {
     try {
@@ -370,6 +377,22 @@ export const RememberUserInfo = () => {
       } else if (!res?.error) {
         const { useCartStore } = await import("@/store/useCartStore");
         useCartStore.getState().clearLocal();
+      }
+      if (res?.success) {
+        // clear client-side state FIRST
+        console.log('order placed successfully, clearing cart...', res)
+        localStorage.removeItem("cart_id")
+        localStorage.removeItem("global-cart")
+
+        // await fetchCart()
+
+
+        // reset Zustand/cart store immediately
+        useCartStore.getState().reset()
+
+        //  navigate
+        router.push(`/order/${res.orderId}/confirmed`)
+        // router.replace(`/order/${res.orderId}/confirmed`)
       }
     }
     catch (err: any) {
@@ -389,11 +412,6 @@ export const RememberUserInfo = () => {
 
   }
 
-  const {
-    cartId,
-    fetchCart,
-    totalPayable
-  } = useCartStore()
 
   // Check if address exists
   useEffect(() => {
@@ -424,7 +442,7 @@ export const RememberUserInfo = () => {
       setHasAddress(false)
     }
   }
-  
+
   if (!cartId) return null;
 
 
@@ -433,13 +451,12 @@ export const RememberUserInfo = () => {
     <>
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           onClick={handlePlaceOrderClick}
           disabled={isCheckingAddress}
-          className={`flex items-center bg-myBlue justify-center gap-2 ${
-            isCheckingAddress ? 'bg-blue-400 cursor-not-allowed' : ''
-          }`}
+          className={`flex items-center bg-myBlue hover:opacity-90 justify-center gap-2 ${isCheckingAddress ? 'bg-myBlue cursor-not-allowed' : ''
+            }`}
         >
           {isCheckingAddress ? (
             <>

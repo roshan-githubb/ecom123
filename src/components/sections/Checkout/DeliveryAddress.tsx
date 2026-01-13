@@ -133,7 +133,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         .catch((err) => console.error("Failed to refresh cart address:", err))
     }
   }
-  if (loading) return;;
+  if (loading) return;
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
@@ -236,7 +236,7 @@ export const Button: React.FC<
   const baseClasses = "font-semibold rounded-2xl transition-colors duration-200"
   const variantClasses =
     variant === "primary"
-      ? "bg-[#0000FF] text-white w-full h-9 font-medium text-sm hover:bg-blue-700"
+      ? "bg-myBlue text-white w-full h-9 font-medium text-sm hover:opacity-90"
       : "bg-transparent text-indigo-600 hover:text-indigo-700 shadow-none p-0"
   return (
     <button

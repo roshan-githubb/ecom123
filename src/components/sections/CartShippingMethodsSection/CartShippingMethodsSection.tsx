@@ -437,7 +437,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
                 <button
                   onClick={handleEdit}
                   disabled={isLoadingPrices}
-                  className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-myBlue text-white text-sm font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoadingPrices ? "Loading..." : "Select Shipping Method"}
                 </button>

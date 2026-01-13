@@ -10,7 +10,10 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
 
 const shouldHideStickyBar = (pathname: string) => {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "")
-  return ["/cart", "/check", "/checkout", "/payment"].includes(
+  console.log("pathname, pathnamewithoutlocale, includes? ", pathWithoutLocale, pathname,  ["/cart", "/check", "/checkout", "/payment", "/order"].includes(
+    pathWithoutLocale
+  ))
+  return ["/cart", "/check", "/checkout", "/payment", "/order"].includes(
     pathWithoutLocale
   )
 }
@@ -40,10 +43,10 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
 
   const isLoading = items === undefined;
 
-  const itemCount = useMemo(
-    () => items.reduce((sum, i) => sum + (i.quantity || 0), 0),
-    [items]
-  )
+const itemCount = useMemo(() => {
+  if (!items) return 0
+  return items.reduce((sum, i) => sum + (i.quantity || 0), 0)
+}, [items])
 
   const isVisible = useMemo(() => {
     if (itemCount === 0) return false

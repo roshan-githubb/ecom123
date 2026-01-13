@@ -27,11 +27,11 @@ export interface CartItem {
   productId?: string;
 }
 export interface Promotion {
-   code: string;
-   id: string;
-   value: number;
-   type: string;
-   isAutomatic: boolean;
+  code: string;
+  id: string;
+  value: number;
+  type: string;
+  isAutomatic: boolean;
 }
 
 export interface CartSummary {
@@ -50,6 +50,7 @@ interface CartState extends CartSummary {
   items: CartItem[];
 
   fetchCart: () => Promise<void>;
+  reset: () => Promise<void>;
   add: (variantId: string, quantity?: number) => Promise<void>;
   increase: (lineItemId: string, currentQty: number) => Promise<void>;
   decrease: (lineItemId: string, currentQty: number) => Promise<void>;
@@ -62,10 +63,10 @@ interface CartState extends CartSummary {
 // Mapper
 // -------------------------
 function mapCart(cart: any): { items: CartItem[] } & CartSummary {
-   const discountTotal =
+  const discountTotal =
     cart.discount_total ??
     Math.max((cart.subtotal ?? 0) - (cart.total ?? 0), 0);
-    // console.log('map cart function cart object ', cart)
+  // console.log('map cart function cart object ', cart)
 
   return {
     cartId: cart.id,
@@ -126,15 +127,29 @@ export const useCartStore = create<CartState>()(
         if (data?.cart) {
           const mappedCart = mapCart(data.cart);
           set(mappedCart);
-          
+
           // Sync inventory store with current cart contents
           const cartItems = mappedCart.items.map(item => ({
             variantId: item.variantId || '',
             quantity: item.quantity
           })).filter(item => item.variantId); // Filter out items without variantId
-          
+
           useInventoryStore.getState().syncWithCart(cartItems);
         }
+      },
+      reset: async () => {
+        set({
+          items: [],
+          promotions: [],
+          cartId: "",
+          subtotal: 0,
+          taxTotal: 0,
+          deliveryFee: 0,
+          serviceFee: 0,
+          totalPayable: 0,
+          discountTotal: 0,
+          currency: "NPR",
+        });
       },
 
       add: async (variantId, quantity = 1) => {
@@ -165,7 +180,7 @@ export const useCartStore = create<CartState>()(
 
       decrease: async (lineItemId, currentQuantity) => {
         const currentItems = get().items;
-        
+
         if (currentQuantity <= 1) {
           const optimisticItems = currentItems.filter(i => i.id !== lineItemId);
           set({ items: optimisticItems });
@@ -198,8 +213,8 @@ export const useCartStore = create<CartState>()(
         }
 
         // Optimistic decrement
-        const optimisticItems = currentItems.map(item => 
-          item.id === lineItemId 
+        const optimisticItems = currentItems.map(item =>
+          item.id === lineItemId
             ? { ...item, quantity: item.quantity - 1 }
             : item
         );
