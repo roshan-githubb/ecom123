@@ -1,161 +1,179 @@
 "use client"
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
+import { cn } from "@/lib/utils"
+import { StarRating } from "@/components/atoms/StarRating/StarRating"
 
-import { Button } from "@/components/atoms"
-import { HttpTypes } from "@medusajs/types"
-
-import { getSellerProductPrice } from "@/lib/helpers/get-seller-product-price"
-import { getProductPrice } from "@/lib/helpers/get-product-price"
-import { BaseHit, Hit } from "instantsearch.js"
-import clsx from "clsx"
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import { convertToLocale } from "@/lib/helpers/money"
-
-const getRegionPrice = (product: any, currency_code: string) => {
-  const variant = product.variants?.find((variant: any) => {
-    return variant.prices
-      ? variant.prices?.some(
-          (price: any) => price.currency_code === currency_code
-        )
-      : variant.calculated_price
-  })
-
-  const price = variant?.calculated_price
-    ? {
-        calculated_price: convertToLocale({
-          amount: variant.calculated_price.calculated_amount,
-          currency_code: variant.calculated_price.currency_code,
-        }),
-        original_price: convertToLocale({
-          amount: variant.calculated_price.original_amount,
-          currency_code: variant.calculated_price.currency_code,
-        }),
-      }
-    : {
-        calculated_price: variant?.prices?.find(
-          (price: any) => price.currency_code === currency_code
-        ).amount
-          ? convertToLocale({
-              amount: variant?.prices?.find(
-                (price: any) => price.currency_code === currency_code
-              ).amount,
-              currency_code,
-            })
-          : null,
-        original_price: variant?.prices?.find(
-          (price: any) => price.currency_code === currency_code
-        ).original_amount
-          ? convertToLocale({
-              amount: variant.prices.find(
-                (price: any) => price.currency_code === currency_code
-              ).original_amount,
-              currency_code,
-            })
-          : null,
-      }
-
-  return price
+interface AlgoliaProductHit {
+    id: string
+    title: string
+    subtitle?: string
+    description?: string
+    handle: string
+    thumbnail?: string | null
+    images?: { url: string }[]
+    variants?: any[]
+    average_rating?: number | null
 }
 
-export const SearchProductCard = ({
-  product,
-  currency_code,
-}: {
-  product: Hit<HttpTypes.StoreProduct> | Partial<Hit<BaseHit>>
-  currency_code?: string
-}) => {
-  // const variantId = product.variants.find((variant: any) =>
-  //   variant.prices?.some((price: any) => price.currency_code === currency_code)
-  // )?.id
+interface SearchResultProductCardProps {
+    product: AlgoliaProductHit
+    className?: string
+    //   ratingSummary?: {
+    //     average_rating: number
+    //     // total_reviews: number
+    //   }
+}
 
-  // const { variantPrice } = getProductPrice({
-  //   product,
-  //   variantId,
-  // })
+export const SearchResultProductCard = ({
+    product,
+    className,
+    //   ratingSummary,
+}: SearchResultProductCardProps) => {
+    const [isHydrated, setIsHydrated] = useState(false)
 
-  // const { variantPrice: sellerVariantPrice } = getSellerProductPrice({
-  //   product,
-  //   variantId,
-  // })
+    useEffect(() => {
+        setIsHydrated(true)
+    }, [])
 
-  const price = getRegionPrice(product, currency_code || "npr")
+    const title = product.title
+    const description = product.description
 
-  console.log({ product, price });
-  
+    const imageUrl =
+        product.images?.[0]?.url ||
+        product.thumbnail ||
+        "/images/not-available/not-available.png"
 
-  if (!price.calculated_price) {
-    return null
+ 
+    // const currentPrice =
+    //   product.variants?.[0]?.prices[0]?.amount ?? 0
+    const currentPrice = getLowestAlgoliaVariantPrice(product.variants)
+
+
+    // Algolia DOES NOT provide inventory data
+    // const totalInventory = 0
+    // const stockInfo = getStockDisplayInfo(totalInventory)
+
+    const handleOpenProduct = () => {
+        if (!product.handle) return
+        window.location.href = `/products/${product.handle}`
+    }
+
+    return (
+        <div
+            className={cn(
+               "bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
+                className
+            )}
+        >
+            <div
+                onClick={handleOpenProduct}
+                className="w-full aspect-square  flex flex-col relative cursor-pointer"
+            >
+                <Image
+                    src={imageUrl}
+                    alt={title}
+                    width={300}
+                    height={300}
+                    className="w-full h-full object-cover rounded-t-xl"
+                />
+            </div>
+
+            <div className="p-3 flex flex-col justify-between h-[55%]">
+                <div className="flex flex-col">
+                    <p
+                        onClick={handleOpenProduct}
+                        className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
+                        style={{ color: "#32425A" }}
+                    >
+                        {title}
+                    </p>
+                    <div className="flex items-center gap-x-2 mt-1">
+                        <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
+                            Rs. {currentPrice}
+                        </span>
+                    </div>
+
+                    {/* {ratingSummary && ratingSummary.total_reviews > 0 && ( */}
+                    <div className="flex items-center gap-1 mt-2">
+                        {product?.average_rating &&
+                            <>
+                                <StarRating
+                                    rate={product.average_rating}
+                                    starSize={12}
+                                />
+                                <span className="text-[9px] text-gray-500">
+                                    ({product.average_rating.toFixed(1)})
+                                </span>
+                            </>}
+
+                    {/* <span className="text-[9px] text-gray-500">
+                ({ratingSummary.total_reviews})
+              </span> */}
+                </div>
+                {/* )} */}
+                <p
+                    className="text-[9px] max-h-[32px] leading-snug mt-2 line-clamp-2"
+                    style={{ color: "#768397" }}
+                >
+                    {description}
+                </p>
+            </div>
+
+            {/* Inventory intentionally disabled for Algolia results */}
+            {/*
+        {stockInfo.showWarning && (
+          <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
+            {stockInfo.message}
+          </p>
+        )}
+        */}
+        </div>
+        </div >
+    )
+}
+
+
+function getLowestAlgoliaVariantPrice(
+  variants?: any[]
+): number {
+  if (!variants?.length) return 0
+
+  let lowest = Infinity
+
+  for (const variant of variants) {
+    const prices = variant?.prices
+    if (!Array.isArray(prices)) continue
+
+    for (const price of prices) {
+      const amount = price?.amount
+      if (typeof amount === "number" && amount >= 0) {
+        lowest = Math.min(lowest, amount)
+      }
+    }
   }
 
-  return (
-    <div
-      className={clsx(
-        "relative group border rounded-sm flex flex-col justify-between p-1 w-full lg:w-[calc(25%-1rem)] min-w-[250px]"
-      )}
-    >
-      <div className="relative w-full h-full bg-primary aspect-square">
-        <LocalizedClientLink href={`/products/${product.id}`}>
-          <div className="overflow-hidden rounded-sm w-full h-full flex justify-center align-center ">
-            {product.thumbnail ? (
-              <Image
-                src={decodeURIComponent(product.thumbnail)}
-                alt={product.title}
-                width={360}
-                height={360}
-                className="object-cover aspect-square w-full object-center h-full lg:group-hover:-mt-14 transition-all duration-300 rounded-xs"
-                priority
-              />
-            ) : (
-              <Image
-                src="/images/placeholder.svg"
-                alt="Product placeholder"
-                width={100}
-                height={100}
-              />
-            )}
-          </div>
-        </LocalizedClientLink>
-        <LocalizedClientLink href={`/products/${product.handle}`}>
-          <Button className="absolute rounded-sm bg-action text-action-on-primary h-auto lg:h-[48px] lg:group-hover:block hidden w-full uppercase bottom-1 z-10">
-            See More
-          </Button>
-        </LocalizedClientLink>
-      </div>
-      <LocalizedClientLink href={`/products/${product.handle}`}>
-        <div className="flex justify-between p-4">
-          <div className="w-full">
-            <h3 className="heading-sm truncate">{product.title}</h3>
-            <div className="flex items-center gap-2 mt-2">
-              <p className="font-medium">{price.calculated_price}</p>
-              {price.original_price &&
-                price.calculated_price !== price.original_price && (
-                  <p className="text-sm text-gray-500 line-through">
-                    {price.original_price}
-                  </p>
-                )}
-            </div>
-            {/* <div className="flex items-center gap-2 mt-2">
-              <p className="font-medium">
-                {sellerVariantPrice?.calculated_price ||
-                  variantPrice?.calculated_price}
-              </p>
-              {sellerVariantPrice?.calculated_price
-                ? sellerVariantPrice?.calculated_price !==
-                    sellerVariantPrice?.original_price && (
-                    <p className="text-sm text-gray-500 line-through">
-                      {sellerVariantPrice?.original_price}
-                    </p>
-                  )
-                : variantPrice?.calculated_price !==
-                    variantPrice?.original_price && (
-                    <p className="text-sm text-gray-500 line-through">
-                      {variantPrice?.original_price}
-                    </p>
-                  )}
-            </div> */}
-          </div>
-        </div>
-      </LocalizedClientLink>
-    </div>
-  )
+  return lowest === Infinity ? 0 : lowest
+}
+
+
+function getLowestAlgoliaVariantPriceWithCurrency(
+  variants?: any[],
+  currencyCode = "usd"
+): number {
+  if (!variants?.length) return 0
+
+  let lowest = Infinity
+
+  for (const variant of variants) {
+    for (const price of variant?.prices ?? []) {
+      if (price?.currency_code !== currencyCode) continue
+      if (typeof price.amount === "number") {
+        lowest = Math.min(lowest, price.amount)
+      }
+    }
+  }
+
+  return lowest === Infinity ? 0 : lowest
 }

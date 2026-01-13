@@ -15,11 +15,11 @@ import { getFacedFilters } from "@/lib/helpers/get-faced-filters"
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams"
 import { PRODUCT_LIMIT } from "@/const"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { SearchProductCard } from "@/components/organisms/ProductCard/SearchResultProductCard"
 import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
 import { useEffect, useState } from "react"
 import { listProducts } from "@/lib/data/products"
+import { SearchResultProductCard } from "@/components/organisms/ProductCard/SearchResultProductCard"
 
 export const AlgoliaProductsListing = ({
   category_id,
@@ -71,43 +71,16 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
     results,
     // sendEvent,
   } = useHits()
-  const [apiProducts, setApiProducts] =
-    useState<HttpTypes.StoreProduct[]>([])
+  const [isOpen, setIsOpen] = useState(false)
 
-  useEffect(() => {
-    if (!items.length) return
 
-    const fetchProducts = async () => {
-      const productHandles = items.map((p: any) => p.handle)
+  console.log("Algolia items and results:", items, results)
 
-      const { response } = await listProducts({
-        queryParams: {
-          handle: productHandles,
-          fields: "*variants.calculated_price,*images,*variants.inventory_quantity",
-          limit: items.length,
-        },
-      })
-
-      setApiProducts(response.products)
-    }
-
-    fetchProducts()
-  }, [items])
 
   const [ratingSummaryMap, setRatingSummaryMap] =
     useState<Record<string, SimpleRatingSummary>>({})
 
-  useEffect(() => {
-    if (!apiProducts.length) return
 
-    const fetchRatings = async () => {
-      const productIds = apiProducts.map((p) => p.id)
-      const ratings = await getProductRatingSummaries(productIds)
-      setRatingSummaryMap(ratings)
-    }
-
-    fetchRatings()
-  }, [apiProducts])
 
 
   const updateSearchParams = useUpdateSearchParams()
@@ -124,6 +97,20 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
     <>
       <div className="flex justify-between w-full items-center">
         <div className="my-4 label-md">{`${results?.nbHits} listings`}</div>
+        <button
+          aria-label="Filter"
+          className="p-2 rounded-md border border-gray-200 md:hidden"
+          onClick={() => setIsOpen(true)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path
+              d="M3 5h18l-7 8v6l-4-2v-4z"
+              stroke="currentColor"
+              strokeWidth="2"
+              fill="none"
+            />
+          </svg>
+        </button>
         {/* <div className="hidden md:flex gap-2 items-center">
           Sort by:{" "}
           <SelectField
@@ -133,12 +120,12 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
           />
         </div> TODO: Fix sorting with Algolia */}
       </div>
-      <div className="hidden md:block">
+      {/* <div className="hidden md:block">
         <ProductListingActiveFilters />
-      </div>
+      </div> */}
       <div className="md:flex gap-4">
         <div>
-          <AlgoliaProductSidebar />
+          <AlgoliaProductSidebar isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
         <div className="w-full">
           {!items.length ? (
@@ -150,37 +137,24 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
             </div>
           ) : (
             <div className="w-full">
-              <ul className="flex flex-wrap gap-4">
-                {/* {items.map((hit, index) => (
-                  // <SearchProductCard
-                  //   key={hit.objectID}
-                  //   product={hit}
-                  //   currency_code={currency_code}
-                  // />
-                  <HomeProductCard
-                    api_product={hit}
-                    allProducts={items}
-                    productIndex={index}
-                    ratingSummary={ratingSummaryMap[hit.id]}
-                  />
-                ))} */}
-                {items.map((hit, index) => {
-                  const apiProduct = apiProducts.find(
-                    (p) => p.handle === hit.handle
-                  )
+              <ul
+                className="
+    grid
+    grid-cols-2
+    sm:grid-cols-3
+    md:grid-cols-3
+    lg:grid-cols-4
+    xl:grid-cols-5
+    gap-3
+  "
+              >
+                {items?.map((item: any) => (
+                  <li key={item.objectID} className="w-full">
+                    <SearchResultProductCard key={item.objectId} product={item} />
+                  </li>
 
-                  if (!apiProduct) return null
+                ))}
 
-                  return (
-                    <HomeProductCard
-                      key={apiProduct.id}
-                      api_product={apiProduct}
-                      allProducts={apiProducts}
-                      productIndex={index}
-                      ratingSummary={ratingSummaryMap[apiProduct.id]}
-                    />
-                  )
-                })}
               </ul>
             </div>
           )}

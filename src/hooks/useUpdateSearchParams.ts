@@ -1,24 +1,28 @@
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 const useUpdateSearchParams = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const pathname = usePathname()
 
-  const updateSearchParams = (field: string, value: string | null) => {
-    const updatedSearchParams = new URLSearchParams(searchParams.toString())
+  return (key: string, value?: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+
     if (!value) {
-      updatedSearchParams.delete(field)
+      params.delete(key)
     } else {
-      updatedSearchParams.set(field, value)
+      params.set(key, value)
     }
 
-    router.push(`${pathname}?${updatedSearchParams}`, {
-      scroll: false,
-    })
-  }
+    if (key !== "page") {
+      params.delete("page")
+    }
 
-  return updateSearchParams
+    const query = params.toString()
+    router.push(
+      query ? `?${query}` : window.location.pathname,
+      { scroll: false }
+    )
+  }
 }
 
 export default useUpdateSearchParams
