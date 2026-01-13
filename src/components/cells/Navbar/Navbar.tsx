@@ -265,18 +265,18 @@ const showFAQLabel = pathname == "/np/footer/faq"
           </div>
         </>
         {/* Right: search + profile*/}
-        <div className="flex w-full justify-between md:justify-end lg:ml-auto items-center space-x-4">
+        <div className="flex w-full justify-between md:justify-end lg:ml-auto items-center space-x-2">
           {showSearchbar && <NavbarSearch />}
           
           {/* Profile Icon */}
           <LocalizedClientLink
             href="/profile"
-            className="mt-1 p-2 rounded-full hover:bg-blue-600 transition-colors"
+            className="flex items-center justify-center w-8 h-8 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200"
             title="Profile"
           >
             <svg 
-              width="24" 
-              height="24" 
+              width="18" 
+              height="18" 
               viewBox="0 0 24 24" 
               fill="none" 
               xmlns="http://www.w3.org/2000/svg"
