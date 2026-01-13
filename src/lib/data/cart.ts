@@ -519,7 +519,11 @@ export async function placeOrder(cartId?: string) {
 
   if (cartRes?.order_set) {
     removeCartId()
-    redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
+    // redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
+    return {
+      success: true,
+      orderId: cartRes.order_set.orders[0].id,
+    }
   }
 
   return cartRes.order_set.cart

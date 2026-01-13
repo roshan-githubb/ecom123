@@ -178,9 +178,9 @@ const CartPaymentSection = ({
                       (isStripe && !cardComplete) ||
                       (!selectedPaymentMethod && !paidByGiftcard)
                     }
-                    className="w-full h-11 rounded-md bg-[#2b5bf7] text-white text-[13px] font-medium disabled:opacity-50"
+                    className="w-full h-11 rounded-md bg-myBlue text-white text-[13px] font-medium disabled:opacity-50"
                   >
-                    Continue to review
+                    Proceed
                   </button>
                 </div>
               ) : (
@@ -198,7 +198,6 @@ const CartPaymentSection = ({
       </div>
     </div>
   )
-
 }
 
 export default CartPaymentSection

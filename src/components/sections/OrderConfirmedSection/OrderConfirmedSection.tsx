@@ -4,12 +4,14 @@ import OrderTotals from "@/components/organisms/OrderDefails/OrderTotals"
 import OrderItems from "@/components/organisms/OrderItems/OrderItems"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
+import OrderConfirmationHeading from "./OrderConfirmationHeading"
 
 export const OrderConfirmedSection = ({
   order,
 }: {
   order: HttpTypes.StoreOrder
 }) => {
+  console.log("order confirmed section order:", order)
   return (
     <div className="py-6">
       <div className="content-container flex flex-col justify-center items-center gap-y-10 max-w-4xl h-full w-full mx-auto">
@@ -18,14 +20,7 @@ export const OrderConfirmedSection = ({
           data-testid="order-complete-container"
         >
           <div className="text-center w-full">
-            <Heading
-              level="h1"
-              className="flex flex-col gap-y-3 text-ui-fg-base text-3xl mb-4"
-            >
-              <span>Thank you!</span>
-              <span>Your order was placed successfully.</span>
-            </Heading>
-
+            <OrderConfirmationHeading/>
             <Text>
               We have sent the order confirmation details to{" "}
               <span
@@ -37,6 +32,7 @@ export const OrderConfirmedSection = ({
               .
             </Text>
           </div>
+          
           {/* <OrderDetails order={order} />
           <OrderItems order={order} />
           <OrderTotals totals={order} />
