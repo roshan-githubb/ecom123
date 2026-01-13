@@ -177,9 +177,9 @@ export const ProductCard = ({
           src={productImage}
           alt={api_product.title}
           width={196}
-          height={300}
+          height={250}
           className={`rounded-sm object-contain md:object-cover bg-[#F8F8F8] border border-[#999999]
-            ${hasDiscount ? "h-[319px]" : "h-[300px]"}
+            ${hasDiscount ? "h-[250px]" : "h-[230px]"}
             w-[196px]
              md:w-full`}
         />

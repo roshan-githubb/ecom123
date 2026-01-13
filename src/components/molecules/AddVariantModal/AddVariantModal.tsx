@@ -15,6 +15,7 @@ import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
 import { useInventoryStore } from "@/store/useInventoryStore"
 import { useInventorySync } from "@/hooks/useInventorySync"
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
 import { Review, SimpleRatingSummary } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
@@ -1396,6 +1397,8 @@ export function AddVariantSheet({
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isContentAtTop, setIsContentAtTop] = useState(true)
 
+  useBodyScrollLock(true)
+
   const y = useMotionValue(window.innerHeight)
   const backdropOpacity = useMotionValue(0)
 
@@ -1435,7 +1438,6 @@ export function AddVariantSheet({
     animate(y, 0, springConfig)
     animate(backdropOpacity, 1, { duration: 0.25, ease: "easeOut" })
 
-    // Set initial active index
     setActiveIndex(currentProductIndex)
 
     
