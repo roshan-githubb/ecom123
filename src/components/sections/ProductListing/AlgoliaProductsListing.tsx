@@ -1,22 +1,25 @@
 "use client"
 
-import { HttpTypes } from "@medusajs/types"
 import {
   AlgoliaProductSidebar,
-  ProductCard,
   ProductListingActiveFilters,
   ProductsPagination,
 } from "@/components/organisms"
 import { client } from "@/lib/client"
+import { HttpTypes } from "@medusajs/types"
+import { SimpleRatingSummary } from "@/types/reviews"
 import { Configure, useHits } from "react-instantsearch"
 import { InstantSearchNext } from "react-instantsearch-nextjs"
 import { useSearchParams } from "next/navigation"
 import { getFacedFilters } from "@/lib/helpers/get-faced-filters"
+import useUpdateSearchParams from "@/hooks/useUpdateSearchParams"
 import { PRODUCT_LIMIT } from "@/const"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { useEffect, useState, useCallback } from "react"
+import { SearchProductCard } from "@/components/organisms/ProductCard/SearchResultProductCard"
+import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
+import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
+import { useEffect, useState } from "react"
 import { listProducts } from "@/lib/data/products"
-import { getProductPrice } from "@/lib/helpers/get-product-price"
 
 export const AlgoliaProductsListing = ({
   category_id,
@@ -29,142 +32,112 @@ export const AlgoliaProductsListing = ({
   collection_id?: string
   locale?: string
   seller_handle?: string
-  currency_code: string
+  currency_code?: string
 }) => {
-  const searchParams = useSearchParams() // fixed typo
+  const searchParamas = useSearchParams()
 
-  const facetFilters: string = getFacedFilters(searchParams)
-  const query: string = searchParams.get("query") || ""
+  const indexName = `${process.env.NEXT_PUBLIC_ALGOLIA_INDEX_PREFIX || ""}products`
+  const facetFilters: string = getFacedFilters(searchParamas)
+  const page: number = +(searchParamas.get("page") || 1)
+  const query: string = searchParamas.get("query") || ""
 
-  const filters = `${
-    seller_handle
-      ? `NOT seller:null AND seller.handle:${seller_handle} AND `
-      : "NOT seller:null AND "
-  }NOT seller.store_status:SUSPENDED AND supported_countries:${locale}${
-    category_id
-      ? ` AND categories.id:${category_id}${
-          collection_id !== undefined
-            ? ` AND collections.id:${collection_id}`
-            : ""
-        } ${facetFilters}`
+  const filters = `${seller_handle
+    ? `NOT seller:null AND seller.handle:${seller_handle}`
+    : "NOT seller:null"
+    }${currency_code ? ` AND variants.prices.currency_code:${currency_code}` : ""}${category_id
+      ? ` AND categories.id:${category_id}${collection_id !== undefined
+        ? ` AND collections.id:${collection_id}`
+        : ""
+      } ${facetFilters}`
       : ` ${facetFilters}`
-  }`
+    }`
 
   return (
-    <InstantSearchNext searchClient={client} indexName="products">
-      <Configure query={query} filters={filters} />
-      <ProductsListing
-        locale={locale}
-        currency_code={currency_code}
+    <InstantSearchNext searchClient={client} indexName={indexName}>
+      <Configure
+        query={query}
+        hitsPerPage={PRODUCT_LIMIT}
         filters={filters}
+        page={page - 1}
       />
+      <ProductsListing currency_code={currency_code} />
     </InstantSearchNext>
   )
 }
 
-const ProductsListing = ({
-  locale,
-  currency_code,
-  filters,
-}: {
-  locale?: string
-  currency_code: string
-  filters: string
-}) => {
-  const [apiProducts, setApiProducts] = useState<HttpTypes.StoreProduct[] | null>(null)
-  const { items, results } = useHits()
-  const searchParams = useSearchParams() // fixed typo
-
-  const handleSetProducts = useCallback(async () => {
-  try {
-    setApiProducts(null)
-
-    const { response } = await listProducts({
-      countryCode: locale,
-      queryParams: {
-        fields:
-          "*variants.calculated_price,*seller.reviews,-thumbnail,-images,-type,-tags,-variants.options,-options,-collection,-collection_id",
-        handle: items.map((item) => item.handle),
-        limit: items.length,
-      },
-    })
-
-    setApiProducts(
-      response.products.filter((prod) => {
-        const { cheapestPrice } = getProductPrice({ product: prod })
-        return Boolean(cheapestPrice)
-      })
-    )
-  } catch {
-    setApiProducts(null)
-  }
-}, [items, locale])
-
+const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
+  const {
+    items,
+    results,
+    // sendEvent,
+  } = useHits()
+  const [apiProducts, setApiProducts] =
+    useState<HttpTypes.StoreProduct[]>([])
 
   useEffect(() => {
-  handleSetProducts()
-}, [handleSetProducts])
+    if (!items.length) return
 
+    const fetchProducts = async () => {
+      const productHandles = items.map((p: any) => p.handle)
+
+      const { response } = await listProducts({
+        queryParams: {
+          handle: productHandles,
+          fields: "*variants.calculated_price,*images,*variants.inventory_quantity",
+          limit: items.length,
+        },
+      })
+
+      setApiProducts(response.products)
+    }
+
+    fetchProducts()
+  }, [items])
+
+  const [ratingSummaryMap, setRatingSummaryMap] =
+    useState<Record<string, SimpleRatingSummary>>({})
+
+  useEffect(() => {
+    if (!apiProducts.length) return
+
+    const fetchRatings = async () => {
+      const productIds = apiProducts.map((p) => p.id)
+      const ratings = await getProductRatingSummaries(productIds)
+      setRatingSummaryMap(ratings)
+    }
+
+    fetchRatings()
+  }, [apiProducts])
+
+
+  const updateSearchParams = useUpdateSearchParams()
+
+  const selectOptionHandler = (value: string) => {
+    updateSearchParams("sortBy", value)
+  }
 
   if (!results?.processingTimeMS) return <ProductListingSkeleton />
 
-  const page: number = +(searchParams.get("page") || 1)
-  const filteredProducts = items.filter((pr) =>
-    apiProducts?.some((p) => p.id === pr.objectID)
-  )
 
-  const products = filteredProducts
-    .filter((pr) =>
-      apiProducts?.some(
-        (p) => p.id === pr.objectID && filterProductsByCurrencyCode(p)
-      )
-    )
-    .slice((page - 1) * PRODUCT_LIMIT, page * PRODUCT_LIMIT)
-
-  const count = filteredProducts?.length || 0
-  const pages = Math.ceil(count / PRODUCT_LIMIT) || 1
-
-  function filterProductsByCurrencyCode(product: HttpTypes.StoreProduct) {
-    const minPrice = searchParams.get("min_price")
-    const maxPrice = searchParams.get("max_price")
-
-    const variantsWithCurrencyCode = product?.variants?.filter(
-      (variant) => variant.calculated_price?.currency_code === currency_code
-    )
-
-    if (!variantsWithCurrencyCode?.length) return false
-
-    if (minPrice && maxPrice) {
-      return variantsWithCurrencyCode.some(
-        (variant) =>
-          (variant.calculated_price?.calculated_amount ?? 0) >= +minPrice &&
-          (variant.calculated_price?.calculated_amount ?? 0) <= +maxPrice
-      )
-    }
-    if (minPrice) {
-      return variantsWithCurrencyCode.some(
-        (variant) => (variant.calculated_price?.calculated_amount ?? 0) >= +minPrice
-      )
-    }
-    if (maxPrice) {
-      return variantsWithCurrencyCode.some(
-        (variant) => (variant.calculated_price?.calculated_amount ?? 0) <= +maxPrice
-      )
-    }
-
-    return true
-  }
 
   return (
-    <div className=" min-h-[70vh] ">
+    <>
       <div className="flex justify-between w-full items-center">
-        <div className="my-4 label-md">{`${count} listings`}</div>
+        <div className="my-4 label-md">{`${results?.nbHits} listings`}</div>
+        {/* <div className="hidden md:flex gap-2 items-center">
+          Sort by:{" "}
+          <SelectField
+            className="min-w-[200px]"
+            options={selectOptions}
+            selectOption={selectOptionHandler}
+          />
+        </div> TODO: Fix sorting with Algolia */}
       </div>
       <div className="hidden md:block">
         <ProductListingActiveFilters />
       </div>
       <div className="md:flex gap-4">
-        <div className="w-[280px] flex-shrink-0 hidden md:block">
+        <div>
           <AlgoliaProductSidebar />
         </div>
         <div className="w-full">
@@ -178,16 +151,34 @@ const ProductsListing = ({
           ) : (
             <div className="w-full">
               <ul className="flex flex-wrap gap-4">
-                {products.map((hit) => {
-                  const apiProduct = apiProducts?.find((p) => p.id === hit.objectID)
+                {/* {items.map((hit, index) => (
+                  // <SearchProductCard
+                  //   key={hit.objectID}
+                  //   product={hit}
+                  //   currency_code={currency_code}
+                  // />
+                  <HomeProductCard
+                    api_product={hit}
+                    allProducts={items}
+                    productIndex={index}
+                    ratingSummary={ratingSummaryMap[hit.id]}
+                  />
+                ))} */}
+                {items.map((hit, index) => {
+                  const apiProduct = apiProducts.find(
+                    (p) => p.handle === hit.handle
+                  )
+
+                  if (!apiProduct) return null
+
                   return (
-                    apiProduct && (
-                      <ProductCard
-                        api_product={apiProduct}
-                        key={hit.objectID}
-                        product={hit}
-                      />
-                    )
+                    <HomeProductCard
+                      key={apiProduct.id}
+                      api_product={apiProduct}
+                      allProducts={apiProducts}
+                      productIndex={index}
+                      ratingSummary={ratingSummaryMap[apiProduct.id]}
+                    />
                   )
                 })}
               </ul>
@@ -195,8 +186,7 @@ const ProductsListing = ({
           )}
         </div>
       </div>
-      <ProductsPagination pages={pages} />
-    </div>
+      <ProductsPagination pages={results?.nbPages || 1} />
+    </>
   )
 }
-AlgoliaProductsListing.displayName = "AlgoliaProductsListing"
