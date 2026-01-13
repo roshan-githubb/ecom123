@@ -27,11 +27,11 @@ export interface CartItem {
   productId?: string;
 }
 export interface Promotion {
-   code: string;
-   id: string;
-   value: number;
-   type: string;
-   isAutomatic: boolean;
+  code: string;
+  id: string;
+  value: number;
+  type: string;
+  isAutomatic: boolean;
 }
 
 export interface CartSummary {
@@ -50,6 +50,7 @@ interface CartState extends CartSummary {
   items: CartItem[];
 
   fetchCart: () => Promise<void>;
+  reset: () => Promise<void>;
   add: (variantId: string, quantity?: number) => Promise<void>;
   increase: (lineItemId: string, currentQty: number) => Promise<void>;
   decrease: (lineItemId: string, currentQty: number) => Promise<void>;
@@ -62,10 +63,10 @@ interface CartState extends CartSummary {
 // Mapper
 // -------------------------
 function mapCart(cart: any): { items: CartItem[] } & CartSummary {
-   const discountTotal =
+  const discountTotal =
     cart.discount_total ??
     Math.max((cart.subtotal ?? 0) - (cart.total ?? 0), 0);
-    // console.log('map cart function cart object ', cart)
+  // console.log('map cart function cart object ', cart)
 
   return {
     cartId: cart.id,
@@ -88,7 +89,7 @@ function mapCart(cart: any): { items: CartItem[] } & CartSummary {
 
     items: cart.items?.map((item: any) => ({
       id: item.id,
-      title: item.title,
+      title: item.product_title || item.title,
       price: item.unit_price,
       image:
         item.thumbnail ??
@@ -97,7 +98,7 @@ function mapCart(cart: any): { items: CartItem[] } & CartSummary {
       quantity: item.quantity,
       variantId: item.variant_id,
       productId: item.product_id,
-      variantTitle: item.variant?.title || item.variant_title || "",
+      variantTitle: item.variant_title || item.variant?.title || "",
       totalPrice: item.quantity * item.unit_price,
 
 
@@ -126,15 +127,29 @@ export const useCartStore = create<CartState>()(
         if (data?.cart) {
           const mappedCart = mapCart(data.cart);
           set(mappedCart);
-          
+
           // Sync inventory store with current cart contents
           const cartItems = mappedCart.items.map(item => ({
             variantId: item.variantId || '',
             quantity: item.quantity
           })).filter(item => item.variantId); // Filter out items without variantId
-          
+
           useInventoryStore.getState().syncWithCart(cartItems);
         }
+      },
+      reset: async () => {
+        set({
+          items: [],
+          promotions: [],
+          cartId: "",
+          subtotal: 0,
+          taxTotal: 0,
+          deliveryFee: 0,
+          serviceFee: 0,
+          totalPayable: 0,
+          discountTotal: 0,
+          currency: "NPR",
+        });
       },
 
       add: async (variantId, quantity = 1) => {
@@ -147,55 +162,79 @@ export const useCartStore = create<CartState>()(
       },
 
       increase: async (lineItemId, currentQty) => {
-        const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
-        if (data?.cart) {
-          set(mapCart(data.cart));
-          // Find the variant ID for this line item and decrease inventory
-          const item = data.cart.items?.find((item: any) => item.id === lineItemId);
-          if (item?.variant_id) {
-            useInventoryStore.getState().decreaseInventory(item.variant_id, 1);
+        // No optimistic update for increase - let API validate stock availability
+        try {
+          const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
+          if (data?.cart) {
+            set(mapCart(data.cart));
+            // Find the variant ID for this line item and decrease inventory
+            const item = data.cart.items?.find((item: any) => item.id === lineItemId);
+            if (item?.variant_id) {
+              useInventoryStore.getState().decreaseInventory(item.variant_id, 1);
+            }
           }
+        } catch (error) {
+          throw error;
         }
       },
 
       decrease: async (lineItemId, currentQuantity) => {
+        const currentItems = get().items;
+
         if (currentQuantity <= 1) {
-          // Remove item
-          const data = await removeFromCart(lineItemId);
-          console.log('remove item response ', data)
-          if (data?.deleted == true) {
-            const cartData = await getCart();
-            if (cartData?.cart) {
-              set(mapCart(cartData.cart));
-              // Find the variant ID and increase inventory back
-              const currentItems = get().items;
+          const optimisticItems = currentItems.filter(i => i.id !== lineItemId);
+          set({ items: optimisticItems });
+
+          try {
+            const data = await removeFromCart(lineItemId);
+            console.log('remove item response ', data)
+            if (data?.deleted == true) {
+              const cartData = await getCart();
+              if (cartData?.cart) {
+                set(mapCart(cartData.cart));
+                const item = currentItems.find(i => i.id === lineItemId);
+                if (item?.variantId) {
+                  useInventoryStore.getState().increaseInventory(item.variantId, 1);
+                }
+              }
+            } else {
+              // If API returns nothing, keep the optimistic update
               const item = currentItems.find(i => i.id === lineItemId);
               if (item?.variantId) {
                 useInventoryStore.getState().increaseInventory(item.variantId, 1);
               }
             }
-          } else {
-            // If API returns nothing, manually remove from state
-            const currentItems = get().items;
-            const item = currentItems.find(i => i.id === lineItemId);
-            if (item?.variantId) {
-              useInventoryStore.getState().increaseInventory(item.variantId, 1);
-            }
-            set({ items: currentItems.filter(i => i.id !== lineItemId) });
+          } catch (error) {
+            // Revert optimistic update on error
+            set({ items: currentItems });
+            throw error;
           }
           return;
         }
 
-        // Decrement quantity
-        const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
-        console.log('decrement item ', data)
-        if (data?.cart) {
-          set(mapCart(data.cart));
-          // Find the variant ID for this line item and increase inventory
-          const item = data.cart.items?.find((item: any) => item.id === lineItemId);
-          if (item?.variant_id) {
-            useInventoryStore.getState().increaseInventory(item.variant_id, 1);
+        // Optimistic decrement
+        const optimisticItems = currentItems.map(item =>
+          item.id === lineItemId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        );
+        set({ items: optimisticItems });
+
+        try {
+          const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
+          console.log('decrement item ', data)
+          if (data?.cart) {
+            set(mapCart(data.cart));
+            // Find the variant ID for this line item and increase inventory
+            const item = data.cart.items?.find((item: any) => item.id === lineItemId);
+            if (item?.variant_id) {
+              useInventoryStore.getState().increaseInventory(item.variant_id, 1);
+            }
           }
+        } catch (error) {
+          // Revert optimistic update on error
+          set({ items: currentItems });
+          throw error;
         }
       },
 

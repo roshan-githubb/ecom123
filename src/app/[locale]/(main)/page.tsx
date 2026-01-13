@@ -3,10 +3,18 @@ import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard";
 import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel";
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard";
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar";
-import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
-import HomePageSkeleton from "@/components/organisms/HomepageSkeleton/HomepageSkeleton";
+import { 
+  TopCategoriesSkeleton, 
+  BannerSkeleton, 
+  CategoriesGridSkeleton, 
+  ProductsSectionSkeleton, 
+  FlashItemsSkeleton, 
+  BrandsSkeleton, 
+  VideoSkeleton 
+} from "@/components/organisms/HomepageSkeleton/SectionSkeletons";
 import FlashItems from "@/components/sections/FlashItems/FlashItems";
 import TopProducts from "@/components/sections/TopProducts/TopProducts";
+import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -47,17 +55,6 @@ const topSectionProducts = [
   { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
   { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
   { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
-]
-
-const categories = [
-  { category: "Kitchen Essentials", image: "/images/categories/kitchen-essentials.png" },
-  { category: "Decor", image: "/images/categories/decor.png" },
-  { category: "Lighting Lamps", image: "/images/categories/lighting-lamps.png" },
-  { category: "Bags & Wallets", image: "/images/categories/bags-&-wallets.png" },
-  { category: "Makeup", image: "/images/categories/makeup.png" },
-  { category: "Clothing", image: "/images/categories/clothing.png" },
-  { category: "Skincare", image: "/images/categories/skincare.png" },
-  { category: "Electronics", image: "/images/categories/electronics.png" },
 ];
 
 
@@ -65,164 +62,198 @@ const categories = [
 
 
 
-interface Params {
-  locale: string;
+// Async components for each section
+async function CategoriesSection() {
+  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
+  
+  const headers = {
+    "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+    "Content-Type": "application/json",
+  };
+
+  const res = await fetch(url, {
+    method: "GET",
+    cache: "no-store",
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch categories');
+  }
+
+  const data = await res.json();
+  
+  return (
+    <div className="grid grid-cols-4 gap-4">
+      {data.product_categories.slice(0, 8).map((c: CategoryItem) => (
+        <div key={c.id} className="flex-shrink-0">
+          <ItemCategoryCard 
+            imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} 
+            label={c.name} 
+            shape="circle" 
+            height={70} 
+            width={70} 
+            link={`/categories/${c?.handle}`} 
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
+async function BannerSection() {
+  const bannerCarousel = await getBanners();
+  return <CarouselBanner bannerCarousel={bannerCarousel} />;
+}
 
-export default async function HomePage({ params }: { params: Params }) {
-  const { locale } = await params;
+async function RecommendedSection({ locale }: { locale: string }) {
   const {
     response: { products: jsonLdProducts },
   } = await listProducts({
     countryCode: locale,
-    queryParams: { limit: 8, order: "created_at",
-    },
-  })
+    queryParams: { limit: 8, order: "created_at" },
+  });
   
-  const sortedProducts = sortProductsByInventory(jsonLdProducts)
-  
-  const productIds = sortedProducts?.map((p: any) => p.id) || []
-  const ratingSummaryMap = await getProductRatingSummaries(productIds)
+  const sortedProducts = sortProductsByInventory(jsonLdProducts);
+  const productIds = sortedProducts?.map((p: any) => p.id) || [];
+  const ratingSummaryMap = await getProductRatingSummaries(productIds);
 
-  // console.log("item list and origianl list ",  jsonLdProducts)
-  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`;
+  return (
+    <>
+      <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
+      <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
+        {sortedProducts.map((r, index) => (
+          <div key={r.id} className="w-[180px] flex-shrink-0">
+            <HomeProductCard
+              api_product={r}
+              allProducts={sortedProducts}
+              productIndex={index}
+              ratingSummary={ratingSummaryMap[r.id]}
+            />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+async function BestDealsSection({ locale }: { locale: string }) {
+  const {
+    response: { products: jsonLdProducts },
+  } = await listProducts({
+    countryCode: locale,
+    queryParams: { limit: 8, order: "created_at" },
+  });
+  
+  const sortedProducts = sortProductsByInventory(jsonLdProducts);
+  const productIds = sortedProducts?.map((p: any) => p.id) || [];
+  const ratingSummaryMap = await getProductRatingSummaries(productIds);
+
+  return (
+    <>
+      <SectionHeader title="Best Deals" actionLabel="See All" />
+      <HorizontalScroller className="no-scrollbar !mt-1">
+        {sortedProducts.map((r, index) => (
+          <div key={r.id} className="w-[180px] flex-shrink-0">
+            <HomeProductCard 
+              api_product={r} 
+              allProducts={sortedProducts}
+              productIndex={index}
+              ratingSummary={ratingSummaryMap[r.id]}
+            />
+          </div>
+        ))}
+      </HorizontalScroller>
+    </>
+  );
+}
+
+
+interface Params {
+  locale: string;
+}
+
+export default async function HomePage({ params }: { params: Promise<Params> }) {
+  const { locale } = await params;
 
   try {
-    const headers = {
-      "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
-      "Content-Type": "application/json",
-    };
-
-    const res = await fetch(url, {
-      method: "GET",
-      cache: "no-store",
-      headers,
-    });
-
-
-
-    // Log the exact error body from Medusa (super useful!)
-    if (!res.ok) {
-      const errorText = await res.text();
-
-      return notFound();
-    }
-
-    const data = await res.json();
-    // console.log("Full categories response from Medusa:", data.product_categories);
-
-    const bannerCarousel = await getBanners();
-
     return (
-      <Suspense fallback={<HomePageSkeleton />}>
-        <div className="space-y-6 px-4 lg:px-8 py-4 ">
-          {/* Top horizontal category scroller (item category cards) with visible arrows */}
-          <HorizontalScroller >
+      <div className="space-y-6 px-4 lg:px-8 py-4">
+        {/* Top horizontal category scroller */}
+        <Suspense fallback={<TopCategoriesSkeleton />}>
+          <HorizontalScroller>
             {topSectionProducts.map((c: any) => (
-              <div key={c.name} className=" flex-shrink-0">
-                <ItemCategoryCard imageUrl={c?.image || "/product-placeholder.png"} label={c.name} shape="rounded" height={80} width={80} link={c?.link??"/coming-soon"} />
+              <div key={c.name} className="flex-shrink-0">
+                <ItemCategoryCard 
+                  imageUrl={c?.image || "/product-placeholder.png"} 
+                  label={c.name} 
+                  shape="rounded" 
+                  height={80} 
+                  width={80} 
+                  link={c?.link ?? "/coming-soon"} 
+                />
               </div>
             ))}
           </HorizontalScroller>
+        </Suspense>
 
-
-
-          {/* Large banner carousel */}
+        {/* Large banner carousel */}
+        <Suspense fallback={<BannerSkeleton />}>
           <div className="pt-0">
-            {/* <CarouselBanner slides={bannerSlides} /> */}
-            <CarouselBanner bannerCarousel={bannerCarousel} />
+            <BannerSection />
           </div>
+        </Suspense>
 
-          {/* Circular categories (grid) */}
-          {/* <SectionHeader title="Categories" actionLabel="See All"  /> */}
-          {/* <div className="grid grid-cols-4 gap-4">
-          {categories.map((item: any) => (
-            <ItemCategoryCard key={item?.category} imageUrl={item.image || "/images/not-available/not-available.png"} label={item?.category} shape="circle" height={70} width={70} />
-          ))}
-        </div> */}
-          {/* <HorizontalScroller > */}
-          <div className="grid grid-cols-4 gap-4">
-            {data.product_categories.slice(0, 8).map((c: CategoryItem) => (
-              <div key={c.id} className=" flex-shrink-0">
-                <ItemCategoryCard imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"} label={c.name} shape="circle" height={70} width={70} link={`/categories/${c?.handle}`} />
-              </div>
-            ))}
-          </div>
-          
-          {/* Flash Sale Section */}
-          <Suspense fallback={
-            <div className="animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
-              <div className="flex gap-2 overflow-hidden">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="w-[180px] h-48 bg-gray-200 rounded flex-shrink-0"></div>
-                ))}
-              </div>
-            </div>
-          }>
-            <FlashItems locale={locale} />
-          </Suspense>
-         
+        {/* Categories grid */}
+        <Suspense fallback={<CategoriesGridSkeleton />}>
+          <CategoriesSection />
+        </Suspense>
+        
+        {/* Flash Sale Section */}
+        <Suspense fallback={<FlashItemsSkeleton />}>
+          <FlashItems locale={locale} />
+        </Suspense>
 
-          {/* Recommended for you — horizontal, hidden scrollbar */}
-          <SectionHeader title="Recommended for you" actionLabel="See All" link="/recommended" />
-          <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
-            {sortedProducts.map((r, index) => (
-              <div key={r.id} className="w-[180px] flex-shrink-0 ">
-                <HomeProductCard
-                  api_product={r}
-                  allProducts={sortedProducts}
-                  productIndex={index}
-                  ratingSummary={ratingSummaryMap[r.id]}
-                // hasOfferSticker={true}
-                />
+        {/* Recommended for you */}
+        <Suspense fallback={<ProductsSectionSkeleton title="Recommended for you" />}>
+          <RecommendedSection locale={locale} />
+        </Suspense>
 
-                {/* <HomeProductCard id={r?.id} imageUrl={r?.thumbnail ?? "/images/product-placeholder.png"} title={r?.title ?? ""} currentPrice={r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0} description={r?.description ?? ""} /> */}
-              </div>
-            ))}
-          </div>
-
-          {/* Top brands (use item category card circular) */}
+        {/* Top brands */}
+        <Suspense fallback={<BrandsSkeleton />}>
           <SectionHeader title="Top Brands" actionLabel="See All" />
           <div className="grid grid-cols-4 gap-4">
-            <>
-              {brands.map((brand: any) => (
-                // <div>
-                <ItemCategoryCard key={brand?.name} imageUrl={brand?.image || "/images/not-available/not-available.png"} label={brand?.name} shape="circle" height={70} width={70} link="/coming-soon" />
-                // </div>
-              ))}</>
-          </div>
-
-          {/* Best deals */}
-          <SectionHeader title="Best Deals" actionLabel="See All" />
-          <HorizontalScroller className="no-scrollbar !mt-1">
-            {sortedProducts.map((r, index) => (
-              <div key={r.id} className="w-[180px] flex-shrink-0">
-                <HomeProductCard 
-                  api_product={r} 
-                  allProducts={sortedProducts}
-                  productIndex={index}
-                  ratingSummary={ratingSummaryMap[r.id]}
-                />
-              </div>
+            {brands.map((brand: any) => (
+              <ItemCategoryCard 
+                key={brand?.name} 
+                imageUrl={brand?.image || "/images/not-available/not-available.png"} 
+                label={brand?.name} 
+                shape="circle" 
+                height={70} 
+                width={70} 
+                link="/coming-soon" 
+              />
             ))}
-          </HorizontalScroller>
+          </div>
+        </Suspense>
 
-          {/* Advert video section */}
+        {/* Best deals */}
+        <Suspense fallback={<ProductsSectionSkeleton title="Best Deals" />}>
+          <BestDealsSection locale={locale} />
+        </Suspense>
+
+        {/* Advert video section */}
+        <Suspense fallback={<VideoSkeleton />}>
           <HeroVideo videoSrc="/videos/watch-time.mp4" />
+        </Suspense>
 
-          {/* Most Popular */}
-          <TopProducts/>
-        </div >
-      </Suspense>
-
+        {/* Most Popular */}
+        <Suspense fallback={<ProductsSectionSkeleton title="Top Products" />}>
+          <TopProducts />
+        </Suspense>
+      </div>
     );
-
-    // return <ProductDetailClient product={product} />;
   } catch (err) {
-
     return notFound();
   }
-
 }

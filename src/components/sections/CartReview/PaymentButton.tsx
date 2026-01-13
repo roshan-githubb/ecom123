@@ -68,12 +68,19 @@ const StripePaymentButton = ({
       const res = await placeOrder()
       if (!res.ok) {
         setErrorMessage(res.error?.message)
+      } else {
+        const { useCartStore } = await import("@/store/useCartStore");
+        useCartStore.getState().clearLocal();
       }
     } catch (error: any) {
       if (error?.message !== "NEXT_REDIRECT") {
         setErrorMessage(
           error?.message?.replace("Error setting up the request: ", "")
         )
+      } else {
+        // Order was successful and redirecting, clear cart
+        const { useCartStore } = await import("@/store/useCartStore");
+        useCartStore.getState().clearLocal();
       }
     } finally {
       setSubmitting(false)
@@ -176,12 +183,20 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       const res = await placeOrder()
       if (!res.ok) {
         setErrorMessage(res.error?.message)
+      } else {
+        // Clear cart state only after successful order placement
+        const { useCartStore } = await import("@/store/useCartStore");
+        useCartStore.getState().clearLocal();
       }
     } catch (error: any) {
       if (error?.message !== "NEXT_REDIRECT") {
         setErrorMessage(
           error?.message?.replace("Error setting up the request: ", "")
         )
+      } else {
+        // Order was successful and redirecting, clear cart
+        const { useCartStore } = await import("@/store/useCartStore");
+        useCartStore.getState().clearLocal();
       }
     } finally {
       setSubmitting(false)

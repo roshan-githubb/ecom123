@@ -28,14 +28,19 @@ type CountrySelectProps = {
 }
 
 const CountrySelect = ({ regions }: CountrySelectProps) => {
-  const [current, setCurrent] = useState<
-    | { country: string | undefined; region: string; label: string | undefined }
-    | undefined
-  >(undefined)
+  const [current, setCurrent] = useState<CountryOption | undefined>(undefined)
+  const [mounted, setMounted] = useState(false)
 
-  const { locale: countryCode } = useParams()
+  const params = useParams()
   const router = useRouter()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
+  const pathname = usePathname()
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const countryCode = mounted ? params?.locale : 'en'
+  const currentPath = mounted ? pathname.split(`/${countryCode}`)[1] : ''
 
   const options = useMemo(() => {
     return regions
@@ -47,17 +52,24 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
         }))
       })
       .flat()
-      .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
+      .filter((option): option is CountryOption => 
+        option !== undefined && 
+        option.country !== undefined && 
+        option.label !== undefined
+      )
+      .sort((a, b) => a.label.localeCompare(b.label))
   }, [regions])
 
   useEffect(() => {
-    if (countryCode) {
-      const option = options?.find((o) => o?.country === countryCode)
+    if (mounted && countryCode) {
+      const option = options?.find((o) => o.country === countryCode)
       setCurrent(option)
     }
-  }, [options, countryCode])
+  }, [options, countryCode, mounted])
 
   const handleChange = async (option: CountryOption) => {
+    if (!mounted) return
+    
     try {
       const result = await updateRegionWithValidation(option.country, currentPath)
       
@@ -88,7 +100,7 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
           onChange={handleChange}
           defaultValue={
             countryCode
-              ? options?.find((o) => o?.country === countryCode)
+              ? options?.find((o) => o.country === countryCode)
               : undefined
           }
         >

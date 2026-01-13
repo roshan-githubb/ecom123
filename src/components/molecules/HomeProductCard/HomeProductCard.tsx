@@ -188,7 +188,7 @@ export const HomeProductCard = ({
                 <div className="flex flex-col">
                     <p
                         onClick={handleOpenModal}
-                        className="text-[12px] font-medium min-h-[32px] line-clamp-2 cursor-pointer hover:underline"
+                        className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
                         style={{ color: "#32425A" }}
                     >
                         {title}
@@ -201,7 +201,7 @@ export const HomeProductCard = ({
                     </div>
 
                     {ratingSummary && ratingSummary.total_reviews > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-1 mt-2">
                             <StarRating rate={ratingSummary.average_rating} starSize={12} />
                             <span className="text-[9px] text-gray-500">
                                 ({ratingSummary.total_reviews})
@@ -210,26 +210,27 @@ export const HomeProductCard = ({
                     )}
 
                     <p
-                        className="text-[9px] max-h-[32px] leading-snug mt-1 line-clamp-2"
+                        className="text-[9px] max-h-[32px] leading-snug mt-2 line-clamp-2"
                         style={{ color: "#768397" }}
                     >
                         {description}
                     </p>
 
-                    {stockInfo.showWarning && (
+                    
+                </div>
+                {stockInfo.showWarning && (
                         <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
                             {stockInfo.message}
                         </p>
                     )}
-                </div>
 
                 <button
                     onClick={handleAddToCart}
                     disabled={isAddingToCart}
-                    className={`flex items-center justify-center mt-auto text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
+                    className={`flex items-center justify-center text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
             ${isAddingToCart || totalInventory <= 0
                             ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
+                            : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
                         } text-[#FFFFFF]`}
                 >
                     <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} />

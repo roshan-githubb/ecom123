@@ -10,11 +10,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-poppins)"], 
+        sans: ["var(--font-poppins)"],
         // display: ["var(--font-funnel-sans)", "sans-serif"],
       },
       fontWeight: {
-        semibold: "600", 
+        semibold: "600",
       },
       backgroundColor: {
         primary: "rgba(var(--bg-primary))",
@@ -81,6 +81,7 @@ export default {
         tertiary: "rgba(var(--content-tertiary))",
         disabled: "rgba(var(--content-disabled))",
         myBlue: '#3A3A99',
+
 
         //from fignma design files
         contentOrange: "rgba(var(--content-orange))",

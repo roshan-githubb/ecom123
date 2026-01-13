@@ -3,6 +3,9 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   trailingSlash: false,
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['@medusajs/ui', '@medusajs/icons'],
+  },
   logging: {
     fetches: {
       fullUrl: true,

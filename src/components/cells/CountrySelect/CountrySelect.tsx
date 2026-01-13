@@ -48,10 +48,12 @@ const CountrySelect = forwardRef<
     } as React.ChangeEvent<HTMLSelectElement>)
   }
 
+  const normalizedValue = typeof props.value === 'string' ? props.value : String(props.value || '')
+
   return (
     <label className="label-md">
       <p className="mb-2">Country</p>
-      <Listbox onChange={handleSelect} value={props.value}>
+      <Listbox onChange={handleSelect} value={normalizedValue}>
         <div className="relative">
           <Listbox.Button
             className={clsx(
@@ -63,7 +65,7 @@ const CountrySelect = forwardRef<
               <>
                 <span className="block truncate">
                   {countryOptions?.find(
-                    (country) => country.value === props.value
+                    (country) => country.value === normalizedValue
                   )?.label || "Choose a country"}
                 </span>
                 <ChevronUpDown

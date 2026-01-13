@@ -67,24 +67,24 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
     const sortedProducts = sortProductsByInventory(recommendedProducts)
 
     return (
-        <main className="container py-6">
-            <h2 className="text-[#32425A] text-base font-semibold mb-4">Recommended For You</h2>
+            <main className="container py-6">
+                <h2 className="text-[#32425A] text-base font-semibold mb-4">Recommended For You</h2>
 
-            <Suspense fallback={<ProductListingSkeleton />}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {sortedProducts.map((product: HttpTypes.StoreProduct, index: number) => (
-                        <ProductCard
-                            key={product.id}
-                            api_product={product}
-                            locale={locale}
-                            ratingSummary={ratingsMap[product.id]}
-                            allProducts={sortedProducts}
-                            productIndex={index}
-                        />
-                    ))}
-                </div>
-            </Suspense>
-        </main>
+                <Suspense fallback={<ProductListingSkeleton />}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {sortedProducts.map((product: HttpTypes.StoreProduct, index: number) => (
+                            <ProductCard
+                                key={product.id}
+                                api_product={product}
+                                locale={locale}
+                                ratingSummary={ratingsMap[product.id]}
+                                allProducts={sortedProducts}
+                                productIndex={index}
+                            />
+                        ))}
+                    </div>
+                </Suspense>
+            </main>
     )
 }
 

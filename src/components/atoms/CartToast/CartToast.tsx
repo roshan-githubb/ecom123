@@ -9,13 +9,15 @@ interface CartToastProps {
   isVisible: boolean
   duration?: number
   onDismiss: () => void
+  variant?: 'success' | 'error'
 }
 
 export const CartToast = ({ 
   message, 
   isVisible, 
   duration = 3000, 
-  onDismiss 
+  onDismiss,
+  variant = 'success'
 }: CartToastProps) => {
   const [progress, setProgress] = useState(100)
 
@@ -42,6 +44,10 @@ export const CartToast = ({
     return () => clearInterval(interval)
   }, [isVisible, duration, onDismiss])
 
+  const isError = variant === 'error'
+  const bgColor = isError ? 'bg-red-500' : 'bg-myBlue'
+  const progressBarColor = isError ? 'bg-red-600' : 'bg-green-600'
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -55,14 +61,22 @@ export const CartToast = ({
             damping: 25,
             duration: 0.3 
           }}
-          className="fixed top-4 right-4 z-50 bg-myBlue text-white rounded-lg shadow-lg overflow-hidden min-w-[280px] max-w-[400px]"
+          className={`fixed top-4 right-4 z-50 ${bgColor} text-white rounded-lg shadow-lg overflow-hidden min-w-[280px] max-w-[400px]`}
         >
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-3">
-              {/* Check circle icon */}
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-              </svg>
+              {/* Icon based on variant */}
+              {isError ? (
+                // X circle icon for error
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 00-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                // Check circle icon for success
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                </svg>
+              )}
               <motion.span 
                 key={message}
                 initial={{ opacity: 0, x: -10 }}
@@ -86,9 +100,9 @@ export const CartToast = ({
           </div>
           
           {/* Progress bar */}
-          <div className="h-1 bg-green-600">
+          <div className={progressBarColor}>
             <motion.div
-              className="h-full bg-white"
+              className="h-1 bg-white"
               initial={{ width: "100%" }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.1, ease: "linear" }}

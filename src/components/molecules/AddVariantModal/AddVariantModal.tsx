@@ -15,6 +15,7 @@ import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
 import { useInventoryStore } from "@/store/useInventoryStore"
 import { useInventorySync } from "@/hooks/useInventorySync"
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
 import { Review, SimpleRatingSummary } from "@/types/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
@@ -103,6 +104,22 @@ function ProductCardInternal({
   const [reviews, setReviews] = useState<any[]>([])
   const [loadingReviews, setLoadingReviews] = useState(false)
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Questions functionality state
+  const [showQuestionForm, setShowQuestionForm] = useState(false)
+  const [questionText, setQuestionText] = useState('')
+  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [questions, setQuestions] = useState<any[]>([])
+  const [questionsPage, setQuestionsPage] = useState(1)
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const questionsPerPage = 5
+
+  // Reply functionality state
+  const [replyingTo, setReplyingTo] = useState<number | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false)
+  const [expandedThreads, setExpandedThreads] = useState<Set<number>>(new Set())
   
   const { getAdjustedInventory } = useInventoryStore()
   
@@ -135,6 +152,185 @@ function ProductCardInternal({
     }
   }, [product?.id, isFullScreen])
 
+  // Check if user is logged in (simplified client-side check)
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        // Simple demo: assume user is logged in if there's any auth-related cookie or localStorage
+        // In a real app, you'd check for a valid JWT token or session
+        const hasAuthCookie = document.cookie.includes('connect.sid') || 
+                             document.cookie.includes('session') ||
+                             document.cookie.includes('auth')
+        const hasAuthStorage = localStorage.getItem('user') || 
+                              localStorage.getItem('token') ||
+                              localStorage.getItem('session')
+        
+        // For demo purposes, let's assume user is logged in 50% of the time randomly
+        // Replace this with your actual auth check
+        setIsLoggedIn(!!(hasAuthCookie || hasAuthStorage || Math.random() > 0.5))
+      } catch (error) {
+        // If localStorage is not available (SSR), default to false
+        setIsLoggedIn(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  // Load mock questions data with threaded conversations
+  useEffect(() => {
+    if (product?.id && isFullScreen) {
+      setLoadingQuestions(true)
+      // Mock threaded questions data - replace with actual API call
+      setTimeout(() => {
+        const mockQuestions = [
+          {
+            id: 1,
+            question: "What sizes are available for this product?",
+            askedBy: "John D.",
+            askedAt: "2024-01-05T10:30:00Z",
+            answer: "We have sizes S, M, L, XL, and XXL available. Please check the size chart for detailed measurements.",
+            answeredBy: "Vendor",
+            answeredAt: "2024-01-05T14:20:00Z",
+            replies: [
+              {
+                id: 11,
+                text: "Thanks! Is the sizing true to size or should I size up?",
+                author: "John D.",
+                createdAt: "2024-01-05T15:30:00Z",
+                isVendor: false
+              },
+              {
+                id: 12,
+                text: "I'd recommend going with your normal size. The fit is pretty accurate to the size chart.",
+                author: "Vendor",
+                createdAt: "2024-01-05T16:45:00Z",
+                isVendor: true
+              },
+              {
+                id: 13,
+                text: "I bought this last month and went with my normal size - fits perfectly!",
+                author: "Lisa K.",
+                createdAt: "2024-01-05T18:20:00Z",
+                isVendor: false
+              }
+            ]
+          },
+          {
+            id: 2,
+            question: "Is this product suitable for outdoor activities?",
+            askedBy: "Sarah M.",
+            askedAt: "2024-01-04T16:45:00Z",
+            answer: "Yes, this product is designed for outdoor use and is water-resistant. However, it's not completely waterproof.",
+            answeredBy: "Vendor",
+            answeredAt: "2024-01-04T18:30:00Z",
+            replies: [
+              {
+                id: 21,
+                text: "What about heavy rain? Will it hold up?",
+                author: "Sarah M.",
+                createdAt: "2024-01-04T19:15:00Z",
+                isVendor: false
+              },
+              {
+                id: 22,
+                text: "For light rain it's fine, but for heavy downpours I'd recommend a proper rain jacket over it.",
+                author: "Vendor",
+                createdAt: "2024-01-04T20:30:00Z",
+                isVendor: true
+              },
+              {
+                id: 23,
+                text: "I've used it hiking in light rain and it worked great! Very comfortable.",
+                author: "Mike T.",
+                createdAt: "2024-01-04T21:45:00Z",
+                isVendor: false
+              }
+            ]
+          },
+          {
+            id: 3,
+            question: "What is the material composition?",
+            askedBy: "Mike R.",
+            askedAt: "2024-01-03T09:15:00Z",
+            answer: "This product is made from 80% cotton and 20% polyester blend for comfort and durability.",
+            answeredBy: "Vendor",
+            answeredAt: "2024-01-03T11:45:00Z",
+            replies: []
+          },
+          {
+            id: 4,
+            question: "How long does shipping usually take?",
+            askedBy: "Emma L.",
+            askedAt: "2024-01-02T14:20:00Z",
+            answer: "Standard shipping takes 3-5 business days. Express shipping is available for 1-2 business days.",
+            answeredBy: "Vendor",
+            answeredAt: "2024-01-02T16:10:00Z",
+            replies: [
+              {
+                id: 41,
+                text: "Do you ship internationally?",
+                author: "Emma L.",
+                createdAt: "2024-01-02T17:30:00Z",
+                isVendor: false
+              },
+              {
+                id: 42,
+                text: "Yes! International shipping takes 7-14 business days depending on location.",
+                author: "Vendor",
+                createdAt: "2024-01-02T18:45:00Z",
+                isVendor: true
+              }
+            ]
+          },
+          {
+            id: 5,
+            question: "Can I return this if it doesn't fit?",
+            askedBy: "Alex K.",
+            askedAt: "2024-01-01T12:00:00Z",
+            answer: "Yes, we offer a 30-day return policy for unused items in original packaging.",
+            answeredBy: "Vendor",
+            answeredAt: "2024-01-01T15:30:00Z",
+            replies: [
+              {
+                id: 51,
+                text: "What about return shipping costs?",
+                author: "Alex K.",
+                createdAt: "2024-01-01T16:45:00Z",
+                isVendor: false
+              },
+              {
+                id: 52,
+                text: "Return shipping is free for defective items, otherwise customer pays return shipping.",
+                author: "Vendor",
+                createdAt: "2024-01-01T17:30:00Z",
+                isVendor: true
+              },
+              {
+                id: 53,
+                text: "That's fair! Most places charge for returns.",
+                author: "Jenny P.",
+                createdAt: "2024-01-01T18:15:00Z",
+                isVendor: false
+              }
+            ]
+          },
+          {
+            id: 6,
+            question: "Is there a warranty on this product?",
+            askedBy: "Lisa P.",
+            askedAt: "2023-12-30T11:30:00Z",
+            answer: "Yes, this product comes with a 1-year manufacturer warranty against defects.",
+            answeredBy: "Vendor",
+            answeredAt: "2023-12-30T13:45:00Z",
+            replies: []
+          }
+        ]
+        setQuestions(mockQuestions)
+        setLoadingQuestions(false)
+      }, 500)
+    }
+  }, [product?.id, isFullScreen])
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const atTop = e.currentTarget.scrollTop <= 5
     setIsAtTop(atTop)
@@ -157,6 +353,139 @@ function ProductCardInternal({
         setTouchStartY(null)
       }
     }
+  }
+
+  // Question handling functions
+  const handleAskSeller = () => {
+    if (!isLoggedIn) {
+      alert('Please log in to ask a question')
+      return
+    }
+    setShowQuestionForm(true)
+  }
+
+  const handleSubmitQuestion = async () => {
+    if (!questionText.trim()) {
+      alert('Please enter your question')
+      return
+    }
+
+    setIsSubmittingQuestion(true)
+    try {
+      // TODO: Replace with actual API call to submit question
+      // await submitQuestion(product.id, questionText)
+      
+      // Simulate API call for now
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Add the new question to the list (mock behavior)
+      const newQuestion = {
+        id: questions.length + 1,
+        question: questionText,
+        askedBy: "You",
+        askedAt: new Date().toISOString(),
+        answer: null,
+        answeredBy: null,
+        answeredAt: null,
+        replies: [] // Initialize empty replies array
+      }
+      setQuestions([newQuestion, ...questions])
+      
+      alert('Question submitted successfully! The vendor will respond soon.')
+      setQuestionText('')
+      setShowQuestionForm(false)
+    } catch (error) {
+      alert('Failed to submit question. Please try again.')
+    } finally {
+      setIsSubmittingQuestion(false)
+    }
+  }
+
+  const handleCancelQuestion = () => {
+    setQuestionText('')
+    setShowQuestionForm(false)
+  }
+
+  // Reply handling functions
+  const handleReplyToQuestion = (questionId: number) => {
+    if (!isLoggedIn) {
+      alert('Please log in to reply')
+      return
+    }
+    setReplyingTo(questionId)
+    setReplyText('')
+  }
+
+  const handleSubmitReply = async (questionId: number) => {
+    if (!replyText.trim()) {
+      alert('Please enter your reply')
+      return
+    }
+
+    setIsSubmittingReply(true)
+    try {
+      // TODO: Replace with actual API call to submit reply
+      // await submitReply(questionId, replyText)
+      
+      // Simulate API call for now
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Add the new reply to the question thread (mock behavior)
+      const newReply = {
+        id: Date.now(), // Simple ID for demo
+        text: replyText,
+        author: "You",
+        createdAt: new Date().toISOString(),
+        isVendor: false // In real app, check if current user is vendor
+      }
+      
+      setQuestions(prevQuestions => 
+        prevQuestions.map(q => 
+          q.id === questionId 
+            ? { ...q, replies: [...(q.replies || []), newReply] }
+            : q
+        )
+      )
+      
+      // Expand the thread to show the new reply
+      setExpandedThreads(prev => new Set([...prev, questionId]))
+      
+      alert('Reply posted successfully!')
+      setReplyText('')
+      setReplyingTo(null)
+    } catch (error) {
+      alert('Failed to post reply. Please try again.')
+    } finally {
+      setIsSubmittingReply(false)
+    }
+  }
+
+  const handleCancelReply = () => {
+    setReplyText('')
+    setReplyingTo(null)
+  }
+
+  const toggleThread = (questionId: number) => {
+    setExpandedThreads(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId)
+      } else {
+        newSet.add(questionId)
+      }
+      return newSet
+    })
+  }
+
+  // Pagination for questions
+  const totalQuestionsPages = Math.ceil(questions.length / questionsPerPage)
+  const paginatedQuestions = questions.slice(
+    (questionsPage - 1) * questionsPerPage,
+    questionsPage * questionsPerPage
+  )
+
+  const handleQuestionsPageChange = (page: number) => {
+    setQuestionsPage(page)
   }
 
   const handleTouchEnd = () => {
@@ -698,37 +1027,323 @@ function ProductCardInternal({
 
           <details className="py-2" open={isFullScreen}>
             <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
-              <span>Questions & Reviews ({reviews.length})</span>
+              <span>Questions & Reviews ({questions.length + reviews.length})</span>
               <MdOutlineKeyboardArrowDown />
             </summary>
-            <div className="mt-2">
-              {loadingReviews ? (
-                <div className="text-sm text-gray-600">Loading reviews...</div>
-              ) : reviews.length > 0 ? (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
-                      <div className="items-center gap-2 mb-2">
-                        <div className="flex gap-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          {review.customer?.first_name} {review.customer?.last_name}
-                        </span>
-                        <div className="flex mt-1">
-                          <StarRating rate={review.rating} starSize={12} />
+            <div className="mt-4 space-y-6">
+              
+              {/* Questions Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800 text-sm">QnA ({questions.length})</h3>
+                  {isLoggedIn && !showQuestionForm && (
+                    <button
+                      onClick={handleAskSeller}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Ask Seller
+                    </button>
+                  )}
+                </div>
+
+                {!isLoggedIn && (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center mb-4">
+                    <p className="text-gray-600 text-sm mb-2">Want to ask a question about this product?</p>
+                    <button className="text-blue-600 font-medium text-sm hover:underline">
+                      Log in to ask seller
+                    </button>
+                  </div>
+                )}
+
+                {showQuestionForm && (
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Your Question
+                      </label>
+                      <textarea
+                        value={questionText}
+                        onChange={(e) => setQuestionText(e.target.value)}
+                        placeholder="Ask anything about this product - size, material, shipping, etc."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        rows={3}
+                        maxLength={500}
+                      />
+                      <div className="text-right text-xs text-gray-500 mt-1">
+                        {questionText.length}/500 characters
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSubmitQuestion}
+                        disabled={isSubmittingQuestion || !questionText.trim()}
+                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
+                      >
+                        {isSubmittingQuestion ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Submitting...
+                          </div>
+                        ) : (
+                          'Submit Question'
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelQuestion}
+                        disabled={isSubmittingQuestion}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Questions List */}
+                {loadingQuestions ? (
+                  <div className="text-sm text-gray-600">Loading questions...</div>
+                ) : questions.length > 0 ? (
+                  <div className="space-y-4">
+                    {paginatedQuestions.map((question) => (
+                      <div key={question.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-800 font-medium mb-1">{question.question}</p>
+                            <p className="text-xs text-gray-500 mb-3">
+                              Asked by {question.askedBy} • {new Date(question.askedAt).toLocaleDateString()}
+                            </p>
+                            
+                            {question.answer ? (
+                              <div className="bg-green-50 border-green-400 p-3 mb-3">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-800">{question.answer}</p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Answered by {question.answeredBy} • {new Date(question.answeredAt).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3">
+                                <p className="text-sm text-yellow-800">Waiting for seller response...</p>
+                              </div>
+                            )}
+
+                            {/* Thread Actions */}
+                            <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                              {question.replies && question.replies.length > 0 && (
+                                <button
+                                  onClick={() => toggleThread(question.id)}
+                                  className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                  </svg>
+                                  {expandedThreads.has(question.id) ? 'Hide' : 'Show'} {question.replies.length} {question.replies.length === 1 ? 'reply' : 'replies'}
+                                </button>
+                              )}
+                              
+                              {isLoggedIn && (
+                                <button
+                                  onClick={() => handleReplyToQuestion(question.id)}
+                                  className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                  </svg>
+                                  Reply
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Threaded Replies */}
+                            {question.replies && question.replies.length > 0 && expandedThreads.has(question.id) && (
+                              <div className="ml-4 border-l-2 border-gray-200 pl-4 space-y-3">
+                                {question.replies.map((reply: any) => (
+                                  <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
+                                    <div className="flex items-start gap-2">
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                        reply.isVendor ? 'bg-green-100' : 'bg-blue-100'
+                                      }`}>
+                                        {reply.isVendor ? (
+                                          <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        ) : (
+                                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                          </svg>
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className={`text-xs font-medium ${
+                                            reply.isVendor ? 'text-green-700' : 'text-gray-700'
+                                          }`}>
+                                            {reply.author}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            {new Date(reply.createdAt).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                        <p className="text-sm text-gray-800">{reply.text}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Reply Form */}
+                            {replyingTo === question.id && (
+                              <div className="ml-4 mt-3 bg-gray-50 rounded-lg p-3">
+                                <div className="space-y-3">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                      Your Reply
+                                    </label>
+                                    <textarea
+                                      value={replyText}
+                                      onChange={(e) => setReplyText(e.target.value)}
+                                      placeholder="Join the conversation..."
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                      rows={2}
+                                      maxLength={300}
+                                    />
+                                    <div className="text-right text-xs text-gray-500 mt-1">
+                                      {replyText.length}/300 characters
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleSubmitReply(question.id)}
+                                      disabled={isSubmittingReply || !replyText.trim()}
+                                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
+                                    >
+                                      {isSubmittingReply ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                          Posting...
+                                        </div>
+                                      ) : (
+                                        'Post Reply'
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={handleCancelReply}
+                                      disabled={isSubmittingReply}
+                                      className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors duration-200"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      </div>
+                    ))}
+
+                    {/* Questions Pagination */}
+                    {totalQuestionsPages > 1 && (
+                      <div className="flex justify-center items-center gap-2 mt-4">
+                        <button
+                          onClick={() => handleQuestionsPageChange(questionsPage - 1)}
+                          disabled={questionsPage === 1}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
+                        </button>
+                        
+                        <div className="flex gap-1">
+                          {Array.from({ length: totalQuestionsPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => handleQuestionsPageChange(page)}
+                              className={`px-3 py-1 text-sm rounded-md ${
+                                page === questionsPage
+                                  ? 'bg-blue-600 text-white'
+                                  : 'border border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
                         </div>
                         
+                        <button
+                          onClick={() => handleQuestionsPageChange(questionsPage + 1)}
+                          disabled={questionsPage === totalQuestionsPages}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                        </button>
                       </div>
-                      <p className="text-sm text-gray-700">{review.customer_note}</p>
-                      <span className="text-xs text-gray-500">
-                        Posted on {new Date(review.created_at).toLocaleDateString()}
-                        </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm text-gray-600">No reviews yet</div>
-              )}
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm">No questions yet. Be the first to ask!</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Reviews Section */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="font-semibold text-gray-800 text-sm mb-4">Reviews ({reviews.length})</h3>
+                {loadingReviews ? (
+                  <div className="text-sm text-gray-600">Loading reviews...</div>
+                ) : reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                        <div className="items-center gap-2 mb-2">
+                          <div className="flex gap-4">
+                          <span className="text-sm font-medium text-gray-900">
+                            {review.customer?.first_name} {review.customer?.last_name}
+                          </span>
+                          <div className="flex mt-1">
+                            <StarRating rate={review.rating} starSize={12} />
+                          </div>
+                          </div>
+                          
+                        </div>
+                        <p className="text-sm text-gray-700">{review.customer_note}</p>
+                        <span className="text-xs text-gray-500">
+                          Posted on {new Date(review.created_at).toLocaleDateString()}
+                          </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                    <p className="text-sm">No reviews yet. Be the first to review!</p>
+                  </div>
+                )}
+              </div>
             </div>
           </details>
 
@@ -782,6 +1397,8 @@ export function AddVariantSheet({
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isContentAtTop, setIsContentAtTop] = useState(true)
 
+  useBodyScrollLock(true)
+
   const y = useMotionValue(window.innerHeight)
   const backdropOpacity = useMotionValue(0)
 
@@ -821,7 +1438,6 @@ export function AddVariantSheet({
     animate(y, 0, springConfig)
     animate(backdropOpacity, 1, { duration: 0.25, ease: "easeOut" })
 
-    // Set initial active index
     setActiveIndex(currentProductIndex)
 
     

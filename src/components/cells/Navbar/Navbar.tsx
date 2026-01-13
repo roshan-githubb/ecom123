@@ -268,7 +268,7 @@ const showFAQLabel = pathname == "/np/footer/faq"
         <div className="flex w-full justify-between md:justify-end lg:ml-auto items-center space-x-4">
           {showSearchbar && <NavbarSearch />}
 
-          <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} />
+          {/* <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} /> */}
         </div>
       </div>
 

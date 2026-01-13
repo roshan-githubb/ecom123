@@ -16,6 +16,7 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { parseVariantIdsFromError } from "@/lib/helpers/parse-variant-error"
+import { NextResponse } from "next/server"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -264,7 +265,7 @@ export async function initiatePaymentSession(
     .then(async (resp) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
-      console.log('payment session initiate response, cart and data ', {resp, cart, data})
+      console.log('payment session initiate response, cart and data ', { resp, cart, data })
       return resp
     })
     .catch(medusaError)
@@ -364,7 +365,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     }
 
     const currentCart = await retrieveCart(cartId)
-    
+
     const data = {
       shipping_address: {
         first_name: formData.get("shipping_address.first_name"),
@@ -446,7 +447,7 @@ export async function setAddressesWithCartId(
     await setCartId(cartId)
 
     const currentCart = await retrieveCart(cartId)
-    
+
     const data = {
       shipping_address: addressData.shipping_address,
       billing_address: addressData.shipping_address, // Set billing same as shipping
@@ -464,7 +465,7 @@ export async function setAddressesWithCartId(
     console.log("Cart updated. Email in response:", result.email)
 
     await revalidatePath("/cart")
-    
+
     return null // Success
   } catch (e: any) {
     console.error("Error setting addresses:", e)
@@ -495,11 +496,34 @@ export async function placeOrder(cartId?: string) {
       revalidateTag(cartCacheTag)
       return cartRes
     })
-    .catch(medusaError)
+    .catch((error) => {
+      if (error?.status === 401) {
+        console.log("Unauthorized error detected when placing order", error)
+
+        return {
+          error: true,
+          status: 401,
+          message: "Unauthorized",
+        }
+      }
+
+      console.error("Error placing order:", error)
+      throw medusaError(error)
+    })
+
+
+  if (cartRes?.error) {
+    console.log("Cart response contains error:", cartRes.error)
+    return cartRes
+  }
 
   if (cartRes?.order_set) {
     removeCartId()
-    redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
+    // redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
+    return {
+      success: true,
+      orderId: cartRes.order_set.orders[0].id,
+    }
   }
 
   return cartRes.order_set.cart

@@ -34,7 +34,7 @@ export function HorizontalScroller({
 
       <div
         ref={scrollerRef}
-        className="check flex gap-3 overflow-x-auto pr-4  scroll-smooth no-scrollbar"
+        className="check flex gap-2 overflow-x-auto pr-4  scroll-smooth no-scrollbar"
       >
         {children}
       </div>

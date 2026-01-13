@@ -177,9 +177,9 @@ export const ProductCard = ({
           src={productImage}
           alt={api_product.title}
           width={196}
-          height={300}
+          height={250}
           className={`rounded-sm object-contain md:object-cover bg-[#F8F8F8] border border-[#999999]
-            ${hasDiscount ? "h-[319px]" : "h-[300px]"}
+            ${hasDiscount ? "h-[250px]" : "h-[230px]"}
             w-[196px]
              md:w-full`}
         />
@@ -265,7 +265,7 @@ export const ProductCard = ({
           className={`w-[175px] h-[30px] lg:w-auto lg:h-auto mt-3 flex items-center justify-center gap-2 py-2 rounded-lg text-[clamp(12px,1.5vw,16px)] font-medium
             ${isAddingToCart || totalInventory <= 0
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#3002FC] hover:bg-blue-700 active:bg-blue-800"
+              : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
             } text-[#FFFFFF]`}
         >
           <Image
