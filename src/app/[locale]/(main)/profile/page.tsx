@@ -33,7 +33,7 @@ export default async function ProfilePage() {
 
           {/* Message */}
           <h1 className="text-2xl font-bold text-gray-900 mb-3">
-            You're Not Logged In
+            You&apos;re Not Logged In
           </h1>
 
           {/* Continue Shopping */}
