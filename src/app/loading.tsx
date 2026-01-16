@@ -9,6 +9,8 @@ export default function Loading() {
           src="/appIcon.png" 
           alt="Loading..." 
           className="h-12 w-auto"
+          height={48}
+          width={48}
         />
       </div>
       
