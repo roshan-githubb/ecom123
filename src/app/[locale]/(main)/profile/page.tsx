@@ -54,11 +54,11 @@ export default async function ProfilePage() {
     )
   }
 
-  const orders: any[] = []
+  
 
   return (
     <main className="container mx-auto px-4 py-6">
-      <ProfileOverview customer={customer} recentOrders={orders} />
+      <ProfileOverview customer={customer}  />
     </main>
   )
 }

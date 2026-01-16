@@ -32,6 +32,7 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
           {`${user.email}, ${singleOrder.shipping_address.phone || user.phone}`}
         </p>
       </div>
+      <div className="my-4"></div>
       <div>
         <h4 className="label-md text-primary">Billing address</h4>
         {singleOrder.billing_address.id === singleOrder.shipping_address.id ? (

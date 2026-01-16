@@ -17,7 +17,7 @@ export const ComingSoon = ({
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 mb-6">
           {icon || (
             <svg 
-              className="h-10 w-10 text-blue-600" 
+              className="h-10 w-10 text-myBlue" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor" 
@@ -37,7 +37,7 @@ export const ComingSoon = ({
         </p>
 
         <LocalizedLink href="/">
-          <button className="w-full flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button className="w-full flex justify-center items-center px-4 py-2 bg-myBlue text-white rounded-lg hover:opacity-90 transition-colors">
             Return Home
           </button>
         </LocalizedLink>
