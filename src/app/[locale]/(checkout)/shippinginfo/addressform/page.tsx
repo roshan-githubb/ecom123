@@ -9,12 +9,14 @@ interface AddressFormProps {
   initialData?: Address
   index?: number
   onClose: () => void
+  isUserLoggedIn?: boolean  // Add this prop
 }
 
 export const AddressForm: React.FC<AddressFormProps> = ({
   initialData,
   index,
   onClose,
+  isUserLoggedIn = false,  // Default to false
 }) => {
   const addAddress = useAddressStore((state) => state.addAddress)
   const updateAddress = useAddressStore((state) => state.updateAddress)
@@ -36,6 +38,8 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveToProfile, setSaveToProfile] = useState(true)
+  const isLoggedIn = isUserLoggedIn  // Use the prop instead of state
 
   React.useEffect(() => {
     async function loadCartEmail() {
@@ -97,6 +101,87 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         setSaveError(error)
         setIsSaving(false)
         return
+      }
+
+      // Save to customer profile if logged in and checkbox is checked
+      if (isLoggedIn && saveToProfile) {
+        try {
+          console.log("💾 Attempting to save address to customer profile...")
+          
+          const nameParts = name.trim().split(/\s+/)
+          const firstName = nameParts[0] || ''
+          const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '.'
+          
+          const addressData = {
+            address_name: label,
+            first_name: firstName,
+            last_name: lastName,
+            company: "",
+            address_1: line1,
+            city: district,
+            postal_code: postalCode,
+            country_code: countryCode,
+            phone: phone,
+            province: province,
+            isDefaultShipping: "true",
+            isDefaultBilling: "false"
+          }
+          
+          const response = await fetch("/api/customer/address", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(addressData)
+          })
+          
+          const result = await response.json()
+          
+          if (result.success) {
+            console.log("✅ Address saved to customer profile successfully")
+            
+            // Verify by fetching customer data
+            try {
+              const verifyRes = await fetch("/api/customer/me", {
+                method: "GET",
+                credentials: "include",
+              })
+              
+              if (verifyRes.ok) {
+                const verifyData = await verifyRes.json()
+                const customer = verifyData?.customer
+                
+                if (customer?.addresses && customer.addresses.length > 0) {
+                  const savedAddress = customer.addresses.find((a: any) => 
+                    a.address_1 === line1 && a.city === district
+                  )
+                  
+                  if (savedAddress) {
+                    console.log("✅ VERIFIED: Address found in customer profile:", savedAddress)
+                    console.log("   - Address ID:", savedAddress.id)
+                    console.log("   - Is Default Shipping:", savedAddress.is_default_shipping)
+                  } else {
+                    console.warn("⚠️ Address saved but not found in verification")
+                  }
+                } else {
+                  console.warn("⚠️ No addresses found in customer profile after save")
+                }
+              }
+            } catch (verifyError) {
+              console.error("Failed to verify address save:", verifyError)
+            }
+          } else {
+            console.error("❌ Failed to save address to customer profile:", result.error)
+          }
+        } catch (customerError) {
+          console.error("❌ Exception saving address to customer profile:", customerError)
+          // Don't fail the whole operation if customer address save fails
+        }
+      } else if (isLoggedIn && !saveToProfile) {
+        console.log("ℹ️ Skipping customer profile save - checkbox not checked")
+      } else {
+        console.log("ℹ️ Skipping customer profile save - user not logged in")
       }
 
       setIsSaving(false)
@@ -266,14 +351,17 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         className="border p-2 w-full rounded"
       />
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="border p-2 w-full rounded"
-        required
-      />
+      {/* Email field - only show for guest users */}
+      {!isUserLoggedIn && (
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border p-2 w-full rounded"
+          required
+        />
+      )}
 
       <input
         type="text"
@@ -292,6 +380,38 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         <option value="np">Nepal</option>
         <option value="in">India</option>
       </select>
+      
+      {/* Debug: Show login status */}
+      <div className="text-xs p-2 bg-gray-100 rounded border border-gray-300">
+        <strong>Debug:</strong> Login Status = {isLoggedIn ? "✅ Logged In" : "❌ Not Logged In"}
+      </div>
+      
+      {/* Save to Profile Checkbox - Only show for logged-in users */}
+      {isLoggedIn && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={saveToProfile} 
+              onChange={(e) => setSaveToProfile(e.target.checked)}
+              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div className="flex-1">
+              <span className="font-medium text-gray-900 block">Save as my default address</span>
+              <span className="text-xs text-gray-600">
+                This address will be automatically used for future orders
+              </span>
+            </div>
+          </label>
+        </div>
+      )}
+      
+      {/* Debug: Show why checkbox is hidden */}
+      {!isLoggedIn && (
+        <div className="text-xs p-2 bg-yellow-50 rounded border border-yellow-300 text-yellow-800">
+          ℹ️ Checkbox hidden because isLoggedIn = false. Address will only be saved for this session.
+        </div>
+      )}
       
       <div className="flex gap-2">
         <button

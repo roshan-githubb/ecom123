@@ -64,7 +64,7 @@ const showFAQLabel = pathname == "/np/footer/faq"
       {showBackArrow && (
         <button
           onClick={() => window.history.state && window.history.state.idx > 0 ? router.back() : router.push('/')}
-          className="mt-2 mr-2 flex items-center justify-center rounded"
+          className="mt-2 mr-2 flex items-center justify-center rounded active:scale-95 active:bg-white/10 transition-transform duration-150 p-1"
         >
           <Image
             src="/images/icons/basil_arrow-up-solid.png"

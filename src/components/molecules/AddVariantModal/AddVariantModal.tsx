@@ -121,6 +121,7 @@ function ProductCardInternal({
   const [replyText, setReplyText] = useState('')
   const [isSubmittingReply, setIsSubmittingReply] = useState(false)
   const [expandedThreads, setExpandedThreads] = useState<Set<number>>(new Set())
+  const [isAdding, setIsAdding] = useState(false)
 
   const { getAdjustedInventory } = useInventoryStore()
   
@@ -709,11 +710,14 @@ function ProductCardInternal({
       }
       return cartToast.showErrorToast("Variant unavailable")
     }
+    setIsAdding(true)
     try {
       await useCartStore.getState().add(selectedVariant.id, 1)
       cartToast.showCartToast()
     } catch {
       cartToast.showErrorToast()
+    } finally {
+      setIsAdding(false)
     }
   }
 
@@ -724,8 +728,8 @@ function ProductCardInternal({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
-      <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white z-10 sticky top-0">
+    <div className="flex flex-col h-full bg-white relative overflow-hidden">
+      <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white z-10 sticky top-0 flex-shrink-0">
         <button
           onClick={onToggleMode}
           className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -761,6 +765,9 @@ function ProductCardInternal({
         ref={scrollRef}
         className={`flex-1 overflow-x-hidden ${isFullScreen ? "overflow-y-auto" : "overflow-y-hidden"
           }`}
+        style={{
+          maxHeight: isFullScreen ? "none" : "100%",
+        }}
         onScroll={handleScroll}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -852,20 +859,41 @@ function ProductCardInternal({
               }
               className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit the{" "}
+              Visit11 the{" "}
               {(product as any).seller?.name || product.store?.name || "Store"}
             </Link>
           </div>
-          <button
-            onClick={handleAddToCart}
-            disabled={isSelectedVariantOutOfStock}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors shadow-md ${isSelectedVariantOutOfStock
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-myBlue text-white hover:bg-blue-700"
-              }`}
-          >
-            ADD
-          </button>
+          <div className="flex flex-col items-end gap-1">
+            {isSelectedVariantOutOfStock ? (
+              <span className="text-xs text-red-600 font-medium mr-4">
+                Out of stock
+              </span>
+            ) : selectedVariantInventory > 0 && selectedVariantInventory < 10 ? (
+              <span className="text-xs text-red-600 font-medium">
+                Only {selectedVariantInventory} left in stock
+              </span>
+            ) : null}
+            <button
+              onClick={handleAddToCart}
+              disabled={isSelectedVariantOutOfStock || isAdding}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors mr-3 shadow-md min-w-[80px] ${isSelectedVariantOutOfStock
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : isAdding
+                ? "bg-myBlue/70 text-white cursor-wait"
+                : "bg-myBlue text-white hover:bg-blue-700"
+                }`}
+            >
+              {isAdding ? (
+                <span className="flex items-center justify-center gap-1">
+                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                </span>
+              ) : "ADD"}
+            </button>
+          </div>
         </div>
 
         {/* Product Info */}
@@ -1404,25 +1432,7 @@ export function AddVariantSheet({
   const cardBorderRadius = useTransform(cardWidth, [85, 100], [20, 0])
 
   const activeCardY = useMotionValue(0)
-  const fullscreenDragY = useMotionValue(0)
   const overscrollY = useMotionValue(0)
-
-  const sheetPreviewScale = useTransform(fullscreenDragY, [0, 200], [1, 0.9])
-  const sheetPreviewBorderRadius = useTransform(
-    fullscreenDragY,
-    [0, 200],
-    [0, 16]
-  )
-
-
-  const combinedScale = useTransform(
-    [cardScale, sheetPreviewScale],
-    ([card, preview]) => (card as number) * (preview as number)
-  )
-  const combinedBorderRadius = useTransform(
-    [cardBorderRadius, sheetPreviewBorderRadius],
-    ([card, preview]) => Math.max(card as number, preview as number)
-  )
 
   const activeProducts = products.length > 0 ? products : [initialProduct]
 
@@ -1481,7 +1491,6 @@ export function AddVariantSheet({
 
     // Reset drag positions
     activeCardY.set(0)
-    fullscreenDragY.set(0)
 
     if (scrollRef.current) {
       setSavedScrollPosition(scrollRef.current.scrollLeft)
@@ -1512,7 +1521,28 @@ export function AddVariantSheet({
 
     // Reset drag positions
     activeCardY.set(0)
-    fullscreenDragY.set(0)
+
+    // Calculate target scroll position BEFORE changing mode
+    const targetScrollPosition = scrollRef.current
+      ? (() => {
+          const container = scrollRef.current
+          // Calculate based on card width and gap
+          const cardWidth = window.innerWidth * 0.85 // 85vw
+          const gap = 8 // 2 * 0.5rem (gap-2)
+          const paddingLeft = 16 // pl-4
+          return activeIndex * (cardWidth + gap)
+        })()
+      : 0
+
+    // Change mode first
+    setViewMode("sheet")
+
+    // Set scroll position immediately after mode change
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollLeft = targetScrollPosition
+      }
+    })
 
     // Optimized spring animations for native feel
     const springConfig = {
@@ -1522,13 +1552,12 @@ export function AddVariantSheet({
       mass: 0.8,
     }
 
-    // Start animations first, then change view mode
+    // Start animations
     Promise.all([
       animate(y, 0, springConfig),
       animate(cardWidth, 85, springConfig), // 85vw for main card
     ]).then(() => {
-      setViewMode("sheet")
-
+      // Ensure scroll position is correct after animation
       requestAnimationFrame(() => {
         if (scrollRef.current) {
           const container = scrollRef.current
@@ -1677,104 +1706,51 @@ export function AddVariantSheet({
                 : "overflow-x-auto pl-4 gap-2 touch-pan-x md:pl-[calc(50vw-200px)] md:pr-[calc(50vw-200px)]"
               }`}
           >
-            {viewMode === "fullscreen" ? (
-              // Fullscreen: Show only active card with optimized transforms
-              <motion.div
-                key={`fullscreen-${activeProducts[activeIndex]?.id || activeIndex
-                  }`}
-                layoutId={`product-${activeProducts[activeIndex]?.id || activeIndex
-                  }`}
-                layout
-                style={{
-                  scale: combinedScale,
-                  borderRadius: combinedBorderRadius,
-                  width: "100vw",
-                }}
-                transition={{
-                  layout: {
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 40,
-                    mass: 0.8,
-                  },
-                }}
-                className="relative flex-shrink-0 h-full md:h-[800px] snap-center bg-white overflow-hidden shadow-2xl will-change-transform"
-                drag={isContentAtTop ? "y" : false}
-                dragElastic={false}
-                dragMomentum={false}
-                onDrag={(_, info) => {
-                  const dragY = Math.max(0, info.offset.y)
-                  fullscreenDragY.set(dragY)
-
-                  // Prevent dragging above initial position
-                  if (info.offset.y < 0) {
-                    fullscreenDragY.set(0)
-                  }
-                }}
-                onDragEnd={(_, { offset, velocity }) => {
-                  if (offset.y > 80 || velocity.y > 250) {
-                    animate(fullscreenDragY, 0, {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                      mass: 0.8,
-                      onComplete: () => {
-                        goToSheet()
-                      }
-                    })
-                  } else {
-                    // Snap back to fullscreen
-                    animate(fullscreenDragY, 0, {
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                      mass: 0.8,
-                    })
-                  }
-                }}
-              >
-                <ProductCardInternal
-                  product={activeProducts[activeIndex] || activeProducts[0]}
-                  onClose={smoothClose}
-                  isFullScreen={true}
-                  onScrollChange={handleScrollChange}
-                  onOverscrollUp={goToSheet}
-                  overscrollY={overscrollY}
-                  ratingSummary={ratingSummary}
-                  onToggleMode={goToSheet}
-                />
-              </motion.div>
-            ) : (
-              activeProducts.map((prod, idx) => (
+            {/* Always render all products to prevent unmounting/remounting */}
+            {activeProducts.map((prod, idx) => {
+              const isActive = idx === activeIndex
+              const isFullscreen = viewMode === "fullscreen"
+              
+              return (
                 <motion.div
                   key={prod.id || idx}
-                  layout
+                  layout={false}
                   style={{
-                    scale: cardScale,
-                    borderRadius: cardBorderRadius,
-                    width: "85vw",
+                    scale: isFullscreen ? 1 : cardScale,
+                    borderRadius: isFullscreen ? 0 : cardBorderRadius,
+                    width: isFullscreen ? "100vw" : "85vw",
+                    height: isFullscreen ? "100vh" : "100%",
+                    display: isFullscreen && !isActive ? "none" : "block",
                   }}
                   transition={{
-                    layout: {
+                    scale: {
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 40,
+                      mass: 0.8,
+                    },
+                    borderRadius: {
                       type: "spring",
                       stiffness: 500,
                       damping: 40,
                       mass: 0.8,
                     },
                   }}
-                  className="relative flex-shrink-0 h-full md:h-[800px] snap-center bg-white overflow-hidden shadow-2xl will-change-transform"
+                  className="relative flex-shrink-0 md:h-[800px] snap-center bg-white overflow-hidden shadow-2xl will-change-transform"
                 >
                   <ProductCardInternal
                     product={prod}
                     onClose={smoothClose}
-                    isFullScreen={false}
+                    isFullScreen={isFullscreen && isActive}
                     onScrollChange={handleScrollChange}
+                    onOverscrollUp={goToSheet}
+                    overscrollY={overscrollY}
                     ratingSummary={ratingSummary}
-                    onToggleMode={goToFullscreen}
+                    onToggleMode={isFullscreen ? goToSheet : goToFullscreen}
                   />
                 </motion.div>
-              ))
-            )}
+              )
+            })}
             {viewMode === "sheet" && <div className="w-1 flex-shrink-0" />}
           </div>
         </motion.div>

@@ -207,6 +207,8 @@
                   alt="banner"
                   fill
                   className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 100vw"
                 />
               </Link>
             </div>

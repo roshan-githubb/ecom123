@@ -73,7 +73,7 @@ async function CategoriesSection() {
 
   const res = await fetch(url, {
     method: "GET",
-    cache: "no-store",
+    next: { revalidate: 3600 }, // Cache for 1 hour
     headers,
   });
 

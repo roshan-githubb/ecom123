@@ -59,8 +59,10 @@ const DeliveryAddress = () => {
     // Trigger address re-check
     setAddressCheckTrigger((prev) => prev + 1)
   }
-  if (loading) <CheckoutSkeleton />
-  if (!loading && !cartId) return;
+  
+  if (loading) return <CheckoutSkeleton />
+  if (!cartId) return null
+  
   return (
     <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
   )
@@ -79,10 +81,93 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   const [cartAddress, setCartAddress] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
   const { cartId } = useCartStore()
+  const [customerDefaultAddress, setCustomerDefaultAddress] = useState<any>(undefined)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  // Load customer's default address if logged in
+  useEffect(() => {
+    async function loadCustomerAddress() {
+      try {
+        console.log("🔍 DeliveryAddress: Checking customer login status...")
+        
+        // First check if cart has a customer_id (simpler check)
+        if (cartId) {
+          const cartRes = await fetch("/api/cart/get", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cart_id: cartId }),
+          })
+          const cartData = await cartRes.json()
+          const hasCustomer = !!cartData?.cart?.customer_id
+          
+          console.log("🛒 DeliveryAddress: Cart has customer_id?", hasCustomer, cartData?.cart?.customer_id)
+          
+          if (hasCustomer) {
+            setIsLoggedIn(true)
+            console.log("✅ DeliveryAddress: User IS logged in (via cart customer_id)")
+          }
+        }
+        
+        // Then try to get customer details
+        const res = await fetch("/api/customer/me", {
+          method: "GET",
+          credentials: "include",
+        })
+        
+        console.log("🔍 DeliveryAddress: API response status:", res.status, res.ok)
+        
+        if (res.ok) {
+          const data = await res.json()
+          const customer = data?.customer
+          
+          console.log("🔍 DeliveryAddress: Customer data:", customer ? "Found" : "Null", customer)
+          
+          if (customer) {
+            setIsLoggedIn(true)
+            console.log("✅ DeliveryAddress: User IS logged in (via API)")
+            if (customer.addresses && customer.addresses.length > 0) {
+              // Find default shipping address or use first address
+              const defaultAddr = customer.addresses.find((addr: any) => addr.is_default_shipping) 
+                || customer.addresses[0]
+              setCustomerDefaultAddress(defaultAddr)
+              console.log("📍 DeliveryAddress: Found default address:", defaultAddr)
+            } else {
+              setCustomerDefaultAddress(null)
+              console.log("📍 DeliveryAddress: No addresses found")
+            }
+          } else {
+            if (!cartId) {
+              // Only set to false if we also don't have a cart customer
+              setIsLoggedIn(false)
+            }
+            setCustomerDefaultAddress(null)
+            console.log("❌ DeliveryAddress: User NOT logged in (customer is null)")
+          }
+        } else {
+          if (!cartId) {
+            setIsLoggedIn(false)
+          }
+          setCustomerDefaultAddress(null)
+          console.log("❌ DeliveryAddress: User NOT logged in (API returned not ok)")
+        }
+      } catch (err) {
+        console.error("❌ DeliveryAddress: Failed to load customer address:", err)
+        setCustomerDefaultAddress(null)
+      }
+    }
+
+    loadCustomerAddress()
+  }, [cartId])
 
   useEffect(() => {
     async function fetchCartAddress() {
-      if (!cartId) return
+      if (!cartId) {
+        setLoading(false)
+        return
+      }
+
+      // Wait for customer address check to complete
+      if (customerDefaultAddress === undefined) return
 
       try {
         const res = await fetch("/api/cart/get", {
@@ -91,18 +176,53 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
           body: JSON.stringify({ cart_id: cartId }),
         })
         const data = await res.json()
-        if (data?.cart?.shipping_address) {
-          setCartAddress(data.cart.shipping_address)
-          setLoading(false)
+        const shippingAddr = data?.cart?.shipping_address
+        
+        // If cart has no address but customer has default address, set it
+        if ((!shippingAddr || !shippingAddr.first_name) && customerDefaultAddress) {
+          console.log("Auto-filling customer default address to cart")
+          
+          // Auto-fill the cart with customer's default address
+          const formData = new FormData()
+          formData.set("email", data?.cart?.email || "")
+          formData.set("shipping_address.first_name", customerDefaultAddress.first_name)
+          formData.set("shipping_address.last_name", customerDefaultAddress.last_name)
+          formData.set("shipping_address.address_1", customerDefaultAddress.address_1)
+          formData.set("shipping_address.address_2", customerDefaultAddress.address_2 || "")
+          formData.set("shipping_address.city", customerDefaultAddress.city)
+          formData.set("shipping_address.province", customerDefaultAddress.province || "")
+          formData.set("shipping_address.postal_code", customerDefaultAddress.postal_code)
+          formData.set("shipping_address.country_code", customerDefaultAddress.country_code)
+          formData.set("shipping_address.phone", customerDefaultAddress.phone)
+          formData.set("shipping_address.company", customerDefaultAddress.company || "")
+          
+          const { setAddresses } = await import("@/lib/data/cart")
+          await setAddresses(null, formData)
+          
+          // Refresh cart address
+          const updatedRes = await fetch("/api/cart/get", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cart_id: cartId }),
+          })
+          const updatedData = await updatedRes.json()
+          setCartAddress(updatedData?.cart?.shipping_address)
+        } else if (shippingAddr) {
+          setCartAddress(shippingAddr)
         }
+        
+        setLoading(false)
       } catch (err) {
         console.error("Failed to fetch cart address:", err)
+        setLoading(false)
       }
     }
 
     fetchCartAddress()
-  }, [cartId])
+  }, [cartId, customerDefaultAddress])
+  
   if (!cartId) return null
+  if (loading) return <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4"><CheckoutSkeleton /></div>
 
   // Use cart address if available, otherwise use local address
   const addr = cartAddress || localAddr
@@ -133,7 +253,8 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         .catch((err) => console.error("Failed to refresh cart address:", err))
     }
   }
-  if (loading) return;
+
+  console.log("🎨 DeliveryAddress: Rendering form with isLoggedIn =", isLoggedIn)
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
@@ -142,6 +263,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
           initialData={localAddr || undefined}
           index={selectedIndex}
           onClose={handleFormClose}
+          isUserLoggedIn={isLoggedIn}
         />
       ) : hasValidAddress ? (
         <div className="space-y-3">

@@ -12,6 +12,7 @@ import { Modal } from "@/components/molecules/Modal/Modal";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/lib/data/cart";
 import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal";
+import { useParams } from "next/navigation";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -169,21 +170,34 @@ export default ItemCounter
 
 
 const OrderRow: React.FC<{ item: OrderSummaryItem }> = ({ item }) => {
+  const params = useParams()
+  const locale = params?.locale as string || 'np'
+  const router = useRouter()
+
+  const handleProductClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    // Navigate to product detail page instead of opening modal
+    // The modal approach requires full product data which we don't have in cart items
+    router.push(`/${locale}/products/${item.productId}`)
+  }
+
   return (
     <div className="flex items-center justify-between gap-2">
-      <Image
-        height={50}
-        width={35}
-        className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover"
-        src={item.thumbnail || "/images/not-available/not-available.png"}
-        alt={item.title}
-      />
+      <button onClick={handleProductClick} className="flex-shrink-0">
+        <Image
+          height={50}
+          width={35}
+          className="w-[35px] h-[35px] sm:w-[50px] sm:h-[50px] md:w-[60px] md:h-[60px] rounded-[8px] md:rounded-[12px] lg:rounded-[16px] object-cover hover:opacity-80 transition-opacity"
+          src={item.thumbnail || "/images/not-available/not-available.png"}
+          alt={item.title}
+        />
+      </button>
       <div className="flex-1 min-w-0">
-        <Link href={`/products/${item.productId}`}>
-          <p className="text-[#222222] font-medium text-sm truncate">
+        <button onClick={handleProductClick} className="text-left w-full">
+          <p className="text-[#222222] font-medium text-sm truncate hover:text-myBlue transition-colors">
             {item.title}
           </p>
-        </Link>
+        </button>
         {item.variantTitle && (
           <p className="text-xs text-gray-600 font-medium">
             {item.variantTitle}

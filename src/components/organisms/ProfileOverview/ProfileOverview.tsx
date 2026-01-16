@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/atoms"
 import LocalizedLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { DefaultAddressSection } from "@/components/organisms/DefaultAddressSection/DefaultAddressSection"
 import { HttpTypes } from "@medusajs/types"
 import { User, Mail, Phone, Package, Heart, ShoppingBag } from "lucide-react"
 import Image from "next/image"
@@ -153,6 +154,9 @@ export const ProfileOverview = ({ customer, recentOrders = [] }: ProfileOverview
           )
         })}
       </div>
+
+      {/* Default Address Section */}
+      <DefaultAddressSection customer={customer} />
 
       {/* Account Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

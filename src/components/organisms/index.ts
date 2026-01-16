@@ -26,6 +26,7 @@ import { ReviewsWritten } from "./Reviews/ReviewsWritten"
 import { CartEmpty } from "./CartEmpty/CartEmpty"
 import StickyCartBar from "./StickyCartBar/StickyCartBar"
 import { ProfileOverview } from "./ProfileOverview/ProfileOverview"
+import { DefaultAddressSection } from "./DefaultAddressSection/DefaultAddressSection"
 
 
 export {
@@ -57,4 +58,5 @@ export {
   CartEmpty,
   StickyCartBar,
   ProfileOverview,
+  DefaultAddressSection,
 }

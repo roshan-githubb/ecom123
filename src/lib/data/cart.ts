@@ -408,6 +408,35 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     //   }
 
     await updateCart(data)
+    
+    // If user is logged in and wants to save as default, save to customer profile
+    const authHeaders = await getAuthHeaders()
+    const isDefaultShipping = formData.get("isDefaultShipping") === "true"
+    
+    if (authHeaders && isDefaultShipping) {
+      try {
+        const { addCustomerAddress } = await import("./customer")
+        const addressFormData = new FormData()
+        addressFormData.set("address_name", formData.get("address_name") as string || "Home")
+        addressFormData.set("first_name", formData.get("shipping_address.first_name") as string)
+        addressFormData.set("last_name", formData.get("shipping_address.last_name") as string)
+        addressFormData.set("company", formData.get("shipping_address.company") as string || "")
+        addressFormData.set("address_1", formData.get("shipping_address.address_1") as string)
+        addressFormData.set("city", formData.get("shipping_address.city") as string)
+        addressFormData.set("postal_code", formData.get("shipping_address.postal_code") as string)
+        addressFormData.set("country_code", formData.get("shipping_address.country_code") as string)
+        addressFormData.set("phone", formData.get("shipping_address.phone") as string)
+        addressFormData.set("province", formData.get("shipping_address.province") as string)
+        addressFormData.set("isDefaultShipping", "true")
+        
+        await addCustomerAddress(addressFormData)
+        console.log("Address saved to customer profile as default")
+      } catch (customerError) {
+        console.error("Failed to save address to customer profile:", customerError)
+        // Don't fail the whole operation if customer address save fails
+      }
+    }
+    
     await revalidatePath("/cart")
   } catch (e: any) {
     return e.message
@@ -453,11 +482,13 @@ export async function setAddressesWithCartId(
       billing_address: addressData.shipping_address, // Set billing same as shipping
     } as any
 
-    // Always try to update email if provided
-    // Note: Medusa may ignore this if cart has a customer, but we'll try anyway
-    if (addressData.email) {
+    // Only set email if cart doesn't have a customer (guest checkout)
+    // For logged-in users, the email is already associated with their account
+    if (addressData.email && !currentCart?.customer_id) {
       data.email = addressData.email
-      console.log("Attempting to set email on cart:", addressData.email, "Cart has customer:", !!currentCart?.customer_id)
+      console.log("Setting email on cart (guest):", addressData.email)
+    } else if (currentCart?.customer_id) {
+      console.log("Skipping email update - cart has customer_id:", currentCart.customer_id)
     }
 
     // Use the existing updateCart function

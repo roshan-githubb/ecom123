@@ -7,7 +7,7 @@ export async function getBanners() {
       headers: {
         "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
       },
-      cache: "no-store",
+      next: { revalidate: 300 }, // Cache for 5 minutes
     }
   );
 
