@@ -9,15 +9,10 @@ import {
   removeFromCart,
   getCart
 } from "@/services/cart";
-
-// Import inventory store to sync inventory changes
 import { useInventoryStore } from "./useInventoryStore";
 
-// -------------------------
-// Interfaces
-// -------------------------
 export interface CartItem {
-  id: string;            // line_item_id
+  id: string;
   title: string;
   price: number;
   image: string;
@@ -25,6 +20,8 @@ export interface CartItem {
 
   variantId?: string;
   productId?: string;
+  variantTitle?: string;
+  totalPrice?: number;
 }
 export interface Promotion {
   code: string;
@@ -54,19 +51,17 @@ interface CartState extends CartSummary {
   add: (variantId: string, quantity?: number) => Promise<void>;
   increase: (lineItemId: string, currentQty: number) => Promise<void>;
   decrease: (lineItemId: string, currentQty: number) => Promise<void>;
-  // remove: (lineItemId: string) => Promise<void>;
+
 
   clearLocal: () => void;
 }
 
-// -------------------------
-// Mapper
-// -------------------------
+
 function mapCart(cart: any): { items: CartItem[] } & CartSummary {
   const discountTotal =
     cart.discount_total ??
     Math.max((cart.subtotal ?? 0) - (cart.total ?? 0), 0);
-  // console.log('map cart function cart object ', cart)
+
 
   return {
     cartId: cart.id,
@@ -123,16 +118,16 @@ export const useCartStore = create<CartState>()(
 
       fetchCart: async () => {
         const data = await getCart();
-        console.log('unmapped cart from db ', data)
+
         if (data?.cart) {
           const mappedCart = mapCart(data.cart);
           set(mappedCart);
 
-          // Sync inventory store with current cart contents
+
           const cartItems = mappedCart.items.map(item => ({
             variantId: item.variantId || '',
             quantity: item.quantity
-          })).filter(item => item.variantId); // Filter out items without variantId
+          })).filter(item => item.variantId);
 
           useInventoryStore.getState().syncWithCart(cartItems);
         }
@@ -156,18 +151,16 @@ export const useCartStore = create<CartState>()(
         const data = await addToServerCart(variantId, quantity);
         if (data?.cart) {
           set(mapCart(data.cart));
-          // Update inventory store
           useInventoryStore.getState().decreaseInventory(variantId, quantity);
         }
       },
 
       increase: async (lineItemId, currentQty) => {
-        // No optimistic update for increase - let API validate stock availability
+
         try {
           const data = await updateCartItemQuantity(lineItemId, currentQty + 1);
           if (data?.cart) {
             set(mapCart(data.cart));
-            // Find the variant ID for this line item and decrease inventory
             const item = data.cart.items?.find((item: any) => item.id === lineItemId);
             if (item?.variant_id) {
               useInventoryStore.getState().decreaseInventory(item.variant_id, 1);
@@ -182,27 +175,24 @@ export const useCartStore = create<CartState>()(
         const currentItems = get().items;
 
         if (currentQuantity <= 1) {
+          const itemToRemove = currentItems.find(i => i.id === lineItemId);
+
           const optimisticItems = currentItems.filter(i => i.id !== lineItemId);
           set({ items: optimisticItems });
 
           try {
             const data = await removeFromCart(lineItemId);
-            console.log('remove item response ', data)
-            if (data?.deleted == true) {
-              const cartData = await getCart();
-              if (cartData?.cart) {
-                set(mapCart(cartData.cart));
-                const item = currentItems.find(i => i.id === lineItemId);
-                if (item?.variantId) {
-                  useInventoryStore.getState().increaseInventory(item.variantId, 1);
-                }
-              }
-            } else {
-              // If API returns nothing, keep the optimistic update
-              const item = currentItems.find(i => i.id === lineItemId);
-              if (item?.variantId) {
-                useInventoryStore.getState().increaseInventory(item.variantId, 1);
-              }
+
+
+            // Fetch fresh cart data after removal
+            const cartData = await getCart();
+            if (cartData?.cart) {
+              set(mapCart(cartData.cart));
+            }
+
+
+            if (itemToRemove?.variantId) {
+              useInventoryStore.getState().increaseInventory(itemToRemove.variantId, 1);
             }
           } catch (error) {
             // Revert optimistic update on error
@@ -212,7 +202,7 @@ export const useCartStore = create<CartState>()(
           return;
         }
 
-        // Optimistic decrement
+
         const optimisticItems = currentItems.map(item =>
           item.id === lineItemId
             ? { ...item, quantity: item.quantity - 1 }
@@ -222,10 +212,9 @@ export const useCartStore = create<CartState>()(
 
         try {
           const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
-          console.log('decrement item ', data)
+
           if (data?.cart) {
             set(mapCart(data.cart));
-            // Find the variant ID for this line item and increase inventory
             const item = data.cart.items?.find((item: any) => item.id === lineItemId);
             if (item?.variant_id) {
               useInventoryStore.getState().increaseInventory(item.variant_id, 1);
@@ -238,28 +227,25 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      //      // Decrement quantity
-      // const data = await updateCartItemQuantity(lineItemId, currentQuantity - 1);
-      // if (data?.cart?.items) {
-      //   set({ items: data.cart.items });
-      // }
 
 
-      // remove: async (lineItemId) => {
-      //   const data = await removeFromCart(lineItemId);
-      //   if (data?.cart) set(mapCart(data.cart));
-      // },
+
+
 
 
       clearLocal: () =>
         set({
+          cartId: "",
           items: [],
           subtotal: 0,
           taxTotal: 0,
           deliveryFee: 0,
           serviceFee: 0,
-          totalPayable: 0
-        })
+          totalPayable: 0,
+          discountTotal: 0,
+          promotions: [],
+          currency: "NPR",
+        }),
     }),
     { name: "global-cart" }
   )

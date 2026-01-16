@@ -24,10 +24,6 @@ export const retrieveCustomer =
       ...authHeaders,
     }
 
-    const next = {
-      ...(await getCacheOptions("customers")),
-    }
-
     return await sdk.client
       .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
         method: "GET",
@@ -35,8 +31,7 @@ export const retrieveCustomer =
           fields: "*orders,*addresses",
         },
         headers,
-        next,
-        cache: "force-cache",
+        cache: "no-store",
       })
       .then(({ customer }) => customer)
       .catch(() => null)
@@ -181,9 +176,9 @@ export async function transferCart() {
 }
 
 export const addCustomerAddress = async (formData: FormData): Promise<any> => {
-  const isDefaultShipping = formData.get("isDefaultShipping") === "true"
-  const isDefaultBilling = formData.get("isDefaultBilling") === "true"
-  
+  const isDefaultShipping = formData.get("isDefaultShipping") === "true";
+  const isDefaultBilling = formData.get("isDefaultBilling") === "true";
+
   const address = {
     address_name: formData.get("address_name") as string,
     first_name: formData.get("first_name") as string,
@@ -199,24 +194,21 @@ export const addCustomerAddress = async (formData: FormData): Promise<any> => {
     is_default_shipping: isDefaultShipping,
   }
 
-  console.log("📤 Sending address to Medusa API:", address)
+
 
   const headers = {
     ...(await getAuthHeaders()),
   }
-  
-  console.log("🔐 Auth headers:", headers)
+
 
   return sdk.store.customer
     .createAddress(address, {}, headers)
     .then(async ({ customer }) => {
-      console.log("✅ Medusa API response - customer addresses:", customer.addresses?.length)
       const customerCacheTag = await getCacheTag("customers")
       revalidateTag(customerCacheTag)
       return { success: true, error: null, customer }
     })
     .catch((err) => {
-      console.error("❌ Medusa API error:", err)
       return { success: false, error: err.toString() }
     })
 }

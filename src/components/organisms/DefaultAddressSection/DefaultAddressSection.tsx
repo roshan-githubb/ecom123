@@ -5,7 +5,8 @@ import { HttpTypes } from "@medusajs/types"
 import { MapPin, Edit2 } from "lucide-react"
 import { useState } from "react"
 import { Modal } from "@/components/molecules"
-import { DefaultAddressForm } from "@/components/molecules/DefaultAddressForm/DefaultAddressForm"
+import { AddressForm } from "@/app/[locale]/(checkout)/shippinginfo/addressform/page"
+import { Address } from "@/store/addressStore"
 
 interface DefaultAddressSectionProps {
   customer: HttpTypes.StoreCustomer
@@ -13,9 +14,34 @@ interface DefaultAddressSectionProps {
 
 export const DefaultAddressSection = ({ customer }: DefaultAddressSectionProps) => {
   const [showForm, setShowForm] = useState(false)
-  
-  // Find the default shipping address
+
+
   const defaultAddress = customer.addresses?.find(addr => addr.is_default_shipping) || customer.addresses?.[0]
+
+
+  const convertToLocalAddress = (addr: HttpTypes.StoreCustomerAddress | undefined): Address | undefined => {
+    if (!addr) return undefined
+
+    return {
+      name: `${addr.first_name} ${addr.last_name}`,
+      email: customer.email || "",
+      phone: addr.phone || "",
+      province: addr.province || "",
+      district: addr.city || "",
+      line1: addr.address_1 || "",
+      line2: addr.address_2 || "",
+      postalCode: addr.postal_code || "",
+      countryCode: addr.country_code || "np",
+      label: addr.address_name || "Home",
+      isDefault: addr.is_default_shipping || false,
+    }
+  }
+
+  const handleFormClose = () => {
+    setShowForm(false)
+
+    window.location.reload()
+  }
 
   return (
     <>
@@ -49,7 +75,7 @@ export const DefaultAddressSection = ({ customer }: DefaultAddressSectionProps) 
                   )}
                 </div>
               </div>
-              
+
               <div className="text-sm text-gray-600 space-y-1">
                 <p>{defaultAddress.address_1}</p>
                 {defaultAddress.address_2 && <p>{defaultAddress.address_2}</p>}
@@ -87,11 +113,13 @@ export const DefaultAddressSection = ({ customer }: DefaultAddressSectionProps) 
         <Modal
           heading={defaultAddress ? "Change Default Address" : "Add Default Address"}
           onClose={() => setShowForm(false)}
+          showCloseButton={false}
         >
-          <DefaultAddressForm
-            customer={customer}
-            currentDefaultAddress={defaultAddress}
-            onClose={() => setShowForm(false)}
+          <AddressForm
+            initialData={convertToLocalAddress(defaultAddress)}
+            onClose={handleFormClose}
+            isUserLoggedIn={true}
+            hideCheckbox={true}
           />
         </Modal>
       )}

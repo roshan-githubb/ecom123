@@ -18,11 +18,7 @@ import { getRegion } from "./regions"
 import { parseVariantIdsFromError } from "@/lib/helpers/parse-variant-error"
 import { NextResponse } from "next/server"
 
-/**
- * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to retrieve.
- * @returns The cart object if found, or null if not found.
- */
+
 export async function retrieveCart(cartId?: string) {
   const id = cartId || (await getCartId())
 
@@ -40,7 +36,8 @@ export async function retrieveCart(cartId?: string) {
       query: {
         fields:
           "*items,*region, *items.product, *items.variant, *items.variant.options, items.variant.options.option.title," +
-          "*items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *items.product.seller" +
+          "*items.thumbnail, *items.metadata, +items.total, *promotions, *shipping_methods, *items.product.seller," +
+          "*shipping_address, *billing_address" +
           "",
       },
       headers,
@@ -265,7 +262,6 @@ export async function initiatePaymentSession(
     .then(async (resp) => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
-      console.log('payment session initiate response, cart and data ', { resp, cart, data })
       return resp
     })
     .catch(medusaError)
@@ -353,7 +349,7 @@ export async function deletePromotionCode(promoId: string) {
     .catch(medusaError)
 }
 
-// TODO: Pass a POJO instead of a form entity here
+// Address form handling
 export async function setAddresses(currentState: unknown, formData: FormData) {
   try {
     if (!formData) {
@@ -384,35 +380,19 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     const emailFromForm = formData.get("email")
     if (!currentCart?.email && emailFromForm) {
       data.email = emailFromForm
-      console.log("Setting email on cart:", emailFromForm)
-    } else {
-      console.log("Skipping email update. Current cart email:", currentCart?.email, "Form email:", emailFromForm)
     }
 
-    // const sameAsBilling = formData.get("same_as_billing")
-    // if (sameAsBilling === "on") data.billing_address = data.shipping_address
+
     data.billing_address = data.shipping_address
 
-    // if (sameAsBilling !== "on")
-    //   data.billing_address = {
-    //     first_name: formData.get("billing_address.first_name"),
-    //     last_name: formData.get("billing_address.last_name"),
-    //     address_1: formData.get("billing_address.address_1"),
-    //     address_2: "",
-    //     company: formData.get("billing_address.company"),
-    //     postal_code: formData.get("billing_address.postal_code"),
-    //     city: formData.get("billing_address.city"),
-    //     country_code: formData.get("billing_address.country_code"),
-    //     province: formData.get("billing_address.province"),
-    //     phone: formData.get("billing_address.phone"),
-    //   }
+
 
     await updateCart(data)
-    
-    // If user is logged in and wants to save as default, save to customer profile
+
+
     const authHeaders = await getAuthHeaders()
     const isDefaultShipping = formData.get("isDefaultShipping") === "true"
-    
+
     if (authHeaders && isDefaultShipping) {
       try {
         const { addCustomerAddress } = await import("./customer")
@@ -428,27 +408,20 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         addressFormData.set("phone", formData.get("shipping_address.phone") as string)
         addressFormData.set("province", formData.get("shipping_address.province") as string)
         addressFormData.set("isDefaultShipping", "true")
-        
+
         await addCustomerAddress(addressFormData)
-        console.log("Address saved to customer profile as default")
       } catch (customerError) {
-        console.error("Failed to save address to customer profile:", customerError)
-        // Don't fail the whole operation if customer address save fails
+
       }
     }
-    
+
     await revalidatePath("/cart")
   } catch (e: any) {
     return e.message
   }
 }
 
-/**
- * Sets addresses on a cart using the provided cart ID (for localStorage-based cart systems)
- * @param cartId - The cart ID from localStorage
- * @param addressData - The address data to set
- * @returns Error message on failure, null on success
- */
+
 export async function setAddressesWithCartId(
   cartId: string,
   addressData: {
@@ -482,33 +455,23 @@ export async function setAddressesWithCartId(
       billing_address: addressData.shipping_address, // Set billing same as shipping
     } as any
 
-    // Only set email if cart doesn't have a customer (guest checkout)
-    // For logged-in users, the email is already associated with their account
+
     if (addressData.email && !currentCart?.customer_id) {
       data.email = addressData.email
-      console.log("Setting email on cart (guest):", addressData.email)
-    } else if (currentCart?.customer_id) {
-      console.log("Skipping email update - cart has customer_id:", currentCart.customer_id)
     }
 
     // Use the existing updateCart function
     const result = await updateCart(data)
-    console.log("Cart updated. Email in response:", result.email)
 
     await revalidatePath("/cart")
 
     return null // Success
   } catch (e: any) {
-    console.error("Error setting addresses:", e)
     return e.message
   }
 }
 
-/**
- * Places an order for a cart. If no cart ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to place an order for.
- * @returns The cart object if the order was successful, or null if not.
- */
+
 export async function placeOrder(cartId?: string) {
   const id = cartId || (await getCartId())
 
@@ -544,13 +507,12 @@ export async function placeOrder(cartId?: string) {
 
 
   if (cartRes?.error) {
-    console.log("Cart response contains error:", cartRes.error)
     return cartRes
   }
 
   if (cartRes?.order_set) {
     removeCartId()
-    // redirect(`/order/${cartRes?.order_set.orders[0].id}/confirmed`)
+
     return {
       success: true,
       orderId: cartRes.order_set.orders[0].id,
@@ -560,11 +522,7 @@ export async function placeOrder(cartId?: string) {
   return cartRes.order_set.cart
 }
 
-/**
- * Updates the countrycode param and revalidates the regions cache
- * @param regionId
- * @param countryCode
- */
+
 export async function updateRegion(countryCode: string, currentPath: string) {
   const cartId = await getCartId()
   const region = await getRegion(countryCode)
@@ -588,14 +546,7 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   redirect(`/${countryCode}${currentPath}`)
 }
 
-/**
- * Updates the region and returns removed items for notification
- * This is a wrapper around updateRegion that doesn't redirect
- * Uses error-driven approach: tries to update, catches price errors, removes problem items, retries
- * @param countryCode - The country code to update to
- * @param currentPath - The current path for redirect
- * @returns Array of removed item names and new path
- */
+
 export async function updateRegionWithValidation(
   countryCode: string,
   currentPath: string
@@ -617,21 +568,21 @@ export async function updateRegionWithValidation(
     try {
       await updateCart({ region_id: region.id })
     } catch (error: any) {
-      // Check if error is about variants not having prices
+
       if (!error?.message?.includes("do not have a price")) {
-        // Re-throw if it's a different error
+
         throw error
       }
 
-      // Parse variant IDs from error message
+
       const problematicVariantIds = parseVariantIdsFromError(error.message)
 
-      // Early return if no variant IDs found
+
       if (!problematicVariantIds.length) {
         throw new Error("Failed to parse variant IDs from error")
       }
 
-      // Fetch cart with minimal fields to get items
+
       try {
         const { cart } = await sdk.client.fetch<HttpTypes.StoreCartResponse>(
           `/store/carts/${cartId}`,
@@ -645,7 +596,7 @@ export async function updateRegionWithValidation(
           }
         )
 
-        // Iterate over problematic variants and remove corresponding items
+
         for (const variantId of problematicVariantIds) {
           const item = cart?.items?.find(
             (item) => item.variant_id === variantId
@@ -655,12 +606,12 @@ export async function updateRegionWithValidation(
               await sdk.store.cart.deleteLineItem(cart.id, item.id, {})
               removedItems.push(item.product_title || "Unknown product")
             } catch (deleteError) {
-              // Silent failure - item removal failed but continue
+
             }
           }
         }
 
-        // Retry region update after removing problematic items
+
         if (removedItems.length > 0) {
           await updateCart({ region_id: region.id })
         }
@@ -669,7 +620,7 @@ export async function updateRegionWithValidation(
       }
     }
 
-    // Revalidate caches
+
     const cartCacheTag = await getCacheTag("carts")
     revalidateTag(cartCacheTag)
   }
