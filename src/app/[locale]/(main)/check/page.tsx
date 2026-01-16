@@ -11,7 +11,8 @@ import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkelet
 import CartPaymentSection from "@/components/sections/CartPaymentSection/CartPaymentSection"
 import { AddVariantSheet } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { useProductModalStore } from "@/store/useProductModalStore"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 
 export default function CheckoutPage() {
@@ -30,7 +31,6 @@ function CheckoutPageComponent() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const { isOpen, product, closeModal } = useProductModalStore()
   const params = useParams()
-  const router = useRouter()
   const locale = params?.locale as string || 'np'
 
   const loadData = async () => {
@@ -90,13 +90,12 @@ function CheckoutPageComponent() {
             Looks like you haven't added anything to your cart yet.
           </p>
 
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="inline-flex items-center justify-center rounded-lg bg-myBlue px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+          <LocalizedClientLink
+            href="/"
+            className="inline-flex items-center justify-center rounded-lg bg-myBlue px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 font-poppins"
           >
             Continue shopping
-          </button>
+          </LocalizedClientLink>
         </div>
       </div>
     )
@@ -124,7 +123,7 @@ function CheckoutPageComponent() {
           availablePaymentMethods={paymentMethods}
         />
       )}
-      <RememberUserInfo />
+      <RememberUserInfo isReady={!!(shippingMethods && paymentMethods)} />
 
       {/* Global Product Modal */}
       {isOpen && product && (

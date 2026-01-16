@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { placeOrder } from "@/lib/data/cart";
 import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal";
 import { useParams } from "next/navigation";
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink";
 
 interface OrderSummaryProps {
   summary: OrderSummaryData;
@@ -194,21 +195,10 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
 
 export default ItemCounter
 
-
-const OrderRow: React.FC<{ item: OrderSummaryItem; totalItems: number }> = ({ item, totalItems }) => {
-  const params = useParams()
-  const locale = params?.locale as string || 'np'
-  const router = useRouter()
-
-  const handleProductClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    // Navigate to product detail page instead of opening modal
-    router.push(`/${locale}/products/${item.productId}`)
-  }
-
+const OrderRow: React.FC<{ item: any; totalItems: number }> = ({ item, totalItems }) => {
   return (
     <div className="flex items-center justify-between gap-2">
-      <button onClick={handleProductClick} className="flex-shrink-0">
+      <LocalizedClientLink href={`/products/${item.productId}`} className="flex-shrink-0">
         <Image
           height={50}
           width={35}
@@ -216,13 +206,13 @@ const OrderRow: React.FC<{ item: OrderSummaryItem; totalItems: number }> = ({ it
           src={item.thumbnail || "/images/not-available/not-available.png"}
           alt={item.title}
         />
-      </button>
+      </LocalizedClientLink>
       <div className="flex-1 min-w-0">
-        <button onClick={handleProductClick} className="text-left w-full">
+        <LocalizedClientLink href={`/products/${item.productId}`} className="text-left w-full">
           <p className="text-[#222222] font-medium text-sm truncate hover:text-myBlue transition-colors">
             {item.title}
           </p>
-        </button>
+        </LocalizedClientLink>
         {item.variantTitle && (
           <p className="text-xs text-gray-600 font-medium">
             {item.variantTitle}
@@ -387,7 +377,7 @@ export function OrderSummary() {
   )
 }
 
-export const RememberUserInfo = () => {
+export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
   const [checked, setChecked] = useState(false)
   const [hasAddress, setHasAddress] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -490,6 +480,7 @@ export const RememberUserInfo = () => {
       return
     }
 
+    setIsCheckingAddress(true)
     try {
       const res = await fetch("/api/cart/get", {
         method: "POST",
@@ -503,6 +494,8 @@ export const RememberUserInfo = () => {
     } catch (err) {
       console.error("Failed to check address:", err)
       setHasAddress(false)
+    } finally {
+      setIsCheckingAddress(false)
     }
   }
 
@@ -517,8 +510,8 @@ export const RememberUserInfo = () => {
         <Button
           variant="primary"
           onClick={handlePlaceOrderClick}
-          disabled={isCheckingAddress}
-          className={`flex items-center bg-myBlue hover:opacity-90 justify-center gap-2 ${isCheckingAddress ? 'bg-myBlue cursor-not-allowed' : ''
+          disabled={isCheckingAddress || !isReady}
+          className={`flex items-center bg-myBlue hover:opacity-90 justify-center gap-2 ${isCheckingAddress || !isReady ? 'bg-gray-400 cursor-not-allowed opacity-50' : ''
             }`}
         >
           {isCheckingAddress ? (
@@ -558,12 +551,12 @@ export function EmptyCartCard() {
         </p>
 
         {/* CTA */}
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-lg bg-myBlue px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+        <LocalizedClientLink
+          href="/"
+          className="inline-flex items-center justify-center rounded-lg bg-myBlue px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
         >
           Continue shopping
-        </button>
+        </LocalizedClientLink>
       </div>
     </div>
   )

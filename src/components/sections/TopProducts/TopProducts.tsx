@@ -5,16 +5,16 @@ import { getProductRatingSummaries } from '@/lib/helpers/rating-helpers'
 import { safeDataFetch } from '@/lib/utils/safe-data'
 import React from 'react'
 
-export default async function TopProducts() {
+export default async function TopProducts({ regionId }: { regionId?: string }) {
     // Safe data fetching with fallback
     const result = await safeDataFetch(
-        () => getTopProducts({ limit: 20 }),
+        () => getTopProducts({ limit: 20, region_id: regionId }),
         { products: [] },
         'TopProducts'
     )
 
     const topProducts = result.data || { products: [] }
-    
+
     // If no products, don't render anything
     if (!topProducts.products || topProducts.products.length === 0) {
         console.warn('[TopProducts] No products available, skipping render')
@@ -22,14 +22,14 @@ export default async function TopProducts() {
     }
 
     const productIds = topProducts.products.map((p: any) => p.id).filter(Boolean)
-    
+
     // Safe ratings fetch
     const ratingsResult = await safeDataFetch(
         () => getProductRatingSummaries(productIds),
         {},
         'TopProducts-Ratings'
     )
-    
+
     const ratingsMap = ratingsResult.data || {}
 
     // Sort products: in-stock first, out-of-stock last
@@ -39,7 +39,7 @@ export default async function TopProducts() {
             if (variant.inventory_quantity !== undefined) {
                 return sum + (variant.inventory_quantity || 0)
             }
-            
+
             const inventoryItem = variant.inventory_items?.[0]
             if (inventoryItem?.inventory?.location_levels) {
                 const totalFromLocations = inventoryItem.inventory.location_levels.reduce(
@@ -50,7 +50,7 @@ export default async function TopProducts() {
                 )
                 return sum + totalFromLocations
             }
-            
+
             return sum
         }, 0) || 0
 
@@ -59,7 +59,7 @@ export default async function TopProducts() {
             if (variant.inventory_quantity !== undefined) {
                 return sum + (variant.inventory_quantity || 0)
             }
-            
+
             const inventoryItem = variant.inventory_items?.[0]
             if (inventoryItem?.inventory?.location_levels) {
                 const totalFromLocations = inventoryItem.inventory.location_levels.reduce(
@@ -70,7 +70,7 @@ export default async function TopProducts() {
                 )
                 return sum + totalFromLocations
             }
-            
+
             return sum
         }, 0) || 0
 
@@ -89,7 +89,7 @@ export default async function TopProducts() {
                     try {
                         const currentPrice = r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
                         if (currentPrice === 0) return null
-                        
+
                         return (
                             <div key={r.id || index} className="w-[180px] flex-shrink-0">
                                 <HomeProductCard

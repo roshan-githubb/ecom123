@@ -1,4 +1,4 @@
-"use client";
+// This file is now a server component by default
 
 export const TopCategoriesSkeleton = () => (
   <div className="flex gap-4 overflow-x-auto animate-pulse">
