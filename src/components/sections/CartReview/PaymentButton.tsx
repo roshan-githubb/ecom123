@@ -7,7 +7,6 @@ import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/atoms"
-import { orderErrorFormatter } from "@/lib/helpers/order-error-formatter"
 import { toast } from "@/lib/helpers/toast"
 
 type PaymentButtonProps = {
@@ -19,12 +18,65 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
   "data-testid": dataTestId,
 }) => {
-  const notReady =
-    !cart ||
-    !cart.shipping_address ||
-    !cart.billing_address ||
-    !cart.email ||
-    (cart.shipping_methods?.length ?? 0) < 1
+  // Check for missing requirements
+  const hasAddress = cart.shipping_address && cart.billing_address && cart.email
+  const hasShippingMethods = (cart.shipping_methods?.length ?? 0) >= 1
+  const hasPaymentMethod = cart.payment_collection?.payment_sessions?.some(
+    (session: any) => session.status === "pending"
+  )
+
+  // Count unique sellers/vendors in cart
+  const uniqueSellers = new Set(
+    cart.items?.map((item: any) => item.product?.seller?.id).filter(Boolean)
+  )
+  const vendorCount = uniqueSellers.size
+  const shippingMethodCount = cart.shipping_methods?.length ?? 0
+
+  // Check if all vendors have shipping methods selected
+  const allVendorsHaveShipping = vendorCount > 0 && shippingMethodCount >= vendorCount
+
+  const notReady = !hasAddress || !hasShippingMethods || !hasPaymentMethod
+
+  // Custom click handler to show specific error messages
+  const handleButtonClick = (e: React.MouseEvent, originalHandler?: () => void) => {
+    const missingItems: string[] = []
+
+    if (!hasAddress) {
+      missingItems.push("delivery address")
+    }
+
+    if (!hasShippingMethods) {
+      if (vendorCount > 1) {
+        missingItems.push("shipping methods for all vendors")
+      } else {
+        missingItems.push("shipping method")
+      }
+    } else if (vendorCount > 1 && !allVendorsHaveShipping) {
+      // Some vendors are missing shipping methods
+      toast.error({ title: `Please select shipping methods for all ${vendorCount} vendors` })
+      e.preventDefault()
+      return
+    }
+
+    if (!hasPaymentMethod) {
+      missingItems.push("payment method")
+    }
+
+    if (missingItems.length > 0) {
+      if (missingItems.length === 1) {
+        toast.error({ title: `Please add a ${missingItems[0]} to continue` })
+      } else if (missingItems.length === 2) {
+        toast.error({ title: `Please add ${missingItems[0]} and ${missingItems[1]} to continue` })
+      } else {
+        toast.error({ title: `Please add ${missingItems.slice(0, -1).join(", ")}, and ${missingItems[missingItems.length - 1]} to continue` })
+      }
+      e.preventDefault()
+      return
+    }
+
+    // All checks passed, call original handler
+    originalHandler?.()
+  }
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
 
@@ -35,15 +87,27 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           notReady={notReady}
           cart={cart}
           data-testid={dataTestId}
+          onButtonClick={handleButtonClick}
         />
       )
     case isManual(paymentSession?.provider_id):
       return (
-        <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+        <ManualTestPaymentButton 
+          notReady={notReady} 
+          data-testid={dataTestId}
+          onButtonClick={handleButtonClick}
+        />
       )
     default:
       return (
-        <Button disabled className="w-full">
+        <Button 
+          disabled 
+          className="w-full"
+          onClick={(e) => {
+            e.preventDefault()
+            toast.error({ title: "Please select a payment method to continue" })
+          }}
+        >
           Select a payment method
         </Button>
       )
@@ -54,10 +118,12 @@ const StripePaymentButton = ({
   cart,
   notReady,
   "data-testid": dataTestId,
+  onButtonClick,
 }: {
   cart: HttpTypes.StoreCart
   notReady: boolean
   "data-testid"?: string
+  onButtonClick?: (e: React.MouseEvent, handler?: () => void) => void
 }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -160,7 +226,13 @@ const StripePaymentButton = ({
     <>
       <Button
         disabled={disabled || notReady}
-        onClick={handlePayment}
+        onClick={(e) => {
+          if (onButtonClick) {
+            onButtonClick(e, handlePayment)
+          } else {
+            handlePayment()
+          }
+        }}
         loading={submitting}
         className="w-full"
       >
@@ -174,7 +246,13 @@ const StripePaymentButton = ({
   )
 }
 
-const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+const ManualTestPaymentButton = ({ 
+  notReady,
+  onButtonClick,
+}: { 
+  notReady: boolean
+  onButtonClick?: (e: React.MouseEvent, handler?: () => void) => void
+}) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -204,6 +282,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   }
 
   const handlePayment = () => {
+    setSubmitting(true)
     onPaymentCompleted()
   }
 
@@ -211,7 +290,13 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
     <>
       <Button
         disabled={notReady}
-        onClick={handlePayment}
+        onClick={(e) => {
+          if (onButtonClick) {
+            onButtonClick(e, handlePayment)
+          } else {
+            handlePayment()
+          }
+        }}
         className="w-full"
         loading={submitting}
       >

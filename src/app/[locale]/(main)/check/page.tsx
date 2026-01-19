@@ -29,6 +29,8 @@ function CheckoutPageComponent() {
   const [paymentMethods, setPaymentMethods] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isLoadingAfterAddress, setIsLoadingAfterAddress] = useState(false)
+  const [isLoadingAfterShipping, setIsLoadingAfterShipping] = useState(false)
   const { isOpen, product, closeModal } = useProductModalStore()
   const params = useParams()
   const locale = params?.locale as string || 'np'
@@ -53,6 +55,8 @@ function CheckoutPageComponent() {
     } catch (error) {
     } finally {
       setLoading(false)
+      setIsLoadingAfterAddress(false)
+      setIsLoadingAfterShipping(false)
     }
   }
 
@@ -60,13 +64,35 @@ function CheckoutPageComponent() {
     loadData()
   }, [refreshTrigger])
 
-  const handleAddressUpdate = () => {
+  const handleAddressUpdate = async () => {
+    setIsLoadingAfterAddress(true)
     setRefreshTrigger(prev => prev + 1)
+    window.dispatchEvent(new CustomEvent('addressUpdated'))
   }
 
   const handleShippingUpdate = async () => {
+    setIsLoadingAfterShipping(true)
     await loadData()
+    window.dispatchEvent(new CustomEvent('shippingUpdated'))
   }
+
+  const handlePaymentUpdate = () => {
+    window.dispatchEvent(new CustomEvent('paymentUpdated'))
+  }
+
+  const allVendorsHaveShipping = () => {
+    if (!cart?.items || !cart?.shipping_methods) return false
+    
+    const uniqueSellers = new Set(
+      cart.items.map((item: any) => item.product?.seller?.id).filter(Boolean)
+    )
+    const vendorCount = uniqueSellers.size
+    const shippingMethodCount = cart.shipping_methods.length
+    
+    return vendorCount > 0 && shippingMethodCount >= vendorCount
+  }
+
+  const showPaymentSection = allVendorsHaveShipping()
 
   if (loading) {
     return <CheckoutSkeleton />
@@ -87,7 +113,7 @@ function CheckoutPageComponent() {
             Your cart is empty
           </h2>
           <p className="mb-6 text-sm text-gray-500">
-            Looks like you haven't added anything to your cart yet.
+            Looks like you haven&apos;t added anything to your cart yet.
           </p>
 
           <LocalizedClientLink
@@ -108,6 +134,18 @@ function CheckoutPageComponent() {
       <main className="max-w-md mx-auto relative z-0">
         <OrderSummary />
         <DeliveryAddress onAddressUpdate={handleAddressUpdate} />
+        
+        {isLoadingAfterAddress && (
+          <div className="max-w-md mx-auto mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+              <p className="text-sm text-blue-700 font-medium">
+                Please wait, loading shipping methods...
+              </p>
+            </div>
+          </div>
+        )}
+        
         <div className="my-4"></div>
         {cart && shippingMethods && (
           <CartShippingMethodsSection
@@ -116,14 +154,29 @@ function CheckoutPageComponent() {
             onShippingUpdate={handleShippingUpdate}
           />
         )}
+      
+        {isLoadingAfterShipping && (
+          <div className="max-w-md mx-auto mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+              <p className="text-sm text-green-700 font-medium">
+                Please wait, loading payment options...
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {showPaymentSection && cart && paymentMethods && !isLoadingAfterShipping && (
+          <CartPaymentSection
+            cart={cart}
+            availablePaymentMethods={paymentMethods}
+            onPaymentUpdate={handlePaymentUpdate}
+          />
+        )}
+        
       </main>
-      {cart && paymentMethods && (
-        <CartPaymentSection
-          cart={cart}
-          availablePaymentMethods={paymentMethods}
-        />
-      )}
-      <RememberUserInfo isReady={!!(shippingMethods && paymentMethods)} />
+      
+      <RememberUserInfo isReady={!!(shippingMethods && paymentMethods && showPaymentSection)} />
 
       {/* Global Product Modal */}
       {isOpen && product && (
