@@ -26,13 +26,9 @@ const DeliveryAddress = ({ onAddressUpdate: parentOnAddressUpdate }: { onAddress
       }
 
       try {
-        const res = await fetch("/api/cart/get", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart_id: cartId }),
-        })
-        const data = await res.json()
-        const shippingAddr = data?.cart?.shipping_address
+        const { retrieveCart } = await import("@/lib/data/cart")
+        const cartData = await retrieveCart(cartId)
+        const shippingAddr = cartData?.shipping_address
 
         const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
         setHasAddress(!!isValid)
@@ -95,38 +91,48 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
               setCustomerDefaultAddress(defaultAddr)
 
               if (cartId) {
-                const addressData = {
-                  email: customer.email || "",
-                  shipping_address: {
-                    first_name: defaultAddr.first_name || "",
-                    last_name: defaultAddr.last_name || "",
-                    address_1: defaultAddr.address_1 || "",
-                    address_2: defaultAddr.address_2 || "",
-                    city: defaultAddr.city || "",
-                    province: defaultAddr.province || "",
-                    postal_code: defaultAddr.postal_code || "",
-                    country_code: defaultAddr.country_code || "np",
-                    phone: defaultAddr.phone || "",
-                    company: defaultAddr.company || "",
-                  },
-                  billing_address: {
-                    first_name: defaultAddr.first_name || "",
-                    last_name: defaultAddr.last_name || "",
-                    address_1: defaultAddr.address_1 || "",
-                    address_2: defaultAddr.address_2 || "",
-                    city: defaultAddr.city || "",
-                    province: defaultAddr.province || "",
-                    postal_code: defaultAddr.postal_code || "",
-                    country_code: defaultAddr.country_code || "np",
-                    phone: defaultAddr.phone || "",
-                    company: defaultAddr.company || "",
+                const { retrieveCart } = await import("@/lib/data/cart")
+                const cartData = await retrieveCart(cartId)
+                const existingAddress = cartData?.shipping_address
+                
+                const needsAddressUpdate = !existingAddress || 
+                  !existingAddress.first_name || 
+                  !existingAddress.address_1
+
+                if (needsAddressUpdate) {
+                  const addressData = {
+                    email: customer.email || "",
+                    shipping_address: {
+                      first_name: defaultAddr.first_name || "",
+                      last_name: defaultAddr.last_name || "",
+                      address_1: defaultAddr.address_1 || "",
+                      address_2: defaultAddr.address_2 || "",
+                      city: defaultAddr.city || "",
+                      province: defaultAddr.province || "",
+                      postal_code: defaultAddr.postal_code || "",
+                      country_code: defaultAddr.country_code || "np",
+                      phone: defaultAddr.phone || "",
+                      company: defaultAddr.company || "",
+                    },
+                    billing_address: {
+                      first_name: defaultAddr.first_name || "",
+                      last_name: defaultAddr.last_name || "",
+                      address_1: defaultAddr.address_1 || "",
+                      address_2: defaultAddr.address_2 || "",
+                      city: defaultAddr.city || "",
+                      province: defaultAddr.province || "",
+                      postal_code: defaultAddr.postal_code || "",
+                      country_code: defaultAddr.country_code || "np",
+                      phone: defaultAddr.phone || "",
+                      company: defaultAddr.company || "",
+                    }
                   }
-                }
 
-                const { setAddressesWithCartId } = await import("@/lib/data/cart")
-                const result = await setAddressesWithCartId(cartId, addressData)
-
-                if (result) {
+                  const { setAddressesWithCartId } = await import("@/lib/data/cart")
+                  await setAddressesWithCartId(cartId, addressData)
+                  
+                  onAddressUpdate?.()
+                } else {
                   onAddressUpdate?.()
                 }
               }
@@ -143,19 +149,12 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         }
         
         if (!isLoggedIn && cartId) {
-          const cartRes = await fetch("/api/cart/get", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ cart_id: cartId }),
-          })
+          const { retrieveCart } = await import("@/lib/data/cart")
+          const cartData = await retrieveCart(cartId)
+          const shippingAddr = cartData?.shipping_address
           
-          if (cartRes.ok) {
-            const cartData = await cartRes.json()
-            const shippingAddr = cartData?.cart?.shipping_address
-            
-            if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
-              setGuestAddress(shippingAddr)
-            }
+          if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+            setGuestAddress(shippingAddr)
           }
         }
       } catch (err) {
@@ -166,27 +165,27 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
       }
     }
 
-    loadCustomerAddress()
-  }, [cartId, onAddressUpdate])
+    if (cartId) {
+      loadCustomerAddress()
+    }
+  }, [cartId])
 
-  const handleFormClose = () => {
+  const handleFormClose = async () => {
     setShowForm(false)
     onAddressUpdate?.()
     
     if (cartId) {
-      fetch("/api/cart/get", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart_id: cartId }),
-      })
-        .then(res => res.json())
-        .then(cartData => {
-          const shippingAddr = cartData?.cart?.shipping_address
-          if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
-            setGuestAddress(shippingAddr)
-          }
-        })
-        .catch(err => console.error("Failed to reload address:", err))
+      try {
+        const { retrieveCart } = await import("@/lib/data/cart")
+        const cartData = await retrieveCart(cartId)
+        const shippingAddr = cartData?.shipping_address
+        
+        if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+          setGuestAddress(shippingAddr)
+        }
+      } catch (err) {
+        console.error("Failed to reload address:", err)
+      }
     }
   }
 
