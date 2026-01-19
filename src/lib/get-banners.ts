@@ -1,8 +1,8 @@
 "use server";
 
-export async function getBanners() {
+export async function getBanners(placement: string) {
   const bannerRes = await fetch(
-    `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/banners?placement=homepage_carousel`,
+    `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/banners?placement=${placement}`,
     {
       headers: {
         "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
