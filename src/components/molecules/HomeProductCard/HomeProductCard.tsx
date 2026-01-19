@@ -175,7 +175,7 @@ export const HomeProductCard = ({
                 />
                 {hasOfferSticker && (
                     <Image
-                        src={"/images/product/offer-sticker.png"}
+                        src={"/images/products/offer-sticker.png"}
                         alt={"sticker image"}
                         width={300}
                         height={300}
