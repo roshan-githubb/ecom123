@@ -26,6 +26,8 @@ export const ProductListing = async ({
   const region = await getRegion(locale)   // "pl", "np", "us", etc.
   if (!region) throw new Error("Region not found")
 
+    console.log('region ', region)
+
   const { response } = await listProducts({
     pageParam: 1,
     queryParams: {
