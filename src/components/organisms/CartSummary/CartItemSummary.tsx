@@ -95,12 +95,26 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
     }
   }
 
-  const handleConfirmRemove = () => {
-    decrease(lineItemId, quantity)
+  const handleConfirmRemove = async () => {
     setShowRemoveModal(false)
-    setTimeout(() => {
+    
+    try {
+      // Remove the last item
+      await decrease(lineItemId, quantity)
+      
+      // Clear local cart state
+      const { useCartStore } = await import("@/store/useCartStore")
+      useCartStore.getState().clearLocal()
+      
+      // Small delay to ensure state is cleared
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Redirect to homepage
       router.push('/')
-    }, 500)
+    } catch (error) {
+      console.error("Failed to remove last item:", error)
+      router.push('/')
+    }
   }
 
   return (
@@ -198,7 +212,10 @@ export default ItemCounter
 const OrderRow: React.FC<{ item: any; totalItems: number }> = ({ item, totalItems }) => {
   return (
     <div className="flex items-center justify-between gap-2">
-      <LocalizedClientLink href={`/products/${item.productId}`} className="flex-shrink-0">
+      <LocalizedClientLink
+        href={`/products/${item.productId}`}
+        className="flex-shrink-0 active:scale-95 active:opacity-80 transition-transform"
+      >
         <Image
           height={50}
           width={35}
@@ -208,8 +225,11 @@ const OrderRow: React.FC<{ item: any; totalItems: number }> = ({ item, totalItem
         />
       </LocalizedClientLink>
       <div className="flex-1 min-w-0">
-        <LocalizedClientLink href={`/products/${item.productId}`} className="text-left w-full">
-          <p className="text-[#222222] font-medium text-sm truncate hover:text-myBlue transition-colors">
+        <LocalizedClientLink
+          href={`/products/${item.productId}`}
+          className="text-left w-full active:scale-95 transition-transform"
+        >
+          <p className="text-[#222222] font-medium text-sm truncate active:text-myBlue transition-colors">
             {item.title}
           </p>
         </LocalizedClientLink>
@@ -380,6 +400,8 @@ export function OrderSummary() {
 export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
   const [checked, setChecked] = useState(false)
   const [hasAddress, setHasAddress] = useState(false)
+  const [hasPaymentMethod, setHasPaymentMethod] = useState(false)
+  const [hasShippingMethod, setHasShippingMethod] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [isCheckingAddress, setIsCheckingAddress] = useState(false)
@@ -423,15 +445,15 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
   }
 
   const handlePlaceOrderClick = async () => {
-    // Validate address
     if (!hasAddress) {
       const { cartToast } = await import("@/lib/cart-toast")
       cartToast.showErrorToast("Please add a delivery address to continue")
       return
     }
 
-    // Validate shipping methods - check cart directly
     try {
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
       const res = await fetch("/api/cart/get", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -440,43 +462,94 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
       const data = await res.json()
       const cart = data?.cart
 
-      // Check if shipping methods are selected
-      if (!cart?.shipping_methods || cart.shipping_methods.length === 0) {
+      if (!cart) {
         const { cartToast } = await import("@/lib/cart-toast")
-        cartToast.showErrorToast("Please select shipping methods for all vendors")
+        cartToast.showErrorToast("Failed to load cart. Please try again.")
         return
       }
 
-      // Check if payment method is selected
-      const hasPaymentSession = cart?.payment_collection?.payment_sessions?.some(
+      const uniqueSellers = new Set(
+        cart.items?.map((item: any) => item.product?.seller?.id).filter(Boolean)
+      )
+      const vendorCount = uniqueSellers.size
+      const shippingMethodCount = cart.shipping_methods?.length ?? 0
+
+      const hasShippingMethods = cart.shipping_methods && cart.shipping_methods.length > 0
+      const allVendorsHaveShipping = vendorCount > 0 && shippingMethodCount >= vendorCount
+
+      const hasPaymentSession = cart.payment_collection?.payment_sessions?.some(
         (session: any) => session.status === "pending"
       )
 
-      if (!hasPaymentSession) {
+      const missingItems: string[] = []
+
+      if (!hasShippingMethods) {
+        if (vendorCount > 1) {
+          missingItems.push("shipping methods for all vendors")
+        } else {
+          missingItems.push("shipping method")
+        }
+      } else if (vendorCount > 1 && !allVendorsHaveShipping) {
         const { cartToast } = await import("@/lib/cart-toast")
-        cartToast.showErrorToast("Please select a payment method")
+        cartToast.showErrorToast(`Please select shipping methods for all ${vendorCount} vendors`)
         return
       }
+
+      if (!hasPaymentSession) {
+        missingItems.push("payment method")
+      }
+
+      // Show appropriate error message
+      if (missingItems.length > 0) {
+        const { cartToast } = await import("@/lib/cart-toast")
+        if (missingItems.length === 1) {
+          cartToast.showErrorToast(`Please add a ${missingItems[0]} to continue`)
+        } else if (missingItems.length === 2) {
+          cartToast.showErrorToast(`Please add ${missingItems[0]} and ${missingItems[1]} to continue`)
+        }
+        return
+      }
+
+      router.push('/order-summary')
     } catch (err) {
       console.error("Failed to validate checkout:", err)
       const { cartToast } = await import("@/lib/cart-toast")
       cartToast.showErrorToast("Failed to validate checkout. Please try again.")
       return
     }
-
-    // All validations passed, proceed to order summary
-    router.push('/order-summary')
   }
 
-
-  // Check if address exists
   useEffect(() => {
     checkAddress()
+    
+    const handleAddressUpdate = () => {
+      checkAddress()
+    }
+    
+    const handleShippingUpdate = () => {
+      checkAddress()
+    }
+    
+    const handlePaymentUpdate = () => {
+      checkAddress()
+    }
+    
+    window.addEventListener('addressUpdated', handleAddressUpdate)
+    window.addEventListener('shippingUpdated', handleShippingUpdate)
+    window.addEventListener('paymentUpdated', handlePaymentUpdate)
+    
+    return () => {
+      window.removeEventListener('addressUpdated', handleAddressUpdate)
+      window.removeEventListener('shippingUpdated', handleShippingUpdate)
+      window.removeEventListener('paymentUpdated', handlePaymentUpdate)
+    }
   }, [cartId])
 
   async function checkAddress() {
     if (!cartId) {
       setHasAddress(false)
+      setHasPaymentMethod(false)
+      setHasShippingMethod(false)
       return
     }
 
@@ -488,12 +561,24 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
         body: JSON.stringify({ cart_id: cartId }),
       })
       const data = await res.json()
-      const shippingAddr = data?.cart?.shipping_address
+      const cart = data?.cart
+      
+      const shippingAddr = cart?.shipping_address
       const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
       setHasAddress(!!isValid)
+      
+      const hasShipping = cart?.shipping_methods && cart.shipping_methods.length > 0
+      setHasShippingMethod(!!hasShipping)
+      
+      const hasPayment = cart?.payment_collection?.payment_sessions?.some(
+        (session: any) => session.status === "pending"
+      )
+      setHasPaymentMethod(!!hasPayment)
     } catch (err) {
       console.error("Failed to check address:", err)
       setHasAddress(false)
+      setHasPaymentMethod(false)
+      setHasShippingMethod(false)
     } finally {
       setIsCheckingAddress(false)
     }
@@ -507,12 +592,31 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
     <>
 
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
+        {!isCheckingAddress && (
+          <>
+            {hasAddress && !hasShippingMethod && (
+              <p className="text-xs text-red-600 mb-2 text-center font-medium">
+                Please add shipping method to continue
+              </p>
+            )}
+            
+            {hasAddress && hasShippingMethod && !hasPaymentMethod && isReady && (
+              <p className="text-xs text-red-600 mb-2 text-center font-medium">
+                Please select a payment method to enable Place Order
+              </p>
+            )}
+          </>
+        )}
+        
         <Button
           variant="primary"
           onClick={handlePlaceOrderClick}
-          disabled={isCheckingAddress || !isReady}
-          className={`flex items-center bg-myBlue hover:opacity-90 justify-center gap-2 ${isCheckingAddress || !isReady ? 'bg-gray-400 cursor-not-allowed opacity-50' : ''
-            }`}
+          disabled={isCheckingAddress || !isReady || !hasPaymentMethod}
+          className={`flex items-center justify-center gap-2 ${
+            isCheckingAddress || !isReady || !hasPaymentMethod
+              ? 'bg-gray-400 cursor-not-allowed opacity-50'
+              : 'bg-myBlue hover:opacity-90'
+          }`}
         >
           {isCheckingAddress ? (
             <>

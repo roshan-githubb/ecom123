@@ -68,6 +68,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   const [showForm, setShowForm] = useState(false)
   const { cartId } = useCartStore()
   const [customerDefaultAddress, setCustomerDefaultAddress] = useState<any>(null)
+  const [guestAddress, setGuestAddress] = useState<any>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
 
@@ -142,6 +143,23 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
           setIsLoggedIn(false)
           setCustomerDefaultAddress(null)
         }
+        
+        if (!isLoggedIn && cartId) {
+          const cartRes = await fetch("/api/cart/get", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cart_id: cartId }),
+          })
+          
+          if (cartRes.ok) {
+            const cartData = await cartRes.json()
+            const shippingAddr = cartData?.cart?.shipping_address
+            
+            if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+              setGuestAddress(shippingAddr)
+            }
+          }
+        }
       } catch (err) {
         setCustomerDefaultAddress(null)
         setIsLoggedIn(false)
@@ -151,19 +169,33 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
     }
 
     loadCustomerAddress()
-  }, [])
+  }, [cartId, onAddressUpdate])
 
   const handleFormClose = () => {
     setShowForm(false)
-
-    window.location.reload()
+    onAddressUpdate?.()
+    
+    if (cartId) {
+      fetch("/api/cart/get", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart_id: cartId }),
+      })
+        .then(res => res.json())
+        .then(cartData => {
+          const shippingAddr = cartData?.cart?.shipping_address
+          if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+            setGuestAddress(shippingAddr)
+          }
+        })
+        .catch(err => console.error("Failed to reload address:", err))
+    }
   }
 
 
 
   if (!cartId) return null
   if (loading) return <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4"><CheckoutSkeleton /></div>
-
 
   if (customerDefaultAddress) {
     return (
@@ -230,6 +262,57 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                     <p className="text-[11px] text-gray-400">
                       9 suggested collection point(s) nearby
                     </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (guestAddress) {
+    return (
+      <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
+        {showForm ? (
+          <AddressForm
+            initialData={undefined}
+            index={undefined}
+            onClose={handleFormClose}
+            isUserLoggedIn={isLoggedIn}
+          />
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]"></div>
+                  <MapPin className="w-5 h-5 text-[#2b5bf7] fill-[#2b5bf7] relative z-10" />
+                </div>
+              </div>
+              <div
+                className="flex-1 cursor-pointer min-w-0"
+                onClick={() => setShowForm(true)}
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-bold text-sm text-gray-900">
+                        {guestAddress.first_name} {guestAddress.last_name}
+                      </span>
+                      <span className="text-gray-400 text-[13px]">
+                        {guestAddress.phone}
+                      </span>
+                    </div>
+                    <div className="leading-snug">
+                      <span className="text-[13px] text-gray-600">
+                        {guestAddress.address_1}
+                        {guestAddress.address_2 ? `, ${guestAddress.address_2}` : ""}
+                        , {guestAddress.city}, {guestAddress.province}
+                      </span>
+                    </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 </div>

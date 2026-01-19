@@ -86,11 +86,12 @@ function OrderSummaryPage() {
                 <p className="font-medium text-gray-900">
                   {cart.shipping_address.first_name} {cart.shipping_address.last_name}
                 </p>
-                <p>{cart.shipping_address.address_1}</p>
+                <p>{cart.shipping_address.address_1}, {cart.shipping_address.postal_code}</p>
                 {cart.shipping_address.address_2 && <p>{cart.shipping_address.address_2}</p>}
                 <p>{cart.shipping_address.city}, {cart.shipping_address.province}</p>
                 <p>{cart.shipping_address.phone}</p>
               </div>
+              
             ) : (
               <p className="text-sm text-red-600">No address selected</p>
             )}
