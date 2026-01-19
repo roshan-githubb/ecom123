@@ -11,14 +11,14 @@ export const sdk = new Medusa({
 
 export async function fetchQuery(
   url: string,
-  { method = "GET", query, headers, body }: any = {}
+  { method = "GET", query, headers, body, ...options }: any = {}
 ) {
   const params = query
     ? "?" +
-      Object.entries(query)
-        .filter(([_, v]) => v != null)
-        .map(([k, v]) => `${k}=${v}`)
-        .join("&")
+    Object.entries(query)
+      .filter(([_, v]) => v != null)
+      .map(([k, v]) => `${k}=${v}`)
+      .join("&")
     : ""
 
   const res = await fetch(`${MEDUSA_BACKEND_URL}${url}${params}`, {
@@ -29,7 +29,8 @@ export async function fetchQuery(
       ...headers,
     },
     body: body ? JSON.stringify(body) : null,
-    credentials: "include", 
+    credentials: "include",
+    ...options,
   })
 
   let data

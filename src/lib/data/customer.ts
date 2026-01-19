@@ -24,19 +24,14 @@ export const retrieveCustomer =
       ...authHeaders,
     }
 
-    const next = {
-      ...(await getCacheOptions("customers")),
-    }
-
     return await sdk.client
       .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
         method: "GET",
         query: {
-          fields: "*orders",
+          fields: "*orders,*addresses",
         },
         headers,
-        next,
-        cache: "force-cache",
+        cache: "no-store",
       })
       .then(({ customer }) => customer)
       .catch(() => null)
@@ -181,6 +176,9 @@ export async function transferCart() {
 }
 
 export const addCustomerAddress = async (formData: FormData): Promise<any> => {
+  const isDefaultShipping = formData.get("isDefaultShipping") === "true";
+  const isDefaultBilling = formData.get("isDefaultBilling") === "true";
+
   const address = {
     address_name: formData.get("address_name") as string,
     first_name: formData.get("first_name") as string,
@@ -192,20 +190,23 @@ export const addCustomerAddress = async (formData: FormData): Promise<any> => {
     country_code: formData.get("country_code") as string,
     phone: formData.get("phone") as string,
     province: formData.get("province") as string,
-    is_default_billing: Boolean(formData.get("isDefaultBilling")),
-    is_default_shipping: Boolean(formData.get("isDefaultShipping")),
+    is_default_billing: isDefaultBilling,
+    is_default_shipping: isDefaultShipping,
   }
+
+
 
   const headers = {
     ...(await getAuthHeaders()),
   }
+
 
   return sdk.store.customer
     .createAddress(address, {}, headers)
     .then(async ({ customer }) => {
       const customerCacheTag = await getCacheTag("customers")
       revalidateTag(customerCacheTag)
-      return { success: true, error: null }
+      return { success: true, error: null, customer }
     })
     .catch((err) => {
       return { success: false, error: err.toString() }

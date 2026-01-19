@@ -33,6 +33,7 @@ import { AddressForm } from "./AddressForm/AddressForm"
 import { ReviewForm } from "./ReviewForm/ReviewForm"
 import { ProfileDetails } from "./ProfileDetails/ProfileDetails"
 import { ComingSoon } from "./ComingSoon/ComingSoon"
+import { DefaultAddressForm } from "./DefaultAddressForm/DefaultAddressForm"
 
 export {
   PrimeCategoryNavbar,
@@ -70,4 +71,5 @@ export {
   ReviewForm,
   ProfileDetails,
   ComingSoon,
+  DefaultAddressForm,
 }

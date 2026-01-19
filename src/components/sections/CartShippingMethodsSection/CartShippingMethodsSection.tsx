@@ -4,18 +4,15 @@ import ErrorMessage from "@/components/molecules/ErrorMessage/ErrorMessage"
 import { setShippingMethod } from "@/lib/data/cart"
 import { calculatePriceForShippingOption } from "@/lib/data/fulfillment"
 import { convertToLocale } from "@/lib/helpers/money"
-import { CheckCircleSolid, ChevronUpDown } from "@medusajs/icons"
+import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { useRouter } from "next/navigation"
-import { Fragment, useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { Modal } from "@/components/molecules"
-import { CartShippingMethodRow } from "./CartShippingMethodRow"
-import { Listbox, Transition } from "@headlessui/react"
-import { Truck } from "lucide-react"
+import { Truck, ChevronDown } from "lucide-react"
 import { removeFromCart } from "@/services/cart"
 import { useCartStore } from "@/store/useCartStore"
 
-// Extended cart item product type to include seller
 type ExtendedStoreProduct = HttpTypes.StoreProduct & {
   seller?: {
     id: string
@@ -23,11 +20,9 @@ type ExtendedStoreProduct = HttpTypes.StoreProduct & {
   }
 }
 
-// Cart item type definition
 type CartItem = {
   id?: string
   product?: ExtendedStoreProduct
-  // Include other cart item properties as needed
 }
 
 export type StoreCardShippingMethod = HttpTypes.StoreCartShippingOption & {
@@ -47,38 +42,44 @@ type ShippingProps = {
   | (StoreCardShippingMethod &
     { rules: any; seller_id: string; price_type: string; id: string }[])
   | null
+  onShippingUpdate?: () => Promise<void>
 }
 
 const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
+  onShippingUpdate,
 }) => {
   const [isLoadingPrices, setIsLoadingPrices] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const [calculatedPricesMap, setCalculatedPricesMap] = useState<
-    Record<string, number>
-  >({})
+  const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
   const [missingModal, setMissingModal] = useState(false)
-  const [missingShippingSellers, setMissingShippingSellers] = useState<
-    string[]
-  >([])
+  const [missingShippingSellers, setMissingShippingSellers] = useState<string[]>([])
   const [isRemovingItems, setIsRemovingItems] = useState(false)
+  const [loadingVendorId, setLoadingVendorId] = useState<string | null>(null)
+  const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set())
+  // Use ref to persist cache across renders without causing re-renders
+  const sellerIdCacheRef = useRef<Record<string, string>>({})
 
   const router = useRouter()
   const fetchCart = useCartStore(state => state.fetchCart)
 
+  // Memoize _shippingMethods to prevent infinite loop
+  const _shippingMethods = useMemo(() =>
+    availableShippingMethods?.filter(
+      (sm) =>
+        sm.rules?.find((rule: any) => rule.attribute === "is_return")?.value !==
+        "true"
+    ), [availableShippingMethods]
+  )
 
-  // Lock/unlock body scroll when modal opens/closes
   useEffect(() => {
     if (missingModal) {
-      // Lock scroll
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
       document.body.style.top = `-${window.scrollY}px`
       document.body.style.width = '100%'
     } else {
-      // Unlock scroll and restore position
       const scrollY = document.body.style.top
       document.body.style.overflow = ''
       document.body.style.position = ''
@@ -89,7 +90,6 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       }
     }
 
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = ''
       document.body.style.position = ''
@@ -98,11 +98,9 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     }
   }, [missingModal])
 
-  // Function to remove all items from specific sellers
   const removeSellerItems = async (sellerIds: string[]) => {
     setIsRemovingItems(true)
     try {
-      // Get all items that belong to the missing sellers
       const itemsToRemove = cart.items?.filter(item =>
         item.product?.seller?.id && sellerIds.includes(item.product.seller.id)
       ) || []
@@ -114,25 +112,25 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       }
 
       await fetchCart()
-
       setMissingModal(false)
       router.push("/check")
     } catch (error) {
-      console.error("Error removing seller items:", error)
       setError("Failed to remove items. Please try again.")
     } finally {
       setIsRemovingItems(false)
     }
   }
 
-
-
-
-  const _shippingMethods = availableShippingMethods?.filter(
-    (sm) =>
-      sm.rules?.find((rule: any) => rule.attribute === "is_return")?.value !==
-      "true"
-  )
+  // Build and cache the seller_id mapping from available shipping methods
+  useEffect(() => {
+    if (_shippingMethods?.length) {
+      _shippingMethods.forEach(method => {
+        if (method.id && method.seller_id) {
+          sellerIdCacheRef.current[method.id] = method.seller_id
+        }
+      })
+    }
+  }, [_shippingMethods])
 
   useEffect(() => {
     const set = new Set<string>()
@@ -143,7 +141,6 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     })
 
     const sellerMethods = _shippingMethods?.map(({ seller_id }) => seller_id)
-
     const missingSellerIds = [...set].filter(
       (sellerId) => !sellerMethods?.includes(sellerId)
     )
@@ -178,16 +175,14 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     }
   }, [availableShippingMethods])
 
-
-
-  const handleSetShippingMethod = async (id: string | null) => {
-    setIsLoadingPrices(true)
+  const handleSetShippingMethod = async (id: string | null, sellerId: string) => {
     setError(null)
 
     if (!id) {
-      setIsLoadingPrices(false)
       return
     }
+
+    setLoadingVendorId(sellerId)
 
     try {
       await setShippingMethod({
@@ -196,32 +191,116 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       })
 
       await fetchCart()
+
+      // Notify parent to refresh cart data and wait for it to complete
+      await onShippingUpdate?.()
+
+      // Collapse vendor section after successful selection
+      setExpandedVendors(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(sellerId)
+        return newSet
+      })
     } catch (err: any) {
       setError(err.message)
     } finally {
-      setIsOpen(false)
-      setIsLoadingPrices(false)
+      setLoadingVendorId(null)
     }
   }
 
-  useEffect(() => {
-    setError(null)
-  }, [isOpen])
+  const toggleVendor = (sellerId: string) => {
+    setExpandedVendors(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(sellerId)) {
+        newSet.delete(sellerId)
+      } else {
+        newSet.add(sellerId)
+      }
+      return newSet
+    })
+  }
 
-  const groupedBySellerId = _shippingMethods?.reduce((acc: any, method) => {
-    const sellerId = method.seller_id!
+  // Identify all sellers from the items currently in the cart
+  const sellersInCart = useMemo(() => {
+    const sellers: Record<string, { id: string; name: string }> = {}
+    cart.items?.forEach((item) => {
+      const seller = item.product?.seller
+      if (seller?.id) {
+        sellers[seller.id] = {
+          id: seller.id,
+          name: seller.name || "Vendor"
+        }
+      }
+    })
+    return sellers
+  }, [cart.items])
 
-    if (!acc[sellerId]) {
-      acc[sellerId] = []
-    }
+  const selectedShippingByVendor = useMemo(() => {
+    return cart.shipping_methods?.reduce((acc: any, method: any) => {
+      // Try to find seller_id from:
+      // 1. The matching method in _shippingMethods
+      // 2. The cached seller_id mapping
+      // 3. The shipping_option object itself (if retrieved)
+      // 4. Default to first seller if only one exists in cart (risky but better than nothing)
 
-    acc[sellerId].push(method)
+      const matchingMethod = _shippingMethods?.find(sm => sm.id === method.shipping_option_id)
+      let sellerId = matchingMethod?.seller_id || sellerIdCacheRef.current[method.shipping_option_id]
+
+      if (!sellerId && method.shipping_option) {
+        sellerId = (method.shipping_option as any).seller_id ||
+          (method.shipping_option.metadata?.seller_id)
+      }
+
+      const cartSellers = Object.keys(sellersInCart)
+      if (!sellerId && cartSellers.length === 1) {
+        sellerId = cartSellers[0]
+      }
+
+      if (sellerId) {
+        acc[sellerId] = method
+      }
+      return acc
+    }, {}) || {}
+  }, [cart.shipping_methods, _shippingMethods, sellersInCart])
+
+  // Group available methods by seller ID
+  const groupedBySellerId = useMemo(() => {
+    const acc: Record<string, any[]> = {}
+
+    // Initialize with all sellers in cart to ensure they appear
+    Object.keys(sellersInCart).forEach(id => {
+      acc[id] = []
+    })
+
+    // Fill with available methods
+    _shippingMethods?.forEach((method) => {
+      const sellerId = method.seller_id!
+      if (!acc[sellerId]) {
+        acc[sellerId] = []
+      }
+      acc[sellerId].push(method)
+    })
+
+    // Ensure selected methods are in the list even if missing from _shippingMethods
+    // This handles the case where _shippingMethods might be empty but we have a selection
+    Object.entries(selectedShippingByVendor).forEach(([sellerId, selected]: [string, any]) => {
+      const alreadyInList = acc[sellerId]?.some(m => m.id === selected.shipping_option_id)
+
+      if (!alreadyInList) {
+        if (!acc[sellerId]) acc[sellerId] = []
+        acc[sellerId].push({
+          id: selected.shipping_option_id,
+          name: selected.name,
+          amount: selected.amount,
+          description: selected.description || selected.shipping_option?.description,
+          seller_id: sellerId,
+          is_synthetic: true
+        })
+      }
+    })
+
     return acc
-  }, {})
-
-  const handleEdit = () => {
-    setIsOpen(true)
-  }
+  }, [_shippingMethods, sellersInCart, selectedShippingByVendor])
 
   const missingSellers = cart.items
     ?.filter((item) =>
@@ -229,8 +308,13 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     )
     .map((item) => item.product?.seller?.name)
 
+
+
+  const allVendorsHaveShipping = groupedBySellerId &&
+    Object.keys(groupedBySellerId).every(sellerId => selectedShippingByVendor[sellerId])
+
   return (
-    <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
+    <>
       {missingModal && (
         <Modal
           heading=""
@@ -238,7 +322,6 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           showCloseButton={false}
         >
           <div className="px-6 pb-8 max-w-sm mx-5">
-
             <div className="flex justify-center mb-3">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
                 <Truck className="w-8 h-8 text-orange-600" />
@@ -307,148 +390,176 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
           </div>
         </Modal>
       )}
-      
-      {/* Header */}
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]" />
-          <Truck className="w-5 h-5 text-[#2b5bf7] relative z-10" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-gray-900">
-                Shipping Method
-              </h2>
-              {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-                <CheckCircleSolid className="w-4 h-4 text-[#2b5bf7]" />
-              )}
-            </div>
-            {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <button
-                onClick={handleEdit}
-                className="text-[13px] font-medium text-[#2b5bf7]"
-              >
-                Edit
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="border-t border-gray-200 pt-3">
-        {isOpen ? (
-          <div className="space-y-6">
-            {Object.keys(groupedBySellerId).map((key) => (
-              <div key={key} className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {groupedBySellerId[key][0].seller_name}
-                  </p>
-                </div>
+      <div className="max-w-md mx-auto mt-4 bg-white rounded-lg p-4">
+        <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Truck className="w-5 h-5 text-myBlue" />
+          Shipping Methods
+          {allVendorsHaveShipping && (
+            <CheckCircleSolid className="w-5 h-5 text-green-600 ml-auto" />
+          )}
+        </h2>
 
-                <Listbox
-                  value={cart.shipping_methods?.[0]?.id}
-                  onChange={handleSetShippingMethod}
-                >
-                  <div className="relative">
-                    <Listbox.Button 
-                      disabled={isLoadingPrices}
-                      className="w-full h-12 px-4 border border-gray-200 rounded-xl text-sm text-gray-700 flex justify-between items-center hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        <div className="space-y-3">
+          {Object.keys(groupedBySellerId).map((sellerId) => {
+            const vendorMethods = groupedBySellerId[sellerId] || []
+            const vendorName = sellersInCart[sellerId]?.name || vendorMethods[0]?.seller_name || "Vendor"
+            const selectedMethod = selectedShippingByVendor[sellerId]
+            const isExpanded = expandedVendors.has(sellerId)
+            const isLoadingThisVendor = loadingVendorId === sellerId
+
+
+
+            return (
+              <div key={sellerId} className="border border-gray-200 rounded-lg overflow-hidden">
+                {/* Vendor Header */}
+                <div className="bg-gray-50 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className={`w-2 h-2 rounded-full ${selectedMethod ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <span className="text-sm font-semibold text-gray-900">{vendorName}</span>
+                      {selectedMethod && (
+                        <CheckCircleSolid className="w-4 h-4 text-green-600 ml-1" />
+                      )}
+                    </div>
+                    <button
+                      onClick={() => toggleVendor(sellerId)}
+                      disabled={isLoadingThisVendor}
+                      className="p-1 hover:bg-gray-200 rounded transition-colors"
                     >
-                      <span>{isLoadingPrices ? "Loading options..." : "Choose shipping option"}</span>
-                      <ChevronUpDown className="w-5 h-5 text-gray-400" />
-                    </Listbox.Button>
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  </div>
+                </div>
 
-                    <Transition as={Fragment}>
-                      <Listbox.Options className="absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-2 max-h-60 overflow-auto shadow-xl">
-                        {groupedBySellerId[key].map((option: any) => (
-                          <Listbox.Option
-                            key={option.id}
-                            value={option.id}
-                            className="px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                {/* Selected Method Display - Shows when collapsed */}
+                {selectedMethod && !isExpanded && (
+                  <div className="px-3 pb-3">
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <CheckCircleSolid className="w-4 h-4 text-green-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-green-900 truncate">
+                            {selectedMethod.name || selectedMethod.shipping_option?.name}
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold text-green-900 flex-shrink-0">
+                          {convertToLocale({
+                            amount: selectedMethod.amount,
+                            currency_code: cart.currency_code,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Shipping Options - Collapsible */}
+                {isExpanded && (
+                  <div className="p-3 space-y-2 relative">
+                    {/* Loading Overlay for this vendor */}
+                    {isLoadingThisVendor && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border-2 border-myBlue border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-sm text-gray-700">Updating...</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {vendorMethods.map((method: any) => {
+                      const isSelected = selectedMethod?.shipping_option_id === method.id
+                      const price = method.price_type === "calculated" && calculatedPricesMap[method.id]
+                        ? calculatedPricesMap[method.id]
+                        : method.amount
+
+                      return (
+                        <label
+                          key={method.id}
+                          className={`block cursor-pointer ${isLoadingThisVendor ? "pointer-events-none" : ""}`}
+                        >
+                          <input
+                            type="radio"
+                            name={`shipping-${sellerId}`}
+                            checked={isSelected}
+                            onChange={() => handleSetShippingMethod(method.id, sellerId)}
+                            disabled={isLoadingThisVendor}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`p-4 rounded-xl border-2 transition-all ${isSelected
+                              ? "border-myBlue bg-gradient-to-r from-blue-50 to-blue-100 shadow-sm"
+                              : "border-gray-200 bg-white hover:border-myBlue/40 hover:shadow-sm"
+                              } ${isLoadingThisVendor ? "opacity-50" : ""}`}
                           >
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium">{option.name}</span>
-                              <span className="text-blue-600 font-semibold">
-                                {option.price_type === "calculated" && calculatedPricesMap[option.id] 
-                                  ? convertToLocale({
-                                      amount: calculatedPricesMap[option.id],
-                                      currency_code: cart.currency_code,
-                                    })
-                                  : convertToLocale({
-                                      amount: option.amount!,
-                                      currency_code: cart.currency_code,
-                                    })
-                                }
-                              </span>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 flex-1">
+                                {/* Custom Radio Circle */}
+                                <div className="relative flex-shrink-0">
+                                  <div
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                                      ? "border-myBlue bg-myBlue shadow-md"
+                                      : "border-gray-300 bg-white"
+                                      }`}
+                                  >
+                                    {isSelected && (
+                                      <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                                    )}
+                                  </div>
+                                  {isSelected && (
+                                    <div className="absolute inset-0 rounded-full bg-myBlue/20 animate-ping" />
+                                  )}
+                                </div>
+
+                                {/* Method Name */}
+                                <div className="flex-1 min-w-0">
+                                  <span className={`text-sm font-semibold block ${isSelected ? "text-myBlue" : "text-gray-900"}`}>
+                                    {method.name}
+                                  </span>
+                                  {method.description && (
+                                    <span className="text-xs text-gray-500 block mt-0.5">
+                                      {method.description}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Price */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className={`text-sm font-bold ${isSelected ? "text-myBlue" : "text-gray-700"}`}>
+                                  {convertToLocale({
+                                    amount: price,
+                                    currency_code: cart.currency_code,
+                                  })}
+                                </span>
+                                {isSelected && (
+                                  <CheckCircleSolid className="w-5 h-5 text-myBlue" />
+                                )}
+                              </div>
                             </div>
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </Transition>
-                  </div>
-                </Listbox>
-              </div>
-            ))}
-            
-            {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-                <h3 className="text-sm font-medium text-green-800 mb-2">Selected Methods</h3>
-                <div className="space-y-2">
-                  {cart.shipping_methods?.map((method) => (
-                    <CartShippingMethodRow
-                      key={method.id}
-                      method={method}
-                      currency_code={cart.currency_code}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <ErrorMessage error={error} />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {(cart.shipping_methods?.length ?? 0) > 0 ? (
-              cart.shipping_methods?.map((method) => (
-                <div key={method.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-900">{method.name}</span>
-                  </div>
-                  <span className="text-sm font-semibold text-blue-600">
-                    {convertToLocale({
-                      amount: method.amount!,
-                      currency_code: cart.currency_code,
+                          </div>
+                        </label>
+                      )
                     })}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Truck className="w-6 h-6 text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-500 mb-4">No shipping method selected</p>
-                <button
-                  onClick={handleEdit}
-                  disabled={isLoadingPrices}
-                  className="px-6 py-2 bg-myBlue text-white text-sm font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoadingPrices ? "Loading..." : "Select Shipping Method"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  )
 
+                    {vendorMethods.length === 0 && !isLoadingThisVendor && (
+                      <div className="p-4 text-center border-2 border-dashed border-gray-200 rounded-xl">
+                        <p className="text-sm text-gray-500">No any other shipping methods available for this location.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <ErrorMessage error={error} />
+      </div>
+    </>
+  )
 }
 
 export default CartShippingMethodsSection

@@ -37,7 +37,7 @@ export default function Navbar({
   const showImePayWalletLink = pathname == "/np/imebottombar"
   const showSelectShippingAddressLabel = pathname == "/np/shippinginfo"
   const showPickupAddressLabel = pathname == "/np/pickupaddress"
-const showFAQLabel = pathname == "/np/footer/faq"
+  const showFAQLabel = pathname == "/np/footer/faq"
   const showTrackOrderLabel = pathname == "/np/footer/track-order"
   const showReturnsLabel = pathname == "/np/footer/returns"
   const showDeliveryLabel = pathname == "/np/footer/delivery"
@@ -47,9 +47,9 @@ const showFAQLabel = pathname == "/np/footer/faq"
   const showPrivacyPolicyLabel = pathname == "/np/footer/privacy-policy"
   const showTermsAndConditionsLabel = pathname == "/np/footer/terms-and-conditions"
 
-  // console.log(" showsearchbar value, pathname, hiddenpaths and hiddenpathIncludes ", showSearchbar, pathname, hiddenPaths, hiddenPaths.includes(pathname))
 
-  // Get total items in cart from Zustand store
+
+
   const totalItems = useCartStore((state) =>
     state.items.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
   )
@@ -64,7 +64,7 @@ const showFAQLabel = pathname == "/np/footer/faq"
       {showBackArrow && (
         <button
           onClick={() => window.history.state && window.history.state.idx > 0 ? router.back() : router.push('/')}
-          className="mt-2 mr-2 flex items-center justify-center rounded"
+          className="mt-2 mr-2 flex items-center justify-center rounded active:scale-95 active:bg-white/10 transition-transform duration-150 p-1"
         >
           <Image
             src="/images/icons/basil_arrow-up-solid.png"
@@ -85,7 +85,7 @@ const showFAQLabel = pathname == "/np/footer/faq"
       <div className="mr-2 lg:mr-0"></div>
 
       <div className="flex items-center w-full">
-        {/* Left: nav links (desktop only) */}
+
         {
           showSearchbar && !showBackArrow && (
             <div className="hidden lg:flex mt-2">
@@ -109,13 +109,13 @@ const showFAQLabel = pathname == "/np/footer/faq"
                     "label-md min-w-[24px] capitalize text-gray-300 hover:text-gray-300"
                   )}
                 >
-                Products
+                  Products
                 </LocalizedClientLink>
 
 
                 {categories.map((category) => {
                   const categoryHref = `/categories/${category?.handle}`
-                  // console.log('pathname and categoryHref', pathname, `${categoryHref}`)
+
 
                   return (
                     <LocalizedClientLink
@@ -265,29 +265,29 @@ const showFAQLabel = pathname == "/np/footer/faq"
           </div>
         </>
         {/* Right: search + profile*/}
-        <div className="flex w-full justify-between md:justify-end lg:ml-auto items-center space-x-2">
+        <div className="flex w-full justify-end lg:ml-auto items-center space-x-2">
           {showSearchbar && <NavbarSearch />}
-          
-          {/* Profile Icon */}
+
+
           <LocalizedClientLink
             href="/profile"
-            className="flex items-center justify-center w-8 h-8 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200"
+            className="flex items-center justify-center w-8 h-8 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200 ml-auto"
             title="Profile"
           >
-            <svg 
-              width="18" 
-              height="18" 
-              viewBox="0 0 24 24" 
-              fill="none" 
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className="text-white"
             >
-              <path 
-                d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" 
+              <path
+                d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
                 fill="currentColor"
               />
-              <path 
-                d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" 
+              <path
+                d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z"
                 fill="currentColor"
               />
             </svg>
@@ -314,7 +314,6 @@ const CartButton = ({ totalItems, goToCheckoutPage }: { totalItems: number, goTo
         e.preventDefault();
         if (isFlutterWebView()) { goCheck() }
         else {
-          console.log("Not in Flutter WebView, navigating using router.");
           goToCheckoutPage()
         }
       }}

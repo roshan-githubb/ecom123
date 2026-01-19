@@ -7,20 +7,22 @@ import { safeDataFetch } from '@/lib/utils/safe-data'
 import React from 'react'
 
 interface FlashItemsProps {
-  locale?: string
+    locale?: string
+    regionId?: string
 }
 
-export default async function FlashItems({ locale = 'np' }: FlashItemsProps) {
-    
+export default async function FlashItems({ locale = 'np', regionId }: FlashItemsProps) {
+
     const result = await safeDataFetch(
         async () => {
             const { response: { products: jsonLdProducts } } = await listProducts({
                 countryCode: locale,
-                queryParams: { limit: 8, order: "created_at" },
+                regionId,
+                queryParams: { limit: 8, order: "-created_at" },
             })
-            
+
             const sortedProducts = sortProductsByInventory(jsonLdProducts)
-            
+
             if (!sortedProducts || sortedProducts.length === 0) {
                 return { products: [], ratingsMap: {} }
             }

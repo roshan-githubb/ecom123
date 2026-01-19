@@ -29,7 +29,6 @@ export async function getOrCreateCartId() {
 }
 
 export async function addToServerCart(variantId: string, quantity = 1) {
-    console.log('Adding to server cart ', variantId, quantity);
     const cartId = await getOrCreateCartId();
 
     const res = await fetch("/api/cart/add", {
@@ -40,18 +39,16 @@ export async function addToServerCart(variantId: string, quantity = 1) {
             quantity,
         }),
     });
-    const resData  = await res.json();
-    console.log("Add to cart response:",  resData);
+    const resData = await res.json();
     return resData;
 }
 
 export async function updateCartItemQuantity(lineItemId: string, quantity: number) {
     const cartId = await getOrCreateCartId();
-    
-    console.log('line item id and quantity ', lineItemId, quantity)
+
     return fetch("/api/cart/update", {
         method: "POST",
-        body: JSON.stringify({ cart_id: cartId ,line_item_id: lineItemId, quantity }),
+        body: JSON.stringify({ cart_id: cartId, line_item_id: lineItemId, quantity }),
     }).then(res => res.json());
 }
 
@@ -82,8 +79,6 @@ export async function getCart() {
         }),
     });
     const data = await res.json();
-
-    console.log("Cart:", data);
 
     return data;
 }

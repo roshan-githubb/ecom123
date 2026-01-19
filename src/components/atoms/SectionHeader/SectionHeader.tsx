@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export function SectionHeader({
   title,
@@ -12,6 +11,7 @@ export function SectionHeader({
   titleColor = "#32425A",
   actionColor = "#144293",
   link,
+  locale: providedLocale,
 }: {
   title: string;
   actionLabel?: string;
@@ -20,15 +20,11 @@ export function SectionHeader({
   titleColor?: string;
   actionColor?: string;
   link?: string;
+  locale?: string;
 }) {
-  const [mounted, setMounted] = useState(false);
   const params = useParams();
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
-  const locale = mounted ? params?.locale || 'en' : 'en';
+  const locale = providedLocale || params?.locale || 'en';
   const href = link ? `/${locale}${link}` : `/${locale}/coming-soon`;
 
   return (

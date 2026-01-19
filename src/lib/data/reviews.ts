@@ -65,7 +65,7 @@ const getProductReviews = async (productId: string, limit: number = 20, offset: 
   const res = await fetchQuery(`/store/products/${productId}/reviews`, {
     headers,
     method: "GET",
-    query: { 
+    query: {
       limit: limit.toString(),
       offset: offset.toString()
     },
@@ -106,6 +106,7 @@ const getProductRatingSummary = async (productId: string) => {
   const res = await fetchQuery(`/store/products/${productId}/rating-summary`, {
     headers,
     method: "GET",
+    next: { revalidate: 3600 },
   })
 
   return res

@@ -9,12 +9,16 @@ interface AddressFormProps {
   initialData?: Address
   index?: number
   onClose: () => void
+  isUserLoggedIn?: boolean
+  hideCheckbox?: boolean
 }
 
 export const AddressForm: React.FC<AddressFormProps> = ({
   initialData,
   index,
   onClose,
+  isUserLoggedIn = false,
+  hideCheckbox = false,
 }) => {
   const addAddress = useAddressStore((state) => state.addAddress)
   const updateAddress = useAddressStore((state) => state.updateAddress)
@@ -36,11 +40,13 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveToProfile, setSaveToProfile] = useState(true)
+  const isLoggedIn = isUserLoggedIn
 
   React.useEffect(() => {
     async function loadCartEmail() {
       if (initialData?.email) return
-      
+
       const cartId = localStorage.getItem("cart_id")
       if (!cartId) return
 
@@ -51,12 +57,11 @@ export const AddressForm: React.FC<AddressFormProps> = ({
           body: JSON.stringify({ cart_id: cartId }),
         })
         const data = await res.json()
-        
+
         if (data?.cart?.email) {
           setEmail(data.cart.email)
         }
       } catch (err) {
-        console.error("Failed to fetch cart email:", err)
       }
     }
 
@@ -70,40 +75,76 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
     const addr: Address = {
       name,
-      email, 
+      email,
       phone,
       province,
       district,
       line1,
       line2,
-      postalCode, 
+      postalCode,
       countryCode,
       label,
       isDefault: initialData?.isDefault || false,
     }
 
     try {
-      
+
       if (typeof index === "number") {
         updateAddress(index, addr)
       } else {
         addAddress(addr)
       }
 
-      
+
       const error = await applySelectedAddressToCart(addr)
-      
+
       if (error) {
         setSaveError(error)
         setIsSaving(false)
         return
       }
 
+      if (isLoggedIn && saveToProfile) {
+        try {
+          const nameParts = name.trim().split(/\s+/)
+          const firstName = nameParts[0] || ''
+          const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '.'
+
+          const addressData = {
+            address_name: label,
+            first_name: firstName,
+            last_name: lastName,
+            company: "",
+            address_1: line1,
+            city: district,
+            postal_code: postalCode,
+            country_code: countryCode,
+            phone: phone,
+            province: province,
+            isDefaultShipping: "true",
+            isDefaultBilling: "false"
+          }
+
+          const response = await fetch("/api/customer/address", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(addressData)
+          })
+
+          const result = await response.json()
+        } catch (customerError) {
+
+        }
+      }
+
       setIsSaving(false)
-      
-      
+
+
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      
+
       onClose()
     } catch (err: any) {
       setSaveError(err.message || "Failed to save address")
@@ -141,7 +182,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
             {
               headers: {
-                'User-Agent': 'YourAppName/1.0' 
+                'User-Agent': 'YourAppName/1.0'
               }
             }
           )
@@ -167,13 +208,11 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
           setIsLoadingLocation(false)
         } catch (error) {
-          console.error("Error fetching address:", error)
           setLocationError("Failed to get address from location")
           setIsLoadingLocation(false)
         }
       },
       (error) => {
-        console.error("Geolocation error:", error)
         setLocationError("Unable to retrieve your location. Please enable location access.")
         setIsLoadingLocation(false)
       },
@@ -266,14 +305,17 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         className="border p-2 w-full rounded"
       />
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="border p-2 w-full rounded"
-        required
-      />
+
+      {!isUserLoggedIn && (
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border p-2 w-full rounded"
+          required
+        />
+      )}
 
       <input
         type="text"
@@ -292,7 +334,27 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         <option value="np">Nepal</option>
         <option value="in">India</option>
       </select>
-      
+
+      {isLoggedIn && !hideCheckbox && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={saveToProfile}
+              onChange={(e) => setSaveToProfile(e.target.checked)}
+              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div className="flex-1">
+              <span className="font-medium text-gray-900 block">Save as my default address</span>
+              <span className="text-xs text-gray-600">
+                This address will be automatically used for future orders
+              </span>
+            </div>
+          </label>
+        </div>
+      )}
+
+
       <div className="flex gap-2">
         <button
           type="submit"

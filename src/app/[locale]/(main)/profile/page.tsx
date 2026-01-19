@@ -35,7 +35,7 @@ export default async function ProfilePage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-3">
             You&apos;re Not Logged In
           </h1>
-
+          
           {/* Continue Shopping */}
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-500 mb-3">

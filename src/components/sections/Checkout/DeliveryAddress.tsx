@@ -7,7 +7,7 @@ import { useCartStore } from '@/store/useCartStore'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from "next/navigation"
 
-const DeliveryAddress = () => {
+const DeliveryAddress = ({ onAddressUpdate: parentOnAddressUpdate }: { onAddressUpdate?: () => void }) => {
   const [loading, setLoading] = useState(true)
   const [hasAddress, setHasAddress] = useState(false)
   const [addressCheckTrigger, setAddressCheckTrigger] = useState(0)
@@ -16,15 +16,7 @@ const DeliveryAddress = () => {
     fetchCart,
   } = useCartStore()
 
-  // useEffect(() => {
-  //     async function load() {
-  //         await fetchCart()
-  //         setLoading(false)
-  //     }
-  //     load()
-  // }, [fetchCart])
 
-  // Check if address exists
   useEffect(() => {
     async function checkAddress() {
       if (!cartId) {
@@ -41,13 +33,11 @@ const DeliveryAddress = () => {
         })
         const data = await res.json()
         const shippingAddr = data?.cart?.shipping_address
-        // Check if address exists AND has actual data (not just null properties)
+
         const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
         setHasAddress(!!isValid)
         setLoading(false)
-        console.log("delivery Address check:", { shippingAddr, isValid })
       } catch (err) {
-        console.error("Failed to check address:", err)
         setHasAddress(false)
       }
     }
@@ -56,11 +46,15 @@ const DeliveryAddress = () => {
   }, [cartId, addressCheckTrigger])
 
   const handleAddressUpdate = () => {
-    // Trigger address re-check
+
     setAddressCheckTrigger((prev) => prev + 1)
+
+    parentOnAddressUpdate?.()
   }
-  if (loading) <CheckoutSkeleton />
-  if (!loading && !cartId) return;
+
+  if (loading) return <CheckoutSkeleton />
+  if (!cartId) return null
+
   return (
     <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
   )
@@ -70,142 +64,193 @@ export default DeliveryAddress
 
 const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddressUpdate }) => {
   const router = useRouter()
-  const addresses = useAddressStore((state) => state.addresses)
-  const selectedIndex = useAddressStore((state) => state.selectedAddressIndex)
-  const localAddr = selectedIndex !== undefined ? addresses[selectedIndex] : null
   const [loading, setLoading] = useState(true)
-
-  // Get cart to check for shipping address
-  const [cartAddress, setCartAddress] = useState<any>(null)
   const [showForm, setShowForm] = useState(false)
   const { cartId } = useCartStore()
+  const [customerDefaultAddress, setCustomerDefaultAddress] = useState<any>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+
+
 
   useEffect(() => {
-    async function fetchCartAddress() {
-      if (!cartId) return
-
+    async function loadCustomerAddress() {
       try {
-        const res = await fetch("/api/cart/get", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart_id: cartId }),
+        const res = await fetch("/api/customer/me", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
         })
-        const data = await res.json()
-        if (data?.cart?.shipping_address) {
-          setCartAddress(data.cart.shipping_address)
-          setLoading(false)
+
+        if (res.ok) {
+          const data = await res.json()
+          const customer = data?.customer
+
+          if (customer) {
+            setIsLoggedIn(true)
+
+            if (customer.addresses && customer.addresses.length > 0) {
+              const defaultAddr = customer.addresses.find((addr: any) => addr.is_default_shipping)
+                || customer.addresses[0]
+
+              setCustomerDefaultAddress(defaultAddr)
+
+              if (cartId) {
+                const addressData = {
+                  email: customer.email || "",
+                  shipping_address: {
+                    first_name: defaultAddr.first_name || "",
+                    last_name: defaultAddr.last_name || "",
+                    address_1: defaultAddr.address_1 || "",
+                    address_2: defaultAddr.address_2 || "",
+                    city: defaultAddr.city || "",
+                    province: defaultAddr.province || "",
+                    postal_code: defaultAddr.postal_code || "",
+                    country_code: defaultAddr.country_code || "np",
+                    phone: defaultAddr.phone || "",
+                    company: defaultAddr.company || "",
+                  },
+                  billing_address: {
+                    first_name: defaultAddr.first_name || "",
+                    last_name: defaultAddr.last_name || "",
+                    address_1: defaultAddr.address_1 || "",
+                    address_2: defaultAddr.address_2 || "",
+                    city: defaultAddr.city || "",
+                    province: defaultAddr.province || "",
+                    postal_code: defaultAddr.postal_code || "",
+                    country_code: defaultAddr.country_code || "np",
+                    phone: defaultAddr.phone || "",
+                    company: defaultAddr.company || "",
+                  }
+                }
+
+                const { setAddressesWithCartId } = await import("@/lib/data/cart")
+                const result = await setAddressesWithCartId(cartId, addressData)
+
+                if (!result) {
+                  onAddressUpdate?.()
+                }
+              }
+            } else {
+              setCustomerDefaultAddress(null)
+            }
+          } else {
+            setIsLoggedIn(false)
+            setCustomerDefaultAddress(null)
+          }
+        } else {
+          setIsLoggedIn(false)
+          setCustomerDefaultAddress(null)
         }
       } catch (err) {
-        console.error("Failed to fetch cart address:", err)
+        setCustomerDefaultAddress(null)
+        setIsLoggedIn(false)
+      } finally {
+        setLoading(false)
       }
     }
 
-    fetchCartAddress()
-  }, [cartId])
-  if (!cartId) return null
-
-  // Use cart address if available, otherwise use local address
-  const addr = cartAddress || localAddr
-
-  // Check if address has actual data (not just null properties)
-  const hasValidAddress = addr && (
-    (cartAddress && cartAddress.first_name) ||
-    (localAddr && localAddr.name)
-  )
+    loadCustomerAddress()
+  }, [])
 
   const handleFormClose = () => {
     setShowForm(false)
-    // Refresh cart address after form closes
-    if (cartId) {
-      fetch("/api/cart/get", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart_id: cartId }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.cart?.shipping_address) {
-            setCartAddress(data.cart.shipping_address)
-          }
-          // Notify parent to re-check address
-          onAddressUpdate?.()
-        })
-        .catch((err) => console.error("Failed to refresh cart address:", err))
-    }
+
+    window.location.reload()
   }
-  if (loading) return;
+
+
+
+  if (!cartId) return null
+  if (loading) return <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4"><CheckoutSkeleton /></div>
+
+
+  if (customerDefaultAddress) {
+    return (
+      <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
+        {showForm ? (
+          <AddressForm
+            initialData={undefined}
+            index={undefined}
+            onClose={handleFormClose}
+            isUserLoggedIn={isLoggedIn}
+          />
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]"></div>
+                  <MapPin className="w-5 h-5 text-[#2b5bf7] fill-[#2b5bf7] relative z-10" />
+                </div>
+              </div>
+              <div
+                className="flex-1 cursor-pointer min-w-0"
+                onClick={() => setShowForm(true)}
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-bold text-sm text-gray-900">
+                        {customerDefaultAddress.first_name} {customerDefaultAddress.last_name}
+                      </span>
+                      <span className="text-gray-400 text-[13px]">
+                        {customerDefaultAddress.phone}
+                      </span>
+                    </div>
+                    <div className="leading-snug">
+                      {customerDefaultAddress.address_name && (
+                        <span className="inline-block bg-[#2b5bf7] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] mr-1 align-middle">
+                          {customerDefaultAddress.address_name.toUpperCase()}
+                        </span>
+                      )}
+                      <span className="text-[13px] text-gray-600">
+                        {customerDefaultAddress.address_1}
+                        {customerDefaultAddress.address_2 ? `, ${customerDefaultAddress.address_2}` : ""}
+                        , {customerDefaultAddress.city}, {customerDefaultAddress.province}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="flex items-start gap-3 pl-[52px] cursor-pointer"
+              onClick={() => router.push("/np/pickupaddress")}
+            >
+              <div className="flex-1 border-t border-gray-200 pt-3 min-w-0">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] text-black font-medium leading-tight mb-1">
+                      Collect your parcels from a nearby location at a minimal
+                      delivery fee.
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      9 suggested collection point(s) nearby
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
       {showForm ? (
         <AddressForm
-          initialData={localAddr || undefined}
-          index={selectedIndex}
+          initialData={undefined}
+          index={undefined}
           onClose={handleFormClose}
+          isUserLoggedIn={isLoggedIn}
         />
-      ) : hasValidAddress ? (
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]"></div>
-                <MapPin className="w-5 h-5 text-[#2b5bf7] fill-[#2b5bf7] relative z-10" />
-              </div>
-            </div>
-            <div
-              className="flex-1 cursor-pointer min-w-0"
-              onClick={() => setShowForm(true)}
-            >
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="font-bold text-sm text-gray-900">
-                      {cartAddress
-                        ? `${cartAddress.first_name} ${cartAddress.last_name}`
-                        : addr.name}
-                    </span>
-                    <span className="text-gray-400 text-[13px]">
-                      {cartAddress ? cartAddress.phone : addr.phone}
-                    </span>
-                  </div>
-                  <div className="leading-snug">
-                    {!cartAddress && addr.label && (
-                      <span className="inline-block bg-[#2b5bf7] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] mr-1 align-middle">
-                        {addr.label.toUpperCase()}
-                      </span>
-                    )}
-                    <span className="text-[13px] text-gray-600">
-                      {cartAddress
-                        ? `${cartAddress.address_1}${cartAddress.address_2 ? ", " + cartAddress.address_2 : ""}, ${cartAddress.city}, ${cartAddress.province}`
-                        : `${addr.line1}${addr.line2 ? ", " + addr.line2 : ""}, ${addr.district}, ${addr.province}`}
-                    </span>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="flex items-start gap-3 pl-[52px] cursor-pointer"
-            onClick={() => router.push("/np/pickupaddress")}
-          >
-            <div className="flex-1 border-t border-gray-200 pt-3 min-w-0">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-black font-medium leading-tight mb-1">
-                    Collect your parcels from a nearby location at a minimal
-                    delivery fee.
-                  </p>
-                  <p className="text-[11px] text-gray-400">
-                    9 suggested collection point(s) nearby
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              </div>
-            </div>
-          </div>
-        </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-6">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
