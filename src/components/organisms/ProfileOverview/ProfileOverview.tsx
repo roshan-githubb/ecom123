@@ -56,7 +56,7 @@ export const ProfileOverview = ({ customer, recentOrders = [] }: ProfileOverview
     {
       title: "Orders",
       description: "View your order history",
-      href: "/coming-soon-orders",
+      href: "/profile/orders",
       icon: Package,
       color: "bg-blue-50 text-blue-600"
     },
@@ -69,22 +69,7 @@ export const ProfileOverview = ({ customer, recentOrders = [] }: ProfileOverview
     }
   ]
 
-  const formatOrderStatus = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'canceled':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -156,54 +141,7 @@ export const ProfileOverview = ({ customer, recentOrders = [] }: ProfileOverview
 
       {/* Account Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recent Orders */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-            <LocalizedLink href="/coming-soon-orders">
-              <button className="text-blue-600 text-sm hover:underline">
-                View all
-              </button>
-            </LocalizedLink>
-          </div>
-          <div className="space-y-3">
-            {recentOrders.length > 0 ? (
-              recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <ShoppingBag className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">Order #{order.display_id}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
-                      {formatOrderStatus(order.status)}
-                    </span>
-                    <p className="text-sm font-medium mt-1">
-                      ${(order.total / 100).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No orders yet</p>
-                <LocalizedLink href="/">
-                  <button className="text-blue-600 text-sm hover:underline mt-1">
-                    Start shopping
-                  </button>
-                </LocalizedLink>
-              </div>
-            )}
-          </div>
-        </Card>
+        
 
         {/* Account Info */}
         <Card className="p-6">

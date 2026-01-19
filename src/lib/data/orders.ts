@@ -37,7 +37,7 @@ export const retrieveOrder = async (id: string) => {
         method: "GET",
         query: {
           fields:
-            "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product,*seller,*order_set",
+            "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product,*seller",
         },
         headers,
         next,
@@ -119,7 +119,6 @@ export const listOrders = async (
       orders: Array<
         HttpTypes.StoreOrder & {
           seller: { id: string; name: string; reviews?: any[] }
-          reviews: any[]
         }
       >
     }>(`/store/orders`, {
@@ -128,13 +127,12 @@ export const listOrders = async (
         limit,
         offset,
         order: "-created_at",
-        fields:
-          "*items,+items.metadata,*items.variant,*items.product,*seller,*reviews,*order_set,shipping_total,total,created_at",
+        fields: "*items,+items.metadata,*items.variant,*items.product,*seller",
         ...filters,
       },
       headers,
       next,
-      cache: "no-cache",
+      cache: "force-cache",
     })
     .then(({ orders }) => orders)
     .catch((err) => medusaError(err))

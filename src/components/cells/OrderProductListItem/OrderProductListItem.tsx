@@ -47,6 +47,7 @@ export const OrderProductListItem = ({
             {item.variant?.product?.title}
           </LocalizedClientLink>
         </div>
+        <div className="my-2"></div>
         <div className="sm:col-span-2 flex items-center">
           <p className="label-md text-secondary">
             {`Variant: `}
@@ -55,7 +56,7 @@ export const OrderProductListItem = ({
             </span>
           </p>
         </div>
-        <div className="sm:col-span-2 flex items-center justify-center">
+        <div className="sm:col-span-2 ">
           <p className="label-md text-secondary">
             {`Quantity: `}
             <span className="text-primary">{item?.quantity}</span>

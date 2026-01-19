@@ -1,12 +1,16 @@
+import Image from "next/image";
+
 export default function Loading() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
       {/* Logo */}
       <div className="mb-6">
-        <img 
+        <Image
           src="/appIcon.png" 
           alt="Loading..." 
           className="h-12 w-auto"
+          height={48}
+          width={48}
         />
       </div>
       
