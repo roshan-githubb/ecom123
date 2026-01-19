@@ -31,6 +31,7 @@ function CheckoutPageComponent() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [isLoadingAfterAddress, setIsLoadingAfterAddress] = useState(false)
   const [isLoadingAfterShipping, setIsLoadingAfterShipping] = useState(false)
+  const [addressReady, setAddressReady] = useState(false)
   const { isOpen, product, closeModal } = useProductModalStore()
   const params = useParams()
   const locale = params?.locale as string || 'np'
@@ -42,13 +43,23 @@ function CheckoutPageComponent() {
       setCart(cartData)
 
       if (cartData) {
-        const [shipping, payment] = await Promise.all([
-          listCartShippingMethods(cartData.id || ''),
-          listCartPaymentMethods(cartData.region?.id ?? "")
-        ])
+        const hasAddress = cartData.shipping_address && 
+          cartData.shipping_address.first_name && 
+          cartData.shipping_address.address_1
+        
+        if (hasAddress && !addressReady) {
+          setAddressReady(true)
+        }
+        
+        if (addressReady || hasAddress) {
+          const [shipping, payment] = await Promise.all([
+            listCartShippingMethods(cartData.id || ''),
+            listCartPaymentMethods(cartData.region?.id ?? "")
+          ])
 
-        setShippingMethods(shipping)
-        setPaymentMethods(payment)
+          setShippingMethods(shipping)
+          setPaymentMethods(payment)
+        }
       } else {
         setCart(null)
       }
@@ -62,10 +73,11 @@ function CheckoutPageComponent() {
 
   useEffect(() => {
     loadData()
-  }, [refreshTrigger])
+  }, [refreshTrigger, addressReady])
 
   const handleAddressUpdate = async () => {
     setIsLoadingAfterAddress(true)
+    setAddressReady(true)
     setRefreshTrigger(prev => prev + 1)
     window.dispatchEvent(new CustomEvent('addressUpdated'))
   }
