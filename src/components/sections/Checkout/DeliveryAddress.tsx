@@ -72,8 +72,6 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
 
-
-
   useEffect(() => {
     async function loadCustomerAddress() {
       try {
@@ -128,7 +126,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                 const { setAddressesWithCartId } = await import("@/lib/data/cart")
                 const result = await setAddressesWithCartId(cartId, addressData)
 
-                if (!result) {
+                if (result) {
                   onAddressUpdate?.()
                 }
               }
