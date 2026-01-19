@@ -195,7 +195,7 @@ export const HomeProductCard = ({
                     </p>
 
                     <div className="flex items-center gap-x-2 mt-1">
-                        <span className="text-[12px] font-semibold" style={{ color: "#2C49E0" }}>
+                        <span className="text-[12px] font-semibold text-myBlue" >
                             Rs. {currentPrice}
                         </span>
                     </div>

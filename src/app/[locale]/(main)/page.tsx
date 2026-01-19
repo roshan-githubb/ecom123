@@ -9,12 +9,11 @@ import {
   CategoriesGridSkeleton,
   ProductsSectionSkeleton,
   FlashItemsSkeleton,
-  BrandsSkeleton,
+  // BrandsSkeleton,
   VideoSkeleton
 } from "@/components/organisms/HomepageSkeleton/SectionSkeletons";
 import FlashItems from "@/components/sections/FlashItems/FlashItems";
 import TopProducts from "@/components/sections/TopProducts/TopProducts";
-import HeroVideo from "@/components/molecules/VideoComponent/VideoComponent";
 import { listProducts } from "@/lib/data/products";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -38,27 +37,12 @@ interface CategoryItem {
   metadata: CategoryItemMetadata;
 }
 
-
-const brands = [
-  { name: "Nike", image: "/images/brands/Nike.png" },
-  { name: "Maybeline", image: "/images/brands/Maybeline.png" },
-  { name: "Dell", image: "/images/brands/dell.png" },
-  { name: "Adidas", image: "/images/brands/adidas.png" },
-  { name: "Gucci", image: "/images/brands/gucci.png" },
-  { name: "H&M", image: "/images/brands/H&M.png" },
-  { name: "Prada", image: "/images/brands/Prada.png" },
-  { name: "Philips", image: "/images/brands/Philips.png" },
-];
-
 const topSectionProducts = [
   { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png", link: "/flash-sale" },
   { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
   { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
   { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
 ];
-
-
-
 
 
 
@@ -102,7 +86,12 @@ async function CategoriesSection() {
 }
 
 async function BannerSection() {
-  const bannerCarousel = await getBanners();
+  const bannerCarousel = await getBanners('homepage_carousel');
+  return <CarouselBanner bannerCarousel={bannerCarousel} />;
+}
+
+async function VideoSection() {
+  const bannerCarousel = await getBanners('homepage_bottom');
   return <CarouselBanner bannerCarousel={bannerCarousel} />;
 }
 
@@ -226,7 +215,7 @@ export default async function HomePage({ params }: { params: Promise<Params> }) 
           <RecommendedSection locale={locale} regionId={regionId} />
         </Suspense>
 
-        {/* Top brands */}
+        {/* Top brands
         <Suspense fallback={<BrandsSkeleton />}>
           <SectionHeader title="Top Brands" actionLabel="See All" locale={locale} />
           <div className="grid grid-cols-4 gap-4">
@@ -242,7 +231,7 @@ export default async function HomePage({ params }: { params: Promise<Params> }) 
               />
             ))}
           </div>
-        </Suspense>
+        </Suspense> */}
 
         {/* Best deals */}
         <Suspense fallback={<ProductsSectionSkeleton title="Best Deals" />}>
@@ -251,7 +240,9 @@ export default async function HomePage({ params }: { params: Promise<Params> }) 
 
         {/* Advert video section */}
         <Suspense fallback={<VideoSkeleton />}>
-          <HeroVideo videoSrc="/videos/watch-time.mp4" />
+          <div className="pt-0">
+            <VideoSection />
+          </div>
         </Suspense>
 
         {/* Most Popular */}

@@ -360,7 +360,7 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
 
               <Link
                 href={`/${locale}/check`}
-                className="bg-myBlue text-white px-4 py-3 rounded-xl font-normal text-sm hover:bg-blue-700 transition-colors"
+                className="bg-myBlue text-white px-4 py-3 rounded-xl font-normal text-sm hover:opacity-90 transition-colors"
               >
                 View Cart
               </Link>

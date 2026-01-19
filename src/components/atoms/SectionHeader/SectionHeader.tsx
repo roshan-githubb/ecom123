@@ -8,8 +8,7 @@ export function SectionHeader({
   actionLabel,
   titleSize = "text-[20px]",
   actionSize = "text-[14px]",
-  titleColor = "#32425A",
-  actionColor = "#144293",
+  // actionColor = "#144293",
   link,
   locale: providedLocale,
 }: {
@@ -29,14 +28,14 @@ export function SectionHeader({
 
   return (
     <div className="flex items-center justify-between mb-1">
-      <h3 className={`${titleSize} font-medium`} style={{ color: titleColor }}>
+      <h3 className={`${titleSize} font-medium text-myBlue`} >
         {title}
       </h3>
       {actionLabel && (
         <Link
           href={href}
-          className={`${actionSize} font-medium transition-opacity hover:opacity-70 active:opacity-50`}
-          style={{ color: actionColor }}
+          className={`${actionSize} font-medium transition-opacity text-myBlue hover:opacity-70 active:opacity-50`}
+          // style={{ color: actionColor }}
           prefetch={true}
         >
           {actionLabel}
