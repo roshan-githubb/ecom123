@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // ✅ Store token exactly the same way as email/password login
+    await setAuthToken(token)
     await setAuthToken(token)
 
     // Optional but recommended (matches your login behavior)
@@ -24,7 +24,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("[Flutter Auth]", err)
     return NextResponse.json(
       { error: "Authentication failed" },
       { status: 500 }

@@ -19,9 +19,11 @@ type StoreCardPaymentMethod = any & {
 const CartPaymentSection = ({
   cart,
   availablePaymentMethods,
+  onPaymentUpdate,
 }: {
   cart: any
   availablePaymentMethods: StoreCardPaymentMethod[] | null
+  onPaymentUpdate?: () => void
 }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
@@ -41,6 +43,8 @@ const CartPaymentSection = ({
       await initiatePaymentSession(cart, {
         provider_id: method,
       })
+      await new Promise(resolve => setTimeout(resolve, 200))
+      onPaymentUpdate?.()
     } catch (err) {
     } finally {
       setLoadingPaymentMethod(null)

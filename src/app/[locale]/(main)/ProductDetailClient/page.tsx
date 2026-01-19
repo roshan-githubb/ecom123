@@ -378,7 +378,7 @@ export default function ProductDetailClient({
                   setIndex(index - 1)
                 }
               }}
-              className="w-full h-full"
+              className="w-full h-full active:scale-95 active:opacity-80 transition-transform"
             >
               <Image
                 src={images[index] || "/images/not-available/not-available.png"}
@@ -396,7 +396,7 @@ export default function ProductDetailClient({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full transition-all ${i === index ? "bg-blue-800 w-4" : "bg-gray-300"
+              className={`w-2 h-2 rounded-full transition-all active:scale-95 ${i === index ? "bg-blue-800 w-4" : "bg-gray-300"
                 }`}
             />
           ))}
@@ -406,10 +406,14 @@ export default function ProductDetailClient({
         <div className="px-4 py-3 flex justify-between items-center border-b border-gray-200">
           <div className="text-sm text-blue-600 font-medium">
             <Link
-              href={product.store?.url || "/coming-soon"}
+              href={
+                (product as any).seller?.handle
+                  ? `/sellerpage?seller_handle=${(product as any).seller.handle}`
+                  : product.store?.url || "#"
+              }
               className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit the {product.store?.name || "Store"}
+              Visit the {(product as any).seller?.name || product.store?.name || "Store"}
             </Link>
           </div>
           <div className="flex flex-col items-end gap-1">

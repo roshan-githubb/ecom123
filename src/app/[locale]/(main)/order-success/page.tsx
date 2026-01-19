@@ -20,7 +20,7 @@ function OrderSuccessPage() {
         </p>
 
         <p className="mb-8 text-sm text-gray-600 leading-relaxed">
-          Thank you for your order! We'll send you a confirmation email shortly with tracking details.
+          Thank you for your order! We&apos;ll send you a confirmation email shortly with tracking details.
         </p>
 
         <div className="space-y-3">
