@@ -23,6 +23,8 @@ import { useParams } from "next/navigation"
 import { StoreIcon } from "lucide-react"
 import SimilarProducts from "../SimilarProducts/SimilarProduct"
 import { StarRating } from "@/components/atoms"
+import { findColorOption, findSizeOption, extractSizeValues, extractWeightValues, getProductOptionTypes, debugProductOptions } from "@/lib/helpers/option-matcher"
+import { createColorOptions, ColorOption } from "@/lib/helpers/color-mapper"
 
 interface ProductOptionValue {
   id: string
@@ -58,12 +60,6 @@ interface Product {
   options?: ProductOption[]
   variants?: ProductVariant[]
   seller?: { id: string; name: string; handle: string }
-}
-interface ColorOption {
-  id: string
-  label: string
-  bg: string
-  ring: string
 }
 interface AddVariantSheetProps {
   product: Product | HttpTypes.StoreProduct
@@ -530,101 +526,10 @@ function ProductCardInternal({
     }
   }
 
-  const colorOption = product.options?.find(
-    (opt: any) => opt.title.toLowerCase() === "color"
-  )
-  const colors: ColorOption[] =
-    colorOption?.values?.map((v: any) => {
-      let bgClass = "bg-gray-200"
-      switch (v.value.toLowerCase()) {
-        case "white":
-          bgClass = "bg-white"
-          break
-        case "black":
-          bgClass = "bg-black"
-          break
-        case "red":
-          bgClass = "bg-red-500"
-          break
-        case "green":
-          bgClass = "bg-green-500"
-          break
-        case "blue":
-          bgClass = "bg-blue-500"
-          break
-        case "yellow":
-          bgClass = "bg-yellow-400"
-          break
-        case "orange":
-          bgClass = "bg-orange-500"
-          break
-        case "purple":
-          bgClass = "bg-purple-500"
-          break
-        case "pink":
-          bgClass = "bg-pink-500"
-          break
-        case "indigo":
-          bgClass = "bg-indigo-500"
-          break
-        case "teal":
-          bgClass = "bg-teal-500"
-          break
-        case "cyan":
-          bgClass = "bg-cyan-500"
-          break
-        case "lime":
-          bgClass = "bg-lime-500"
-          break
-        case "emerald":
-          bgClass = "bg-emerald-500"
-          break
-        case "sky":
-          bgClass = "bg-sky-500"
-          break
-        case "violet":
-          bgClass = "bg-violet-500"
-          break
-        case "fuchsia":
-          bgClass = "bg-fuchsia-500"
-          break
-        case "rose":
-          bgClass = "bg-rose-500"
-          break
-        case "amber":
-          bgClass = "bg-amber-500"
-          break
-        case "brown":
-          bgClass = "bg-amber-700"
-          break
-        case "gray":
-        case "grey":
-          bgClass = "bg-gray-500"
-          break
-        case "navy":
-          bgClass = "bg-blue-900"
-          break
-        case "maroon":
-          bgClass = "bg-red-900"
-          break
-        case "olive":
-          bgClass = "bg-yellow-700"
-          break
-        case "silver":
-          bgClass = "bg-gray-300"
-          break
-        case "gold":
-          bgClass = "bg-yellow-500"
-          break
-        case "beige":
-          bgClass = "bg-amber-100"
-          break
-        case "cream":
-          bgClass = "bg-yellow-50"
-          break
-      }
-      return { id: v.id, label: v.value, bg: bgClass, ring: "ring-gray-300" }
-    }) || []
+  const colorOption = findColorOption(product.options || [])
+  
+  const optionTypes = getProductOptionTypes(product)
+  const colors: ColorOption[] = createColorOptions(colorOption?.values || [])
 
   const sizeShortMap: Record<string, string> = {
     small: "S",
@@ -636,18 +541,14 @@ function ProductCardInternal({
     m: "M",
     s: "S",
   }
-  const variantSizes =
-    product.variants?.map((v: any) => {
-      const sizeOpt = v?.options?.find((o: any) =>
-        product?.options
-          ?.find((opt: any) => opt?.title?.toLowerCase() === "size")
-          ?.values?.some((val: any) => val.value === o.value)
-      )
-      return sizeOpt?.value
-    }) || []
-  const sizes = [...new Set(variantSizes)].filter(Boolean) as string[]
+  
+  // Use flexible size and weight extraction
+  const sizes = extractSizeValues(product)
+  const weights = extractWeightValues(product)
+  
   const [selectedColor, setSelectedColor] = useState(colors[0]?.id)
   const [selectedSize, setSelectedSize] = useState(sizes[0])
+  const [selectedWeight, setSelectedWeight] = useState(weights[0])
 
   const selectedVariant =
     product.variants?.find((v: any) => {
@@ -660,7 +561,11 @@ function ProductCardInternal({
         sizes.length > 0
           ? v.options?.some((o: any) => o.value === selectedSize)
           : true
-      return hasColor && hasSize
+      const hasWeight =
+        weights.length > 0
+          ? v.options?.some((o: any) => o.value === selectedWeight)
+          : true
+      return hasColor && hasSize && hasWeight
     }) || product.variants?.[0]
 
   // Calculate inventory for selected variant
@@ -859,7 +764,7 @@ function ProductCardInternal({
               }
               className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit11 the{" "}
+              Visit the{" "}
               {(product as any).seller?.name || product.store?.name || "Store"}
             </Link>
           </div>
@@ -869,7 +774,7 @@ function ProductCardInternal({
                 Out of stock
               </span>
             ) : selectedVariantInventory > 0 && selectedVariantInventory < 10 ? (
-              <span className="text-xs text-red-600 font-medium">
+              <span className="text-xs text-red-600 font-medium whitespace-nowrap">
                 Only {selectedVariantInventory} left in stock
               </span>
             ) : null}
@@ -947,7 +852,7 @@ function ProductCardInternal({
                     key={c.id}
                     onClick={() => setSelectedColor(c.id)}
                     className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${selectedColor === c.id
-                      ? "border-2 border-blue-800"
+                      ? `border-2 ${c.border}`
                       : "border border-gray-300"
                       }`}
                   >
@@ -974,6 +879,28 @@ function ProductCardInternal({
                       }`}
                   >
                     {sizeShortMap[s?.toLowerCase()] || s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {weights.length > 0 && (
+            <div>
+              <div className="text-base font-normal mb-2 text-gray-800">
+                Weight:
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {weights.map((w) => (
+                  <button
+                    key={w}
+                    onClick={() => setSelectedWeight(w)}
+                    className={`px-3 py-2 rounded-lg flex items-center justify-center text-sm ${selectedWeight === w
+                      ? "border-2 border-blue-800 bg-white text-gray-800"
+                      : "border border-gray-800 bg-transparent text-gray-800"
+                      }`}
+                  >
+                    {w}
                   </button>
                 ))}
               </div>

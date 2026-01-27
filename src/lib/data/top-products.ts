@@ -6,7 +6,7 @@ export async function getTopProducts({
   category_id,
   limit = 20,
   offset = 0,
-  fields = "*seller,*seller.reviews,*seller.reviews.customer",
+  fields = "*variants,*variants.calculated_price,*variants.options,+variants.inventory_quantity,*options,*options.values,*seller,*seller.reviews,*seller.reviews.customer",
 }: {
   min_discount?: number
   max_discount?: number
