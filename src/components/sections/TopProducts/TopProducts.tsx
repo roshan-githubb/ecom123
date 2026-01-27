@@ -1,21 +1,42 @@
 import { SectionHeader } from '@/components/atoms/SectionHeader/SectionHeader'
 import { HomeProductCard } from '@/components/molecules/HomeProductCard/HomeProductCard'
 import { getTopProducts } from '@/lib/data/top-products'
+import { listProducts } from '@/lib/data/products'
 import { getProductRatingSummaries } from '@/lib/helpers/rating-helpers'
 import { safeDataFetch } from '@/lib/utils/safe-data'
 import React from 'react'
 
 export default async function TopProducts({ regionId }: { regionId?: string }) {
-    // Safe data fetching with fallback
     const result = await safeDataFetch(
-        () => getTopProducts({ limit: 20, region_id: regionId }),
+        async () => {
+            const topProductsResult = await getTopProducts({ limit: 20, region_id: regionId })
+            
+            if (!topProductsResult.products || topProductsResult.products.length === 0) {
+                return { products: [] }
+            }
+
+            const topProductIds = topProductsResult.products.map((p: any) => p.id)
+            
+            const { response: { products: fullProducts } } = await listProducts({
+                countryCode: 'np',
+                regionId,
+                queryParams: { 
+                    limit: 100, 
+                },
+            })
+            
+            const enrichedTopProducts = topProductIds
+                .map((id: string) => fullProducts.find((p: any) => p.id === id))
+                .filter(Boolean) 
+            
+            return { products: enrichedTopProducts }
+        },
         { products: [] },
         'TopProducts'
     )
 
     const topProducts = result.data || { products: [] }
 
-    // If no products, don't render anything
     if (!topProducts.products || topProducts.products.length === 0) {
         console.warn('[TopProducts] No products available, skipping render')
         return null
