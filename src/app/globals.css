@@ -1,6 +1,8 @@
 /* src/app/globals.css – FULLY FIXED & SAFE */
 
 @import "colors.css";
+@import "photoswipe/dist/photoswipe.css";
+
 
 @tailwind base;
 @tailwind components;
