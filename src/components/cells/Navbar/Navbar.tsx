@@ -11,25 +11,40 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { cn } from "@/lib/utils"
 import { useFlutterBridge } from "@/hooks/useFlutterBridge"
 import { isFlutterWebView } from "@/lib/env/isFlutterWebView"
-
+import { usePreviousPath } from "@/hooks/usePreviousPaths"
 
 export default function Navbar({
   categories,
-  parentCategories
+  parentCategories,
 }: {
-  categories: HttpTypes.StoreProductCategory[],
+  categories: HttpTypes.StoreProductCategory[]
   parentCategories: HttpTypes.StoreProductCategory[]
-
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  const showCart = ["/recommended", "/products"].some(path => pathname?.includes(path));
+  const showCart = ["/recommended", "/products"].some((path) =>
+    pathname?.includes(path)
+  )
   const showBackArrow = pathname !== "/np"
-  const hiddenPaths = ["/np/check", "/np/payment", "/np/cardinfo", "/np/imepaynow", "/np/imebottombar",
-    "/np/shippinginfo", "/np/pickupaddress", "/np/footer/faq", "/np/footer/track-order", "/np/footer/returns",
-    "/np/footer/delivery", "/np/footer/payment", "/np/footer/about-us", "/np/footer/blog", "/np/footer/privacy-policy",
-    "/np/footer/terms-and-conditions"];
-  const showSearchbar = !hiddenPaths.includes(pathname);
+  const hiddenPaths = [
+    "/np/check",
+    "/np/payment",
+    "/np/cardinfo",
+    "/np/imepaynow",
+    "/np/imebottombar",
+    "/np/shippinginfo",
+    "/np/pickupaddress",
+    "/np/footer/faq",
+    "/np/footer/track-order",
+    "/np/footer/returns",
+    "/np/footer/delivery",
+    "/np/footer/payment",
+    "/np/footer/about-us",
+    "/np/footer/blog",
+    "/np/footer/privacy-policy",
+    "/np/footer/terms-and-conditions",
+  ]
+  const showSearchbar = !hiddenPaths.includes(pathname)
   const showCheckoutLabel = pathname == "/np/check"
   const showPaymentMethodLabel = pathname == "/np/payment"
   const showCardLabel = pathname == "/np/cardinfo"
@@ -45,25 +60,31 @@ export default function Navbar({
   const showAboutUsLabel = pathname == "/np/footer/about-us"
   const showBlogLabel = pathname == "/np/footer/blog"
   const showPrivacyPolicyLabel = pathname == "/np/footer/privacy-policy"
-  const showTermsAndConditionsLabel = pathname == "/np/footer/terms-and-conditions"
+  const showTermsAndConditionsLabel =
+    pathname == "/np/footer/terms-and-conditions"
 
+  const prevPath = usePreviousPath()
 
-
+  const handleBack = () => {
+    // if (prevPath) router.push(prevPath)
+    // else router.push("/np")
+    router.back()
+  }
 
   const totalItems = useCartStore((state) =>
     state.items.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
   )
 
-
   const goToCheckoutPage = () => {
-    router.push(`/check`);
-  };
+    router.push(`/check`)
+  }
 
   return (
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
       {showBackArrow && (
         <button
-          onClick={() => window.history.state && window.history.state.idx > 0 ? router.back() : router.push('/')}
+          onClick={handleBack
+          }
           className="mt-2 mr-2 flex items-center justify-center rounded active:scale-95 active:bg-white/10 transition-transform duration-150 p-1"
         >
           <Image
@@ -75,67 +96,58 @@ export default function Navbar({
         </button>
       )}
       {!showBackArrow && (
-        <MobileNavbar
-          parentCategories={[]}
-          childrenCategories={categories}
-        />
+        <MobileNavbar parentCategories={[]} childrenCategories={categories} />
       )}
-
 
       <div className="mr-2 lg:mr-0"></div>
 
       <div className="flex items-center w-full">
+        {showSearchbar && !showBackArrow && (
+          <div className="hidden lg:flex mt-2">
+            <ul className="flex space-x-6">
+              <LocalizedClientLink
+                key="home"
+                href="/"
+                className={cn(
+                  "label-md min-w-[24px] capitalize",
+                  pathname === "/np"
+                    ? "text-white font-semibold"
+                    : "text-gray-300 hover:text-gray-300"
+                )}
+              >
+                Home
+              </LocalizedClientLink>
+              <LocalizedClientLink
+                key="products"
+                href="/products"
+                className={cn(
+                  "label-md min-w-[24px] capitalize text-gray-300 hover:text-gray-300"
+                )}
+              >
+                Products
+              </LocalizedClientLink>
 
-        {
-          showSearchbar && !showBackArrow && (
-            <div className="hidden lg:flex mt-2">
-              <ul className="flex space-x-6">
-                <LocalizedClientLink
-                  key="home"
-                  href="/"
-                  className={cn(
-                    "label-md min-w-[24px] capitalize",
-                    pathname === "/np"
-                      ? "text-white font-semibold"
-                      : "text-gray-300 hover:text-gray-300"
-                  )}
-                >
-                  Home
-                </LocalizedClientLink>
-                <LocalizedClientLink
-                  key="products"
-                  href="/products"
-                  className={cn(
-                    "label-md min-w-[24px] capitalize text-gray-300 hover:text-gray-300"
-                  )}
-                >
-                  Products
-                </LocalizedClientLink>
+              {categories.map((category) => {
+                const categoryHref = `/categories/${category?.handle}`
 
-
-                {categories.map((category) => {
-                  const categoryHref = `/categories/${category?.handle}`
-
-
-                  return (
-                    <LocalizedClientLink
-                      key={category.handle}
-                      href={categoryHref}
-                      className={cn(
-                        "label-md min-w-[24px] capitalize",
-                        pathname === `/np${categoryHref}`
-                          ? "text-white  font-semibold"
-                          : "text-gray-300 hover:text-gray-300"
-                      )}
-                    >
-                      {category?.name}
-                    </LocalizedClientLink>
-                  )
-                })}
-              </ul>
-            </div>
-          )
-        }
+                return (
+                  <LocalizedClientLink
+                    key={category.handle}
+                    href={categoryHref}
+                    className={cn(
+                      "label-md min-w-[24px] capitalize",
+                      pathname === `/np${categoryHref}`
+                        ? "text-white  font-semibold"
+                        : "text-gray-300 hover:text-gray-300"
+                    )}
+                  >
+                    {category?.name}
+                  </LocalizedClientLink>
+                )
+              })}
+            </ul>
+          </div>
+        )}
 
         <>
           <div className="mt-2 flex  justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
@@ -169,7 +181,6 @@ export default function Navbar({
               </span>
             )}
           </div>
-
 
           <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
             {showImePayWalletLink && (
@@ -268,7 +279,6 @@ export default function Navbar({
         <div className="flex w-full justify-end lg:ml-auto items-center space-x-2">
           {showSearchbar && <NavbarSearch />}
 
-
           <LocalizedClientLink
             href="/profile"
             className="flex items-center justify-center w-8 h-8 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200 ml-auto"
@@ -296,24 +306,27 @@ export default function Navbar({
           {/* <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} /> */}
         </div>
       </div>
-
-
-
-
-
     </div>
   )
 }
 
-const CartButton = ({ totalItems, goToCheckoutPage }: { totalItems: number, goToCheckoutPage: () => void }) => {
-  const { goCheck } = useFlutterBridge();
+const CartButton = ({
+  totalItems,
+  goToCheckoutPage,
+}: {
+  totalItems: number
+  goToCheckoutPage: () => void
+}) => {
+  const { goCheck } = useFlutterBridge()
   return (
-    <button className="ml-5 mt-1 relative"
+    <button
+      className="ml-5 mt-1 relative"
       // onClick={goToCheckoutPage}
       onClick={(e) => {
-        e.preventDefault();
-        if (isFlutterWebView()) { goCheck() }
-        else {
+        e.preventDefault()
+        if (isFlutterWebView()) {
+          goCheck()
+        } else {
           goToCheckoutPage()
         }
       }}
