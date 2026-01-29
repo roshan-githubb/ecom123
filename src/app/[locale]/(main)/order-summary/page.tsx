@@ -10,11 +10,14 @@ import Image from "next/image"
 import { placeOrder } from "@/lib/data/cart"
 import { useCartStore } from "@/store/useCartStore"
 import { paymentInfoMap } from "@/lib/constants"
+import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal"
 
 function OrderSummaryPage() {
   const [cart, setCart] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
+
   const router = useRouter()
 
   useEffect(() => {
@@ -23,8 +26,8 @@ function OrderSummaryPage() {
         const cartData = await retrieveCart()
         setCart(cartData)
       } catch (error) {
-        console.error('Failed to load cart:', error)
-        router.push('/check')
+        console.error("Failed to load cart:", error)
+        router.push("/check")
       } finally {
         setLoading(false)
       }
@@ -36,12 +39,17 @@ function OrderSummaryPage() {
     setIsPlacingOrder(true)
     try {
       const res = await placeOrder()
+      if (res?.status === 401) {
+        setShowAuthInvalidModal(true)
+        setIsPlacingOrder(false)
+        return
+      }
       if (res?.success) {
         // Clear cart
         localStorage.removeItem("cart_id")
         localStorage.removeItem("global-cart")
         useCartStore.getState().reset()
-        
+
         // Navigate to order confirmation
         router.push(`/order/${res.orderId}/confirmed`)
       } else {
@@ -50,7 +58,7 @@ function OrderSummaryPage() {
         setIsPlacingOrder(false)
       }
     } catch (error) {
-      console.error('Failed to place order:', error)
+      console.error("Failed to place order:", error)
       const { cartToast } = await import("@/lib/cart-toast")
       cartToast.showErrorToast("Failed to place order. Please try again.")
       setIsPlacingOrder(false)
@@ -62,7 +70,7 @@ function OrderSummaryPage() {
   }
 
   if (!cart || !cart.items || cart.items.length === 0) {
-    router.push('/check')
+    router.push("/check")
     return null
   }
 
@@ -84,14 +92,21 @@ function OrderSummaryPage() {
             {cart.shipping_address ? (
               <div className="text-sm text-gray-600">
                 <p className="font-medium text-gray-900">
-                  {cart.shipping_address.first_name} {cart.shipping_address.last_name}
+                  {cart.shipping_address.first_name}{" "}
+                  {cart.shipping_address.last_name}
                 </p>
-                <p>{cart.shipping_address.address_1}, {cart.shipping_address.postal_code}</p>
-                {cart.shipping_address.address_2 && <p>{cart.shipping_address.address_2}</p>}
-                <p>{cart.shipping_address.city}, {cart.shipping_address.province}</p>
+                <p>
+                  {cart.shipping_address.address_1},{" "}
+                  {cart.shipping_address.postal_code}
+                </p>
+                {cart.shipping_address.address_2 && (
+                  <p>{cart.shipping_address.address_2}</p>
+                )}
+                <p>
+                  {cart.shipping_address.city}, {cart.shipping_address.province}
+                </p>
                 <p>{cart.shipping_address.phone}</p>
               </div>
-              
             ) : (
               <p className="text-sm text-red-600">No address selected</p>
             )}
@@ -101,24 +116,35 @@ function OrderSummaryPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <ShoppingBag className="w-5 h-5 text-myBlue" />
-              <h2 className="font-semibold text-gray-900">Order Items ({cart.items.length})</h2>
+              <h2 className="font-semibold text-gray-900">
+                Order Items ({cart.items.length})
+              </h2>
             </div>
             <div className="space-y-3">
               {cart.items.map((item: any) => (
                 <div key={item.id} className="flex items-center gap-3">
                   <Image
-                    src={item.thumbnail || "/images/not-available/not-available.png"}
+                    src={
+                      item.thumbnail ||
+                      "/images/not-available/not-available.png"
+                    }
                     alt={item.title}
                     width={50}
                     height={50}
                     className="w-12 h-12 rounded-lg object-cover"
                   />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {item.title}
+                    </p>
                     {item.variant?.title && (
-                      <p className="text-xs text-gray-500">{item.variant.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.variant.title}
+                      </p>
                     )}
-                    <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+                    <p className="text-xs text-gray-600">
+                      Qty: {item.quantity}
+                    </p>
                   </div>
                   <p className="text-sm font-semibold text-gray-900">
                     {convertToLocale({
@@ -136,11 +162,16 @@ function OrderSummaryPage() {
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="w-5 h-5 text-myBlue" />
-                <h2 className="font-semibold text-gray-900">Shipping Methods</h2>
+                <h2 className="font-semibold text-gray-900">
+                  Shipping Methods
+                </h2>
               </div>
               <div className="space-y-2">
                 {cart.shipping_methods.map((method: any) => (
-                  <div key={method.id} className="flex justify-between items-center text-sm">
+                  <div
+                    key={method.id}
+                    className="flex justify-between items-center text-sm"
+                  >
                     <span className="text-gray-600">{method.name}</span>
                     <span className="font-medium">
                       {convertToLocale({
@@ -162,13 +193,13 @@ function OrderSummaryPage() {
                 <h2 className="font-semibold text-gray-900">Payment Method</h2>
               </div>
               {cart.payment_collection.payment_sessions
-                .filter((session: any) => session.status === 'pending')
+                .filter((session: any) => session.status === "pending")
                 .map((session: any) => (
                   <p key={session.id} className="text-sm text-gray-600">
-                    {paymentInfoMap[session.provider_id]?.title || session.provider_id}
+                    {paymentInfoMap[session.provider_id]?.title ||
+                      session.provider_id}
                   </p>
-                ))
-              }
+                ))}
             </div>
           )}
 
@@ -177,25 +208,43 @@ function OrderSummaryPage() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Subtotal</span>
-                <span>{convertToLocale({ amount: cart.subtotal, currency_code: cart.currency_code })}</span>
+                <span>
+                  {convertToLocale({
+                    amount: cart.subtotal,
+                    currency_code: cart.currency_code,
+                  })}
+                </span>
               </div>
               {cart.shipping_total > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{convertToLocale({ amount: cart.shipping_total, currency_code: cart.currency_code })}</span>
+                  <span>
+                    {convertToLocale({
+                      amount: cart.shipping_total,
+                      currency_code: cart.currency_code,
+                    })}
+                  </span>
                 </div>
               )}
               {cart.tax_total > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax</span>
-                  <span>{convertToLocale({ amount: cart.tax_total, currency_code: cart.currency_code })}</span>
+                  <span>
+                    {convertToLocale({
+                      amount: cart.tax_total,
+                      currency_code: cart.currency_code,
+                    })}
+                  </span>
                 </div>
               )}
               <div className="border-t border-gray-300 pt-2">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
                   <span className="text-myBlue">
-                    {convertToLocale({ amount: cart.total, currency_code: cart.currency_code })}
+                    {convertToLocale({
+                      amount: cart.total,
+                      currency_code: cart.currency_code,
+                    })}
                   </span>
                 </div>
               </div>
@@ -207,8 +256,8 @@ function OrderSummaryPage() {
             <button
               onClick={handleConfirmOrder}
               disabled={isPlacingOrder}
-              className={`font-semibold rounded-2xl transition-colors duration-200 bg-myBlue text-white w-full h-9 font-medium text-sm hover:opacity-90 flex items-center justify-center gap-2 ${
-                isPlacingOrder ? 'opacity-50 cursor-not-allowed' : ''
+              className={` rounded-2xl transition-colors duration-200 bg-myBlue text-white w-full h-9 font-medium text-sm hover:opacity-90 flex items-center justify-center gap-2 ${
+                isPlacingOrder ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
               {isPlacingOrder ? (
@@ -217,20 +266,24 @@ function OrderSummaryPage() {
                   Placing Order...
                 </>
               ) : (
-                'Confirm Order'
+                "Confirm Order"
               )}
             </button>
-            
+
             <button
               onClick={() => router.back()}
               disabled={isPlacingOrder}
-              className="font-semibold rounded-2xl transition-colors duration-200 bg-gray-300 text-gray-800 w-full h-9 font-medium text-sm hover:bg-gray-200 disabled:opacity-50"
+              className=" rounded-2xl transition-colors duration-200 bg-gray-300 text-gray-800 w-full h-9 font-medium text-sm hover:bg-gray-200 disabled:opacity-50"
             >
               Back to Checkout
             </button>
           </div>
         </div>
       </div>
+      <AuthErrorModal
+        open={showAuthInvalidModal}
+        onOpenChange={setShowAuthInvalidModal}
+      />
     </div>
   )
 }
