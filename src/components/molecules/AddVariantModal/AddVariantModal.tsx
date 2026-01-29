@@ -8,7 +8,10 @@ import {
   animate,
   useTransform,
 } from "framer-motion"
-import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from "react-icons/md"
+import {
+  MdOutlineKeyboardArrowDown,
+  MdOutlineKeyboardArrowUp,
+} from "react-icons/md"
 import { FaRegBookmark, FaBookmark } from "react-icons/fa"
 import { IoShareOutline } from "react-icons/io5"
 import { useCartStore } from "@/store/useCartStore"
@@ -23,8 +26,17 @@ import { useParams } from "next/navigation"
 import { StoreIcon } from "lucide-react"
 import SimilarProducts from "../SimilarProducts/SimilarProduct"
 import { StarRating } from "@/components/atoms"
-import { findColorOption, findSizeOption, extractSizeValues, extractWeightValues, getProductOptionTypes, debugProductOptions } from "@/lib/helpers/option-matcher"
+import {
+  findColorOption,
+  findSizeOption,
+  extractSizeValues,
+  extractWeightValues,
+  getProductOptionTypes,
+  debugProductOptions,
+} from "@/lib/helpers/option-matcher"
 import { createColorOptions, ColorOption } from "@/lib/helpers/color-mapper"
+import { ProductLightbox } from "../ImageViewer/ImageViewer"
+import PhotoSwipe from "photoswipe"
 
 interface ProductOptionValue {
   id: string
@@ -82,6 +94,7 @@ function ProductCardInternal({
   ratingSummary,
   onToggleMode,
   locale,
+  lightboxImages,
 }: {
   product: any
   onClose: () => void
@@ -90,8 +103,9 @@ function ProductCardInternal({
   onOverscrollUp?: () => void
   overscrollY?: any
   ratingSummary?: SimpleRatingSummary
-  onToggleMode?: () => void
+  onToggleMode: () => void
   locale?: string
+  lightboxImages: string[]
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [imgIndex, setImgIndex] = useState(0)
@@ -104,27 +118,28 @@ function ProductCardInternal({
 
   // Questions functionality state
   const [showQuestionForm, setShowQuestionForm] = useState(false)
-  const [questionText, setQuestionText] = useState('')
+  const [questionText, setQuestionText] = useState("")
   const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [questions, setQuestions] = useState<any[]>([])
   const [questionsPage, setQuestionsPage] = useState(1)
   const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const [lightBoxPhotos, setLightBoxPhotos] = useState<string[]>([])
   const questionsPerPage = 5
 
   // Reply functionality state
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
-  const [replyText, setReplyText] = useState('')
+  const [replyText, setReplyText] = useState("")
   const [isSubmittingReply, setIsSubmittingReply] = useState(false)
   const [expandedThreads, setExpandedThreads] = useState<Set<number>>(new Set())
   const [isAdding, setIsAdding] = useState(false)
 
   const { getAdjustedInventory } = useInventoryStore()
-  
+
   // Wishlist functionality - disabled since backend APIs are not implemented
   // const { isInWishlist, toggleWishlist, loadWishlist } = useWishlistStore()
   // const [isWishlistLoading, setIsWishlistLoading] = useState(false)
-  
+
   // Sync inventory with cart state
   useInventorySync()
 
@@ -135,18 +150,22 @@ function ProductCardInternal({
     // loadWishlist()
   }, [])
 
+  useEffect(() => {
+    setLightBoxPhotos(product.images.map((img: any) => img.url))
+  }, [isFullScreen])
+
   // Fetch reviews when product changes
   useEffect(() => {
     if (product?.id && isFullScreen) {
       setLoadingReviews(true)
-      import('@/lib/data/reviews').then(({ getProductReviews }) => {
+      import("@/lib/data/reviews").then(({ getProductReviews }) => {
         getProductReviews(product.id, 10, 0)
-          .then(response => {
+          .then((response) => {
             const reviews = response?.data?.reviews || []
             setReviews(reviews)
           })
-          .catch(error => {
-            console.error('Failed to fetch reviews:', error)
+          .catch((error) => {
+            console.error("Failed to fetch reviews:", error)
             setReviews([])
           })
           .finally(() => {
@@ -162,16 +181,20 @@ function ProductCardInternal({
       try {
         // Simple demo: assume user is logged in if there's any auth-related cookie or localStorage
         // In a real app, you'd check for a valid JWT token or session
-        const hasAuthCookie = document.cookie.includes('connect.sid') ||
-          document.cookie.includes('session') ||
-          document.cookie.includes('auth')
-        const hasAuthStorage = localStorage.getItem('user') ||
-          localStorage.getItem('token') ||
-          localStorage.getItem('session')
+        const hasAuthCookie =
+          document.cookie.includes("connect.sid") ||
+          document.cookie.includes("session") ||
+          document.cookie.includes("auth")
+        const hasAuthStorage =
+          localStorage.getItem("user") ||
+          localStorage.getItem("token") ||
+          localStorage.getItem("session")
 
         // For demo purposes, let's assume user is logged in 50% of the time randomly
         // Replace this with your actual auth check
-        setIsLoggedIn(!!(hasAuthCookie || hasAuthStorage || Math.random() > 0.5))
+        setIsLoggedIn(
+          !!(hasAuthCookie || hasAuthStorage || Math.random() > 0.5)
+        )
       } catch (error) {
         // If localStorage is not available (SSR), default to false
         setIsLoggedIn(false)
@@ -192,7 +215,8 @@ function ProductCardInternal({
             question: "What sizes are available for this product?",
             askedBy: "John D.",
             askedAt: "2024-01-05T10:30:00Z",
-            answer: "We have sizes S, M, L, XL, and XXL available. Please check the size chart for detailed measurements.",
+            answer:
+              "We have sizes S, M, L, XL, and XXL available. Please check the size chart for detailed measurements.",
             answeredBy: "Vendor",
             answeredAt: "2024-01-05T14:20:00Z",
             replies: [
@@ -201,30 +225,31 @@ function ProductCardInternal({
                 text: "Thanks! Is the sizing true to size or should I size up?",
                 author: "John D.",
                 createdAt: "2024-01-05T15:30:00Z",
-                isVendor: false
+                isVendor: false,
               },
               {
                 id: 12,
                 text: "I'd recommend going with your normal size. The fit is pretty accurate to the size chart.",
                 author: "Vendor",
                 createdAt: "2024-01-05T16:45:00Z",
-                isVendor: true
+                isVendor: true,
               },
               {
                 id: 13,
                 text: "I bought this last month and went with my normal size - fits perfectly!",
                 author: "Lisa K.",
                 createdAt: "2024-01-05T18:20:00Z",
-                isVendor: false
-              }
-            ]
+                isVendor: false,
+              },
+            ],
           },
           {
             id: 2,
             question: "Is this product suitable for outdoor activities?",
             askedBy: "Sarah M.",
             askedAt: "2024-01-04T16:45:00Z",
-            answer: "Yes, this product is designed for outdoor use and is water-resistant. However, it's not completely waterproof.",
+            answer:
+              "Yes, this product is designed for outdoor use and is water-resistant. However, it's not completely waterproof.",
             answeredBy: "Vendor",
             answeredAt: "2024-01-04T18:30:00Z",
             replies: [
@@ -233,40 +258,42 @@ function ProductCardInternal({
                 text: "What about heavy rain? Will it hold up?",
                 author: "Sarah M.",
                 createdAt: "2024-01-04T19:15:00Z",
-                isVendor: false
+                isVendor: false,
               },
               {
                 id: 22,
                 text: "For light rain it's fine, but for heavy downpours I'd recommend a proper rain jacket over it.",
                 author: "Vendor",
                 createdAt: "2024-01-04T20:30:00Z",
-                isVendor: true
+                isVendor: true,
               },
               {
                 id: 23,
                 text: "I've used it hiking in light rain and it worked great! Very comfortable.",
                 author: "Mike T.",
                 createdAt: "2024-01-04T21:45:00Z",
-                isVendor: false
-              }
-            ]
+                isVendor: false,
+              },
+            ],
           },
           {
             id: 3,
             question: "What is the material composition?",
             askedBy: "Mike R.",
             askedAt: "2024-01-03T09:15:00Z",
-            answer: "This product is made from 80% cotton and 20% polyester blend for comfort and durability.",
+            answer:
+              "This product is made from 80% cotton and 20% polyester blend for comfort and durability.",
             answeredBy: "Vendor",
             answeredAt: "2024-01-03T11:45:00Z",
-            replies: []
+            replies: [],
           },
           {
             id: 4,
             question: "How long does shipping usually take?",
             askedBy: "Emma L.",
             askedAt: "2024-01-02T14:20:00Z",
-            answer: "Standard shipping takes 3-5 business days. Express shipping is available for 1-2 business days.",
+            answer:
+              "Standard shipping takes 3-5 business days. Express shipping is available for 1-2 business days.",
             answeredBy: "Vendor",
             answeredAt: "2024-01-02T16:10:00Z",
             replies: [
@@ -275,23 +302,24 @@ function ProductCardInternal({
                 text: "Do you ship internationally?",
                 author: "Emma L.",
                 createdAt: "2024-01-02T17:30:00Z",
-                isVendor: false
+                isVendor: false,
               },
               {
                 id: 42,
                 text: "Yes! International shipping takes 7-14 business days depending on location.",
                 author: "Vendor",
                 createdAt: "2024-01-02T18:45:00Z",
-                isVendor: true
-              }
-            ]
+                isVendor: true,
+              },
+            ],
           },
           {
             id: 5,
             question: "Can I return this if it doesn't fit?",
             askedBy: "Alex K.",
             askedAt: "2024-01-01T12:00:00Z",
-            answer: "Yes, we offer a 30-day return policy for unused items in original packaging.",
+            answer:
+              "Yes, we offer a 30-day return policy for unused items in original packaging.",
             answeredBy: "Vendor",
             answeredAt: "2024-01-01T15:30:00Z",
             replies: [
@@ -300,40 +328,45 @@ function ProductCardInternal({
                 text: "What about return shipping costs?",
                 author: "Alex K.",
                 createdAt: "2024-01-01T16:45:00Z",
-                isVendor: false
+                isVendor: false,
               },
               {
                 id: 52,
                 text: "Return shipping is free for defective items, otherwise customer pays return shipping.",
                 author: "Vendor",
                 createdAt: "2024-01-01T17:30:00Z",
-                isVendor: true
+                isVendor: true,
               },
               {
                 id: 53,
                 text: "That's fair! Most places charge for returns.",
                 author: "Jenny P.",
                 createdAt: "2024-01-01T18:15:00Z",
-                isVendor: false
-              }
-            ]
+                isVendor: false,
+              },
+            ],
           },
           {
             id: 6,
             question: "Is there a warranty on this product?",
             askedBy: "Lisa P.",
             askedAt: "2023-12-30T11:30:00Z",
-            answer: "Yes, this product comes with a 1-year manufacturer warranty against defects.",
+            answer:
+              "Yes, this product comes with a 1-year manufacturer warranty against defects.",
             answeredBy: "Vendor",
             answeredAt: "2023-12-30T13:45:00Z",
-            replies: []
-          }
+            replies: [],
+          },
         ]
         setQuestions(mockQuestions)
         setLoadingQuestions(false)
       }, 500)
     }
   }, [product?.id, isFullScreen])
+
+  // useEffect(() => {
+  //   setLightboxImages(product.images.map((img: any) => img.url))
+  // }, [product, isFullScreen])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const atTop = e.currentTarget.scrollTop <= 5
@@ -362,7 +395,7 @@ function ProductCardInternal({
   // Question handling functions
   const handleAskSeller = () => {
     if (!isLoggedIn) {
-      alert('Please log in to ask a question')
+      alert("Please log in to ask a question")
       return
     }
     setShowQuestionForm(true)
@@ -370,7 +403,7 @@ function ProductCardInternal({
 
   const handleSubmitQuestion = async () => {
     if (!questionText.trim()) {
-      alert('Please enter your question')
+      alert("Please enter your question")
       return
     }
 
@@ -380,7 +413,7 @@ function ProductCardInternal({
       // await submitQuestion(product.id, questionText)
 
       // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // Add the new question to the list (mock behavior)
       const newQuestion = {
@@ -391,38 +424,38 @@ function ProductCardInternal({
         answer: null,
         answeredBy: null,
         answeredAt: null,
-        replies: [] // Initialize empty replies array
+        replies: [], // Initialize empty replies array
       }
       setQuestions([newQuestion, ...questions])
 
-      alert('Question submitted successfully! The vendor will respond soon.')
-      setQuestionText('')
+      alert("Question submitted successfully! The vendor will respond soon.")
+      setQuestionText("")
       setShowQuestionForm(false)
     } catch (error) {
-      alert('Failed to submit question. Please try again.')
+      alert("Failed to submit question. Please try again.")
     } finally {
       setIsSubmittingQuestion(false)
     }
   }
 
   const handleCancelQuestion = () => {
-    setQuestionText('')
+    setQuestionText("")
     setShowQuestionForm(false)
   }
 
   // Reply handling functions
   const handleReplyToQuestion = (questionId: number) => {
     if (!isLoggedIn) {
-      alert('Please log in to reply')
+      alert("Please log in to reply")
       return
     }
     setReplyingTo(questionId)
-    setReplyText('')
+    setReplyText("")
   }
 
   const handleSubmitReply = async (questionId: number) => {
     if (!replyText.trim()) {
-      alert('Please enter your reply')
+      alert("Please enter your reply")
       return
     }
 
@@ -432,7 +465,7 @@ function ProductCardInternal({
       // await submitReply(questionId, replyText)
 
       // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // Add the new reply to the question thread (mock behavior)
       const newReply = {
@@ -440,11 +473,11 @@ function ProductCardInternal({
         text: replyText,
         author: "You",
         createdAt: new Date().toISOString(),
-        isVendor: false // In real app, check if current user is vendor
+        isVendor: false, // In real app, check if current user is vendor
       }
 
-      setQuestions(prevQuestions =>
-        prevQuestions.map(q =>
+      setQuestions((prevQuestions) =>
+        prevQuestions.map((q) =>
           q.id === questionId
             ? { ...q, replies: [...(q.replies || []), newReply] }
             : q
@@ -452,25 +485,25 @@ function ProductCardInternal({
       )
 
       // Expand the thread to show the new reply
-      setExpandedThreads(prev => new Set([...prev, questionId]))
+      setExpandedThreads((prev) => new Set([...prev, questionId]))
 
-      alert('Reply posted successfully!')
-      setReplyText('')
+      alert("Reply posted successfully!")
+      setReplyText("")
       setReplyingTo(null)
     } catch (error) {
-      alert('Failed to post reply. Please try again.')
+      alert("Failed to post reply. Please try again.")
     } finally {
       setIsSubmittingReply(false)
     }
   }
 
   const handleCancelReply = () => {
-    setReplyText('')
+    setReplyText("")
     setReplyingTo(null)
   }
 
   const toggleThread = (questionId: number) => {
-    setExpandedThreads(prev => {
+    setExpandedThreads((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(questionId)) {
         newSet.delete(questionId)
@@ -496,6 +529,7 @@ function ProductCardInternal({
     setTouchStartY(null)
   }
 
+  // Extract images array early so it can be used in ProductLightbox
   const images = product.images
     ?.map((img: any) => img.url)
     .filter((url: any) => url) || ["/images/not-available/not-available.png"]
@@ -527,7 +561,7 @@ function ProductCardInternal({
   }
 
   const colorOption = findColorOption(product.options || [])
-  
+
   const optionTypes = getProductOptionTypes(product)
   const colors: ColorOption[] = createColorOptions(colorOption?.values || [])
 
@@ -541,11 +575,11 @@ function ProductCardInternal({
     m: "M",
     s: "S",
   }
-  
+
   // Use flexible size and weight extraction
   const sizes = extractSizeValues(product)
   const weights = extractWeightValues(product)
-  
+
   const [selectedColor, setSelectedColor] = useState(colors[0]?.id)
   const [selectedSize, setSelectedSize] = useState(sizes[0])
   const [selectedWeight, setSelectedWeight] = useState(weights[0])
@@ -628,15 +662,19 @@ function ProductCardInternal({
 
   const handleWishlistToggle = async () => {
     if (!product?.id) return
-    
+
     cartToast.showErrorToast("Wishlist feature coming soon!")
   }
 
+  const handleToggleMode = () => {
+    // setLightboxImages([])
+    onToggleMode()
+  }
   return (
     <div className="flex flex-col h-full bg-white relative overflow-hidden">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white z-10 sticky top-0 flex-shrink-0">
         <button
-          onClick={onToggleMode}
+          onClick={handleToggleMode}
           className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
         >
           <motion.div
@@ -654,7 +692,7 @@ function ProductCardInternal({
         </div>
 
         <div className="flex gap-2 flex-shrink-0">
-          <button 
+          <button
             onClick={handleWishlistToggle}
             className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
           >
@@ -668,8 +706,9 @@ function ProductCardInternal({
 
       <motion.div
         ref={scrollRef}
-        className={`flex-1 overflow-x-hidden ${isFullScreen ? "overflow-y-auto" : "overflow-y-hidden"
-          }`}
+        className={`flex-1 overflow-x-hidden ${
+          isFullScreen ? "overflow-y-auto" : "overflow-y-hidden"
+        }`}
         style={{
           maxHeight: isFullScreen ? "none" : "100%",
         }}
@@ -678,77 +717,108 @@ function ProductCardInternal({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="w-full bg-gray-200 py-4 relative flex justify-center">
-          {images.length > 1 ? (
-            <div className="relative w-[250px] md:w-[296px] overflow-hidden rounded-2xl">
-              <motion.div
-                className="relative w-full h-[264px] md:h-[320px]"
-                drag={isFullScreen ? "x" : false}
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                onDragEnd={(_, info) => {
-                  if (!isFullScreen) return
-                  const threshold = 50
-                  if (info.offset.x > threshold && imgIndex > 0) {
-                    handleManualImageChange(imgIndex - 1)
-                  } else if (
-                    info.offset.x < -threshold &&
-                    imgIndex < images.length - 1
-                  ) {
-                    handleManualImageChange(imgIndex + 1)
-                  }
+        <div className="w-full flex flex-col items-center">
+          <div className="w-full flex justify-center">
+            <ProductLightbox
+              images={lightBoxPhotos}
+              galleryId={`product-gallery-${product.id}`}
+            />
+            {images.length > 0 ? (
+              <div className="relative w-[250px] md:w-[296px] rounded-2xl overflow-hidden">
+                <motion.div className="relative w-full h-[264px] md:h-[320px]">
+                  <motion.div
+                    className="flex absolute inset-0"
+                    style={{ width: `${images.length * 100}%` }}
+                    animate={{ x: `-${(imgIndex * 100) / images.length}%` }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    {images.map((img: string, i: number, images: string[]) => {
+                      // console.log("images ", images)
+                      return (
+                        <div
+                          key={i}
+                          className="relative flex-shrink-0"
+                          style={{ width: `${100 / images.length}%` }}
+                        >
+                          <div
+                            className="min-h-[245px] md:h-[320px] relative rounded-2xl overflow-hidden cursor-zoom-in"
+                            onClick={() => {
+                              if (!isFullScreen) return
+                              console.log('image clicked ', isFullScreen, img)
+
+                              const anchors =
+                                document.querySelectorAll<HTMLAnchorElement>(
+                                  `#product-gallery-${product.id} a`
+                                )
+                                console.log('anchors ', anchors)
+                              if (anchors.length === 1) {
+                                // directly open PhotoSwipe manually for the single item
+                                const pswp = new PhotoSwipe({
+                                  dataSource: [
+                                    {
+                                      src: images[0],
+                                      width: 1600,
+                                      height: 1600,
+                                    },
+                                  ],
+                                  index: 0,
+                                  bgOpacity: 0.9,
+                                  wheelToZoom: true,
+                                })
+                                pswp.init()
+                              } else {
+                                anchors[imgIndex]?.click()
+                              }
+                            }}
+                          >
+                            <Image
+                              src={
+                                img || "/images/not-available/not-available.png"
+                              }
+                              alt={`${product.title} - Image ${i + 1}`}
+                              fill
+                              className="object-contain"
+                              draggable={false}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </motion.div>
+                </motion.div>
+              </div>
+            ) : (
+              <div
+                className="relative w-[250px] md:w-[296px] min-h-[245px] md:h-[320px] rounded-2xl overflow-hidden cursor-zoom-in"
+                onClick={() => {
+                  document
+                    .querySelectorAll<HTMLAnchorElement>(
+                      "#product-gallery a"
+                    )[0]
+                    ?.click()
                 }}
               >
-                <motion.div
-                  className="flex absolute"
-                  style={{ width: `${images.length * 100}%` }}
-                  animate={{ x: `-${(imgIndex * 100) / images.length}%` }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                >
-                  {images.map((img: string, i: number) => (
-                    <div
-                      key={i}
-                      className="relative flex-shrink-0"
-                      style={{ width: `${100 / images.length}%` }}
-                    >
-                      <div className="h-[264px] md:h-[320px] relative">
-                        <Image
-                          src={img || "/images/not-available/not-available.png"}
-                          alt={`${product.title} - Image ${i + 1}`}
-                          fill
-                          className="object-cover"
-                          draggable={false}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              </motion.div>
+                <Image
+                  src={images[0] || "/images/not-available/not-available.png"}
+                  alt={product.title}
+                  fill
+                  className="object-contain rounded-md"
+                />
+              </div>
+            )}
+          </div>
 
-              <div className="flex justify-center gap-2 py-3">
-                {images.map((_: any, i: number) => (
-                  <button
-                    key={i}
-                    onClick={() => handleManualImageChange(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${i === imgIndex ? "bg-blue-800 w-4" : "bg-gray-300"
-                      }`}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <div className="relative w-[250px] md:w-[296px] overflow-hidden rounded-2xl">
-                <div className="h-[264px] md:h-[320px] relative">
-                  <Image
-                    src={images[0] || "/images/not-available/not-available.png"}
-                    alt={product.title}
-                    fill
-                    className="object-cover rounded-2xl"
-                    draggable={false}
-                  />
-                </div>
-              </div>
+          {images.length > 1 && (
+            <div className="flex justify-center gap-2 mt-3">
+              {images.map((_: any, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => handleManualImageChange(i)}
+                  className={`h-2 rounded-full transition-all ${
+                    i === imgIndex ? "bg-blue-800 w-4" : "bg-gray-300 w-2"
+                  }`}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -758,8 +828,9 @@ function ProductCardInternal({
             <Link
               href={
                 (product as any).seller?.handle
-                  ? `/sellerpage?seller_handle=${(product as any).seller.handle
-                  }`
+                  ? `/sellerpage?seller_handle=${
+                      (product as any).seller.handle
+                    }`
                   : product.store?.url || "#"
               }
               className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
@@ -773,7 +844,8 @@ function ProductCardInternal({
               <span className="text-xs text-red-600 font-medium mr-4">
                 Out of stock
               </span>
-            ) : selectedVariantInventory > 0 && selectedVariantInventory < 10 ? (
+            ) : selectedVariantInventory > 0 &&
+              selectedVariantInventory < 10 ? (
               <span className="text-xs text-red-600 font-medium whitespace-nowrap">
                 Only {selectedVariantInventory} left in stock
               </span>
@@ -781,33 +853,54 @@ function ProductCardInternal({
             <button
               onClick={handleAddToCart}
               disabled={isSelectedVariantOutOfStock || isAdding}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors mr-3 shadow-md min-w-[80px] ${isSelectedVariantOutOfStock
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : isAdding
-                ? "bg-myBlue/70 text-white cursor-wait"
-                : "bg-myBlue text-white hover:bg-blue-700"
-                }`}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors mr-3 shadow-md min-w-[80px] ${
+                isSelectedVariantOutOfStock
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : isAdding
+                    ? "bg-myBlue/70 text-white cursor-wait"
+                    : "bg-myBlue text-white hover:bg-blue-700"
+              }`}
             >
               {isAdding ? (
                 <span className="flex items-center justify-center gap-1">
-                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-3 w-3"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Adding...
                 </span>
-              ) : "ADD"}
+              ) : (
+                "ADD"
+              )}
             </button>
           </div>
         </div>
 
         {/* Product Info */}
         <div className="px-4 py-3 border-b border-gray-200">
-          <div className={`flex items-center mb-2 ${isFullScreen ? 'gap-2' : 'gap-0'}`}>
+          <div
+            className={`flex items-center mb-2 ${isFullScreen ? "gap-2" : "gap-0"}`}
+          >
             <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold flex-shrink-0">
               #Best Seller
             </span>
-            <div className={`flex ${isFullScreen ? 'gap-16' : 'gap-4'}`}>
+            <div className={`flex ${isFullScreen ? "gap-16" : "gap-4"}`}>
               <span className="text-xs ml-1 font-medium text-blue-600 min-w-0 truncate flex-1">
                 in {product.collection?.title}
               </span>
@@ -815,23 +908,27 @@ function ProductCardInternal({
                 {ratingSummary && ratingSummary.total_reviews > 0 && (
                   <div className="flex items-center gap-1">
                     <div className="flex items-center">
-                      <StarRating rate={ratingSummary.average_rating} starSize={12} />
+                      <StarRating
+                        rate={ratingSummary.average_rating}
+                        starSize={12}
+                      />
                     </div>
                     <span className="text-xs text-gray-600">
                       ({ratingSummary.total_reviews})
                     </span>
                   </div>
-
                 )}
               </div>
             </div>
           </div>
-          <div className="text-sm text-gray-800">
-            <span className="font-semibold">
-              {product.soldLastMonth || "0"}
-            </span>{" "}
-            Sold Out in past month
-          </div>
+          {product.soldLastMonth > 0 && (
+            <div className="text-sm text-gray-800">
+              <span className="font-semibold">
+                {product.soldLastMonth || "0"}
+              </span>{" "}
+              Sold Out in past month
+            </div>
+          )}
         </div>
 
         <hr className="border-gray-300" />
@@ -851,10 +948,11 @@ function ProductCardInternal({
                   <button
                     key={c.id}
                     onClick={() => setSelectedColor(c.id)}
-                    className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${selectedColor === c.id
-                      ? `border-2 ${c.border}`
-                      : "border border-gray-300"
-                      }`}
+                    className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${
+                      selectedColor === c.id
+                        ? `border-2 ${c.border}`
+                        : "border border-gray-300"
+                    }`}
                   >
                     <div className={`${c.bg} w-full h-full`} />
                   </button>
@@ -873,10 +971,11 @@ function ProductCardInternal({
                   <button
                     key={s}
                     onClick={() => setSelectedSize(s)}
-                    className={`w-[50px] h-[40px] rounded-lg flex items-center justify-center text-sm uppercase ${selectedSize === s
-                      ? "border-2 border-blue-800 bg-white text-gray-800"
-                      : "border border-gray-800 bg-transparent text-gray-800"
-                      }`}
+                    className={`w-[50px] h-[40px] rounded-lg flex items-center justify-center text-sm uppercase ${
+                      selectedSize === s
+                        ? "border-2 border-blue-800 bg-white text-gray-800"
+                        : "border border-gray-800 bg-transparent text-gray-800"
+                    }`}
                   >
                     {sizeShortMap[s?.toLowerCase()] || s}
                   </button>
@@ -895,10 +994,11 @@ function ProductCardInternal({
                   <button
                     key={w}
                     onClick={() => setSelectedWeight(w)}
-                    className={`px-3 py-2 rounded-lg flex items-center justify-center text-sm ${selectedWeight === w
-                      ? "border-2 border-blue-800 bg-white text-gray-800"
-                      : "border border-gray-800 bg-transparent text-gray-800"
-                      }`}
+                    className={`px-3 py-2 rounded-lg flex items-center justify-center text-sm ${
+                      selectedWeight === w
+                        ? "border-2 border-blue-800 bg-white text-gray-800"
+                        : "border border-gray-800 bg-transparent text-gray-800"
+                    }`}
                   >
                     {w}
                   </button>
@@ -992,22 +1092,35 @@ function ProductCardInternal({
 
           <details className="py-2" open={isFullScreen}>
             <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
-              <span>Questions & Reviews ({questions.length + reviews.length})</span>
+              <span>
+                Questions & Reviews ({questions.length + reviews.length})
+              </span>
               <MdOutlineKeyboardArrowDown />
             </summary>
             <div className="mt-4 space-y-6">
-
               {/* Questions Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-800 text-sm">QnA ({questions.length})</h3>
+                  <h3 className="font-semibold text-gray-800 text-sm">
+                    QnA ({questions.length})
+                  </h3>
                   {isLoggedIn && !showQuestionForm && (
                     <button
                       onClick={handleAskSeller}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       Ask Seller
                     </button>
@@ -1016,7 +1129,9 @@ function ProductCardInternal({
 
                 {!isLoggedIn && (
                   <div className="bg-gray-50 rounded-lg p-4 text-center mb-4">
-                    <p className="text-gray-600 text-sm mb-2">Want to ask a question about this product?</p>
+                    <p className="text-gray-600 text-sm mb-2">
+                      Want to ask a question about this product?
+                    </p>
                     <button className="text-blue-600 font-medium text-sm hover:underline">
                       Log in to ask seller
                     </button>
@@ -1054,7 +1169,7 @@ function ProductCardInternal({
                             Submitting...
                           </div>
                         ) : (
-                          'Submit Question'
+                          "Submit Question"
                         )}
                       </button>
                       <button
@@ -1070,66 +1185,130 @@ function ProductCardInternal({
 
                 {/* Questions List */}
                 {loadingQuestions ? (
-                  <div className="text-sm text-gray-600">Loading questions...</div>
+                  <div className="text-sm text-gray-600">
+                    Loading questions...
+                  </div>
                 ) : questions.length > 0 ? (
                   <div className="space-y-4">
                     {paginatedQuestions.map((question) => (
-                      <div key={question.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div
+                        key={question.id}
+                        className="bg-white border border-gray-200 rounded-lg p-4"
+                      >
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg
+                              className="w-4 h-4 text-blue-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
                             </svg>
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm text-gray-800 font-medium mb-1">{question.question}</p>
+                            <p className="text-sm text-gray-800 font-medium mb-1">
+                              {question.question}
+                            </p>
                             <p className="text-xs text-gray-500 mb-3">
-                              Asked by {question.askedBy} • {new Date(question.askedAt).toLocaleDateString()}
+                              Asked by {question.askedBy} •{" "}
+                              {new Date(question.askedAt).toLocaleDateString()}
                             </p>
 
                             {question.answer ? (
                               <div className="bg-green-50 border-green-400 p-3 mb-3">
                                 <div className="flex items-start gap-2">
                                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <svg
+                                      className="w-3 h-3 text-green-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
                                     </svg>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-gray-800">{question.answer}</p>
+                                    <p className="text-sm text-gray-800">
+                                      {question.answer}
+                                    </p>
                                     <p className="text-xs text-gray-500 mt-1">
-                                      Answered by {question.answeredBy} • {new Date(question.answeredAt).toLocaleDateString()}
+                                      Answered by {question.answeredBy} •{" "}
+                                      {new Date(
+                                        question.answeredAt
+                                      ).toLocaleDateString()}
                                     </p>
                                   </div>
                                 </div>
                               </div>
                             ) : (
                               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3">
-                                <p className="text-sm text-yellow-800">Waiting for seller response...</p>
+                                <p className="text-sm text-yellow-800">
+                                  Waiting for seller response...
+                                </p>
                               </div>
                             )}
 
                             {/* Thread Actions */}
                             <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                              {question.replies && question.replies.length > 0 && (
-                                <button
-                                  onClick={() => toggleThread(question.id)}
-                                  className="flex items-center gap-1 hover:text-blue-600 transition-colors"
-                                >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                  </svg>
-                                  {expandedThreads.has(question.id) ? 'Hide' : 'Show'} {question.replies.length} {question.replies.length === 1 ? 'reply' : 'replies'}
-                                </button>
-                              )}
+                              {question.replies &&
+                                question.replies.length > 0 && (
+                                  <button
+                                    onClick={() => toggleThread(question.id)}
+                                    className="flex items-center gap-1 hover:text-blue-600 transition-colors"
+                                  >
+                                    <svg
+                                      className="w-3 h-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                      />
+                                    </svg>
+                                    {expandedThreads.has(question.id)
+                                      ? "Hide"
+                                      : "Show"}{" "}
+                                    {question.replies.length}{" "}
+                                    {question.replies.length === 1
+                                      ? "reply"
+                                      : "replies"}
+                                  </button>
+                                )}
 
                               {isLoggedIn && (
                                 <button
-                                  onClick={() => handleReplyToQuestion(question.id)}
+                                  onClick={() =>
+                                    handleReplyToQuestion(question.id)
+                                  }
                                   className="flex items-center gap-1 hover:text-blue-600 transition-colors"
                                 >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                    />
                                   </svg>
                                   Reply
                                 </button>
@@ -1137,40 +1316,79 @@ function ProductCardInternal({
                             </div>
 
                             {/* Threaded Replies */}
-                            {question.replies && question.replies.length > 0 && expandedThreads.has(question.id) && (
-                              <div className="ml-4 border-l-2 border-gray-200 pl-4 space-y-3">
-                                {question.replies.map((reply: any) => (
-                                  <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
-                                    <div className="flex items-start gap-2">
-                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${reply.isVendor ? 'bg-green-100' : 'bg-blue-100'
-                                        }`}>
-                                        {reply.isVendor ? (
-                                          <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                          </svg>
-                                        ) : (
-                                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                          </svg>
-                                        )}
-                                      </div>
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <span className={`text-xs font-medium ${reply.isVendor ? 'text-green-700' : 'text-gray-700'
-                                            }`}>
-                                            {reply.author}
-                                          </span>
-                                          <span className="text-xs text-gray-500">
-                                            {new Date(reply.createdAt).toLocaleDateString()}
-                                          </span>
+                            {question.replies &&
+                              question.replies.length > 0 &&
+                              expandedThreads.has(question.id) && (
+                                <div className="ml-4 border-l-2 border-gray-200 pl-4 space-y-3">
+                                  {question.replies.map((reply: any) => (
+                                    <div
+                                      key={reply.id}
+                                      className="bg-gray-50 rounded-lg p-3"
+                                    >
+                                      <div className="flex items-start gap-2">
+                                        <div
+                                          className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                            reply.isVendor
+                                              ? "bg-green-100"
+                                              : "bg-blue-100"
+                                          }`}
+                                        >
+                                          {reply.isVendor ? (
+                                            <svg
+                                              className="w-3 h-3 text-green-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M5 13l4 4L19 7"
+                                              />
+                                            </svg>
+                                          ) : (
+                                            <svg
+                                              className="w-3 h-3 text-blue-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                              />
+                                            </svg>
+                                          )}
                                         </div>
-                                        <p className="text-sm text-gray-800">{reply.text}</p>
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span
+                                              className={`text-xs font-medium ${
+                                                reply.isVendor
+                                                  ? "text-green-700"
+                                                  : "text-gray-700"
+                                              }`}
+                                            >
+                                              {reply.author}
+                                            </span>
+                                            <span className="text-xs text-gray-500">
+                                              {new Date(
+                                                reply.createdAt
+                                              ).toLocaleDateString()}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm text-gray-800">
+                                            {reply.text}
+                                          </p>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                                  ))}
+                                </div>
+                              )}
 
                             {/* Reply Form */}
                             {replyingTo === question.id && (
@@ -1182,7 +1400,9 @@ function ProductCardInternal({
                                     </label>
                                     <textarea
                                       value={replyText}
-                                      onChange={(e) => setReplyText(e.target.value)}
+                                      onChange={(e) =>
+                                        setReplyText(e.target.value)
+                                      }
                                       placeholder="Join the conversation..."
                                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                                       rows={2}
@@ -1195,8 +1415,12 @@ function ProductCardInternal({
 
                                   <div className="flex gap-2">
                                     <button
-                                      onClick={() => handleSubmitReply(question.id)}
-                                      disabled={isSubmittingReply || !replyText.trim()}
+                                      onClick={() =>
+                                        handleSubmitReply(question.id)
+                                      }
+                                      disabled={
+                                        isSubmittingReply || !replyText.trim()
+                                      }
                                       className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
                                     >
                                       {isSubmittingReply ? (
@@ -1205,7 +1429,7 @@ function ProductCardInternal({
                                           Posting...
                                         </div>
                                       ) : (
-                                        'Post Reply'
+                                        "Post Reply"
                                       )}
                                     </button>
                                     <button
@@ -1228,7 +1452,9 @@ function ProductCardInternal({
                     {totalQuestionsPages > 1 && (
                       <div className="flex justify-center items-center gap-2 mt-4">
                         <button
-                          onClick={() => handleQuestionsPageChange(questionsPage - 1)}
+                          onClick={() =>
+                            handleQuestionsPageChange(questionsPage - 1)
+                          }
                           disabled={questionsPage === 1}
                           className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -1236,14 +1462,18 @@ function ProductCardInternal({
                         </button>
 
                         <div className="flex gap-1">
-                          {Array.from({ length: totalQuestionsPages }, (_, i) => i + 1).map((page) => (
+                          {Array.from(
+                            { length: totalQuestionsPages },
+                            (_, i) => i + 1
+                          ).map((page) => (
                             <button
                               key={page}
                               onClick={() => handleQuestionsPageChange(page)}
-                              className={`px-3 py-1 text-sm rounded-md ${page === questionsPage
-                                ? 'bg-blue-600 text-white'
-                                : 'border border-gray-300 hover:bg-gray-50'
-                                }`}
+                              className={`px-3 py-1 text-sm rounded-md ${
+                                page === questionsPage
+                                  ? "bg-blue-600 text-white"
+                                  : "border border-gray-300 hover:bg-gray-50"
+                              }`}
                             >
                               {page}
                             </button>
@@ -1251,7 +1481,9 @@ function ProductCardInternal({
                         </div>
 
                         <button
-                          onClick={() => handleQuestionsPageChange(questionsPage + 1)}
+                          onClick={() =>
+                            handleQuestionsPageChange(questionsPage + 1)
+                          }
                           disabled={questionsPage === totalQuestionsPages}
                           className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -1267,27 +1499,37 @@ function ProductCardInternal({
 
               {/* Reviews Section */}
               <div className="border-t border-gray-200 pt-6">
-                <h3 className="font-semibold text-gray-800 text-sm mb-4">Reviews ({reviews.length})</h3>
+                <h3 className="font-semibold text-gray-800 text-sm mb-4">
+                  Reviews ({reviews.length})
+                </h3>
                 {loadingReviews ? (
-                  <div className="text-sm text-gray-600">Loading reviews...</div>
+                  <div className="text-sm text-gray-600">
+                    Loading reviews...
+                  </div>
                 ) : reviews.length > 0 ? (
                   <div className="space-y-4">
                     {reviews.map((review) => (
-                      <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                      <div
+                        key={review.id}
+                        className="border-b border-gray-200 pb-4 last:border-b-0"
+                      >
                         <div className="items-center gap-2 mb-2">
                           <div className="flex gap-4">
                             <span className="text-sm font-medium text-gray-900">
-                              {review.customer?.first_name} {review.customer?.last_name}
+                              {review.customer?.first_name}{" "}
+                              {review.customer?.last_name}
                             </span>
                             <div className="flex mt-1">
                               <StarRating rate={review.rating} starSize={12} />
                             </div>
                           </div>
-
                         </div>
-                        <p className="text-sm text-gray-700">{review.customer_note}</p>
+                        <p className="text-sm text-gray-700">
+                          {review.customer_note}
+                        </p>
                         <span className="text-xs text-gray-500">
-                          Posted on {new Date(review.created_at).toLocaleDateString()}
+                          Posted on{" "}
+                          {new Date(review.created_at).toLocaleDateString()}
                         </span>
                       </div>
                     ))}
@@ -1311,8 +1553,14 @@ function ProductCardInternal({
                 }
                 className="inline-flex items-center text-[14px] leading-[21px] font-medium text-[#425699] hover:underline"
               >
-                <span className="mr-2"><StoreIcon size={16} /></span>
-                Explore all {(product as any).seller?.name || product.store?.name || "Store"} products
+                <span className="mr-2">
+                  <StoreIcon size={16} />
+                </span>
+                Explore all{" "}
+                {(product as any).seller?.name ||
+                  product.store?.name ||
+                  "Store"}{" "}
+                products
               </Link>
             </summary>
           </details>
@@ -1373,7 +1621,6 @@ export function AddVariantSheet({
     animate(backdropOpacity, 1, { duration: 0.25, ease: "easeOut" })
 
     setActiveIndex(currentProductIndex)
-
 
     if (scrollRef.current && products.length > 0) {
       requestAnimationFrame(() => {
@@ -1531,10 +1778,8 @@ export function AddVariantSheet({
       }
     }
 
-
     if (closestIndex !== activeIndex) {
       setActiveIndex(closestIndex)
-
     }
   }
 
@@ -1595,7 +1840,6 @@ export function AddVariantSheet({
 
               // More responsive thresholds for native feel
               if (offset.y < -40 || velocity.y < -300) {
-
                 goToFullscreen()
                 return
               }
@@ -1608,8 +1852,9 @@ export function AddVariantSheet({
             }
           }}
           onClick={(e) => e.stopPropagation()}
-          className={`absolute bottom-0 w-full touch-none will-change-transform ${viewMode === "fullscreen" ? "h-screen" : "h-[95vh] md:h-[90vh]"
-            }`}
+          className={`absolute bottom-0 w-full touch-none will-change-transform ${
+            viewMode === "fullscreen" ? "h-screen" : "h-[95vh] md:h-[90vh]"
+          }`}
         >
           {/* Drag Handle Indicator */}
           <div className="absolute -top-12 w-full flex justify-center pointer-events-none">
@@ -1626,18 +1871,19 @@ export function AddVariantSheet({
           <div
             ref={scrollRef}
             onScroll={handleHorizontalScroll}
-            className={`flex h-full w-full overflow-y-hidden snap-x snap-mandatory pb-0 no-scrollbar items-end md:items-center will-change-scroll ${viewMode === "fullscreen"
-              ? "overflow-x-hidden justify-center"
-              : activeProducts.length === 1
+            className={`flex h-full w-full overflow-y-hidden snap-x snap-mandatory pb-0 no-scrollbar items-end md:items-center will-change-scroll ${
+              viewMode === "fullscreen"
                 ? "overflow-x-hidden justify-center"
-                : "overflow-x-auto pl-4 gap-2 touch-pan-x md:pl-[calc(50vw-200px)] md:pr-[calc(50vw-200px)]"
-              }`}
+                : activeProducts.length === 1
+                  ? "overflow-x-hidden justify-center"
+                  : "overflow-x-auto pl-4 gap-2 touch-pan-x md:pl-[calc(50vw-200px)] md:pr-[calc(50vw-200px)]"
+            }`}
           >
             {/* Always render all products to prevent unmounting/remounting */}
             {activeProducts.map((prod, idx) => {
               const isActive = idx === activeIndex
               const isFullscreen = viewMode === "fullscreen"
-              
+
               return (
                 <motion.div
                   key={prod.id || idx}
@@ -1672,6 +1918,7 @@ export function AddVariantSheet({
                     onScrollChange={handleScrollChange}
                     onOverscrollUp={goToSheet}
                     overscrollY={overscrollY}
+                    lightboxImages={prod.images.map((img: any) => img.url)}
                     ratingSummary={ratingSummary}
                     onToggleMode={isFullscreen ? goToSheet : goToFullscreen}
                   />
@@ -1688,24 +1935,42 @@ export function AddVariantSheet({
 
 export { AddVariantSheet as AddVariantModal }
 
-
 export const NoReviews = () => {
   return (
     <div className="text-center py-8 text-gray-500">
-      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      <svg
+        className="w-12 h-12 mx-auto mb-3 text-gray-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+        />
       </svg>
       <p className="text-sm">No reviews yet.</p>
     </div>
   )
 }
 
-
 export const NoQuestions = () => {
   return (
     <div className="text-center py-8 text-gray-500">
-      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <svg
+        className="w-12 h-12 mx-auto mb-3 text-gray-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
       </svg>
       <p className="text-sm">No questions yet. Be the first to ask!</p>
     </div>
