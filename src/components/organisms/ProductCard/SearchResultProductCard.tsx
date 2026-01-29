@@ -4,18 +4,24 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { StarRating } from "@/components/atoms/StarRating/StarRating"
-import Link from "next/link"
+import { useCartStore } from "@/store/useCartStore"
+import { cartToast } from "@/lib/cart-toast"
 
 interface AlgoliaProductHit {
   id: string
   title: string
   subtitle?: string
   description?: string
+  in_stock: boolean
   handle: string
   thumbnail?: string | null
   images?: { url: string }[]
-  variants?: any[]
+  variants?: Variant[]
   average_rating?: number | null
+}
+interface Variant {
+  id: string
+  stocked_quantity?: number
 }
 
 interface SearchResultProductCardProps {
@@ -33,6 +39,8 @@ export const SearchResultProductCard = ({
   //   ratingSummary,
 }: SearchResultProductCardProps) => {
   const [isHydrated, setIsHydrated] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const addToCart = useCartStore((state) => state.add)
 
   useEffect(() => {
     setIsHydrated(true)
@@ -45,6 +53,27 @@ export const SearchResultProductCard = ({
     product.images?.[0]?.url ||
     product.thumbnail ||
     "/images/not-available/not-available.png"
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isAddingToCart) return
+
+    setIsAddingToCart(true)
+    try {
+      if (!product.variants || product.variants.length === 0) {
+        cartToast.showErrorToast()
+        return
+      }
+      await addToCart(product.variants[0].id, 1)
+
+      cartToast.showCartToast()
+    } catch (error) {
+      cartToast.showErrorToast()
+      console.error("Add to cart error:", error)
+    } finally {
+      setIsAddingToCart(false)
+    }
+  }
 
   // const currentPrice =
   //   product.variants?.[0]?.prices[0]?.amount ?? 0
@@ -62,13 +91,12 @@ export const SearchResultProductCard = ({
   return (
     <div
       className={cn(
-        "bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
+        "bg-[#F7F7FF] rounded-lg h-[100%] max-h-[400px] overflow-hidden shadow-sm",
         className
       )}
     >
-      <Link
-        href={`/products/${product.id}`}
-        // onClick={handleOpenProduct}
+      <div
+        onClick={handleOpenProduct}
         className="w-full aspect-square  flex flex-col relative cursor-pointer"
       >
         <Image
@@ -78,18 +106,17 @@ export const SearchResultProductCard = ({
           height={300}
           className="w-full h-full object-cover rounded-t-xl"
         />
-      </Link>
+      </div>
 
       <div className="p-3 flex flex-col justify-between h-[55%]">
         <div className="flex flex-col">
-          <Link
-            href={`/products/${product.id}`}
-            // onClick={handleOpenProduct}
+          <p
+            onClick={handleOpenProduct}
             className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
             style={{ color: "#32425A" }}
           >
             {title}
-          </Link>
+          </p>
           <div className="flex items-center gap-x-2 mt-1">
             <span
               className="text-[12px] font-semibold"
@@ -121,16 +148,40 @@ export const SearchResultProductCard = ({
           >
             {description}
           </p>
-        </div>
 
-        {/* Inventory intentionally disabled for Algolia results */}
-        {/*
+          {/* Inventory intentionally disabled for Algolia results */}
+          {/*
         {stockInfo.showWarning && (
           <p className="text-[9px] font-medium mt-1" style={{ color: stockInfo.textColor }}>
             {stockInfo.message}
           </p>
         )}
         */}
+        <div className="mt-3"></div>
+          <button
+            onClick={handleAddToCart}
+            disabled={isAddingToCart}
+            className={`flex items-center justify-center text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
+                            ${
+                              isAddingToCart || !product?.in_stock
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
+                            } text-[#FFFFFF]`}
+          >
+            <Image
+              src="/images/icons/cart.png"
+              alt="Home Product Card logo"
+              className="w-4 h-4 mr-2"
+              height={14}
+              width={14}
+            />
+            {isAddingToCart
+              ? "Adding..."
+              : !product?.in_stock
+                ? "Out of Stock"
+                : "Add to Cart"}
+          </button>
+        </div>
       </div>
     </div>
   )
