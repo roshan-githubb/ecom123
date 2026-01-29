@@ -28,7 +28,7 @@ async function Category({
       <h1 className="heading-md uppercase">{category.name}</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
-          <div className="">
+          <div className="test">
             <ProductListing category_id={category.id}  />
           </div>
       </Suspense>

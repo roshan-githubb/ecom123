@@ -238,14 +238,14 @@ export const ProductCard = ({
           )}
         </div>
 
-        <p className="text-sm font-bold mt-1 flex items-center">
+        {/* <p className="text-sm font-bold mt-1 flex items-center">
           <span className="bg-green-100 text-[clamp(10px,1vw,12px)] font-medium text-[#008000] rounded">
             Savings
           </span>
           <span className="text-[#777777] text-[clamp(10px,1vw,12px)] font-normal ml-2">
             Buy one, get one free
           </span>
-        </p>
+        </p> */}
 
         {stockInfo.showWarning && (
           <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1" style={{ color: stockInfo.textColor }}>
@@ -253,9 +253,9 @@ export const ProductCard = ({
           </p>
         )}
 
-        <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
+        {/* <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
           FREE delivery on <strong>Sat, 27 Sept</strong> for members
-        </p>
+        </p> */}
 
         <motion.button
           onClick={handleAddToCart}

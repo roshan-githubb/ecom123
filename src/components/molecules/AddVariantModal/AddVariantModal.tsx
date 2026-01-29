@@ -1070,10 +1070,10 @@ function ProductCardInternal({
             product?.material ||
             product?.origin_country) && (
             <>
-              <details className="py-2" open={isFullScreen}>
-                <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
+              <details className="group py-2" open={isFullScreen}>
+                <summary className="list-none cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
                   <span>Product Details</span>
-                  <MdOutlineKeyboardArrowDown />
+                  <MdOutlineKeyboardArrowDown className="transition-transform duration-200 group-open:rotate-180" />
                 </summary>
                 <div className="mt-2">
                   <table className="w-full text-sm">
@@ -1126,11 +1126,12 @@ function ProductCardInternal({
             </>
           )}
 
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
+          <details className="group py-2" open={isFullScreen}>
+            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
               <span>Product Description</span>
-              <MdOutlineKeyboardArrowDown />
+              <MdOutlineKeyboardArrowDown className="transition-transform duration-200 group-open:rotate-180" />
             </summary>
+
             <div className="mt-2">
               <p className="text-sm text-gray-700 leading-relaxed">
                 {product.description || "No description available"}
@@ -1140,12 +1141,12 @@ function ProductCardInternal({
 
           <hr className="border-gray-300" />
 
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
+          <details className="group py-2" open={isFullScreen}>
+            <summary className="list-none cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
               <span>
                 Questions & Reviews ({questions.length + reviews.length})
               </span>
-              <MdOutlineKeyboardArrowDown />
+              <MdOutlineKeyboardArrowDown className="transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <div className="mt-4 space-y-6">
               {/* Questions Section */}
@@ -1593,8 +1594,8 @@ function ProductCardInternal({
 
           <hr className="border-gray-300" />
 
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
+          {/* <details className="group py-2" open={isFullScreen}>
+            <summary className=" cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
               <Link
                 href={
                   (product as any).seller?.handle
@@ -1613,9 +1614,9 @@ function ProductCardInternal({
                 products
               </Link>
             </summary>
-          </details>
+          </details> */}
 
-          <hr className="border-gray-300" />
+          {/* <hr className="border-gray-300" /> */}
 
           {(product as any).categories?.length > 0 && (
             <div className="py-2">
