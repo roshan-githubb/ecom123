@@ -234,8 +234,8 @@ export default async function HomePage({ params }: { params: Promise<Params> }) 
         </Suspense> */}
 
         {/* Best deals */}
-        <Suspense fallback={<ProductsSectionSkeleton title="Best Deals" />}>
-          <BestDealsSection locale={locale} regionId={regionId} />
+       <Suspense fallback={<ProductsSectionSkeleton title="Best Selling Products" />}>
+          <TopProducts regionId={regionId} title="Best Selling Products" link="/bestselling-products" type="bestsellers"/> 
         </Suspense>
 
         {/* Advert video section */}
@@ -247,7 +247,7 @@ export default async function HomePage({ params }: { params: Promise<Params> }) 
 
         {/* Most Popular */}
         <Suspense fallback={<ProductsSectionSkeleton title="Top Products" />}>
-          <TopProducts regionId={regionId} />
+          <TopProducts regionId={regionId} title="Top Products" link="/top-products"/> 
         </Suspense>
       </div>
     );

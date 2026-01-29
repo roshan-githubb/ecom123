@@ -6,6 +6,7 @@ export async function getTopProducts({
   category_id,
   limit = 20,
   offset = 0,
+  type,
   fields = "*variants,*variants.calculated_price,*variants.options,+variants.inventory_quantity,*options,*options.values,*seller,*seller.reviews,*seller.reviews.customer",
 }: {
   min_discount?: number
@@ -16,6 +17,7 @@ export async function getTopProducts({
   limit?: number
   offset?: number
   fields?: string
+  type?: string
 }) {
   const result = await safeDataFetch(
     async () => {
@@ -25,6 +27,7 @@ export async function getTopProducts({
       if (region_id) params.append("region_id", region_id)
       if (currency_code) params.append("currency_code", currency_code)
       if (category_id) params.append("category_id", category_id)
+      if (type) params.append("type", type)
 
       params.append("limit", limit.toString())
       params.append("offset", offset.toString())
