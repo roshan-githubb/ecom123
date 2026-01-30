@@ -33,6 +33,8 @@ import {
   extractWeightValues,
   getProductOptionTypes,
   debugProductOptions,
+  isColorOption,
+  isSizeOption,
 } from "@/lib/helpers/option-matcher"
 import { createColorOptions, ColorOption } from "@/lib/helpers/color-mapper"
 import { ProductLightbox } from "../ImageViewer/ImageViewer"
@@ -560,10 +562,36 @@ function ProductCardInternal({
     }
   }
 
-  const colorOption = findColorOption(product.options || [])
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    product.options?.forEach((option: any) => {
+      if (option.values && option.values.length > 0) {
+        initial[option.title] = option.values[0].value
+      }
+    })
+    return initial
+  })
 
-  const optionTypes = getProductOptionTypes(product)
-  const colors: ColorOption[] = createColorOptions(colorOption?.values || [])
+  const handleOptionSelect = (optionTitle: string, value: string) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [optionTitle]: value
+    }))
+  }
+
+  const selectedVariant = product.variants?.find((variant: any) => {
+    return variant.options?.every((variantOption: any) => {
+      const optionTitle = product.options?.find((opt: any) => 
+        opt.values?.some((val: any) => val.value === variantOption.value)
+      )?.title
+      
+      if (!optionTitle) return true
+      return selectedOptions[optionTitle] === variantOption.value
+    })
+  }) || product.variants?.[0]
+
+  const colorOption = findColorOption(product.options || [])
+  const colors: ColorOption[] = colorOption ? createColorOptions(colorOption.values || []) : []
 
   const sizeShortMap: Record<string, string> = {
     small: "S",
@@ -575,32 +603,6 @@ function ProductCardInternal({
     m: "M",
     s: "S",
   }
-
-  // Use flexible size and weight extraction
-  const sizes = extractSizeValues(product)
-  const weights = extractWeightValues(product)
-
-  const [selectedColor, setSelectedColor] = useState(colors[0]?.id)
-  const [selectedSize, setSelectedSize] = useState(sizes[0])
-  const [selectedWeight, setSelectedWeight] = useState(weights[0])
-
-  const selectedVariant =
-    product.variants?.find((v: any) => {
-      const colorLabel = colors.find((c) => c.id === selectedColor)?.label
-      const hasColor =
-        colors.length > 0
-          ? v.options?.some((o: any) => o.value === colorLabel)
-          : true
-      const hasSize =
-        sizes.length > 0
-          ? v.options?.some((o: any) => o.value === selectedSize)
-          : true
-      const hasWeight =
-        weights.length > 0
-          ? v.options?.some((o: any) => o.value === selectedWeight)
-          : true
-      return hasColor && hasSize && hasWeight
-    }) || product.variants?.[0]
 
   // Calculate inventory for selected variant
   const getVariantInventory = (variant: any) => {
@@ -941,91 +943,75 @@ function ProductCardInternal({
               )}
             </div>
 
-            <hr className="border-gray-300" />
-          </>
-        )}
-        {/* product Info // */}
-        {/* Variant Selection */}
-        {(colors?.length > 0 || weights.length > 0 || sizes.length > 0) && (
-          <div className="px-4 py-4 space-y-4">
-            {colors.length > 0 && (
-              <div>
+</>)}
+
+        { product?.options.length > 0 && 
+      <>
+        <div className="px-4 py-4 space-y-4">
+          {product.options?.map((option: any) => {
+            const isColorOpt = isColorOption(option.title)
+            const isSizeOpt = isSizeOption(option.title)
+            const selectedValue = selectedOptions[option.title]
+
+            return (
+              <div key={option.id}>
                 <div className="text-base font-normal text-black mb-2">
-                  Color:{" "}
+                  {option.title}:{" "}
                   <span className="font-semibold">
-                    {colors.find((c) => c.id === selectedColor)?.label}
+                    {selectedValue}
                   </span>
                 </div>
-                <div className="flex gap-3">
-                  {colors.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => setSelectedColor(c.id)}
-                      className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${
-                        selectedColor === c.id
-                          ? `border-2 ${c.border}`
-                          : "border border-gray-300"
-                      }`}
-                    >
-                      <div className={`${c.bg} w-full h-full`} />
-                    </button>
-                  ))}
-                </div>
+
+                {isColorOpt && colors.length > 0 ? (
+                  <div className="flex gap-3 flex-wrap">
+                    {colors.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => handleOptionSelect(option.title, c.label)}
+                        className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${
+                          selectedValue === c.label
+                            ? `border-2 ${c.border}`
+                            : "border border-gray-300"
+                        }`}
+                      >
+                        <div className={`${c.bg} w-full h-full`} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex gap-2 flex-wrap">
+                    {option.values?.map((value: any) => (
+                      <button
+                        key={value.id}
+                        onClick={() => handleOptionSelect(option.title, value.value)}
+                        className={`${
+                          isSizeOpt 
+                            ? 'w-[50px] h-[40px]' 
+                            : 'px-3 py-2'
+                        } rounded-lg flex items-center justify-center text-sm ${
+                          selectedValue === value.value
+                            ? "border-2 border-blue-800 bg-white text-gray-800"
+                            : "border border-gray-800 bg-transparent text-gray-800"
+                        }`}
+                      >
+                        {isSizeOpt 
+                          ? (sizeShortMap[value.value?.toLowerCase()] || value.value)
+                          : value.value
+                        }
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            )
+          })}
+        </div>
+                  <hr className="border-gray-300" />
 
-            {sizes.length > 0 && (
-              <div>
-                <div className="text-base font-normal mb-2 text-gray-800">
-                  Size:
-                </div>
-                <div className="flex gap-2">
-                  {sizes.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      className={`w-[50px] h-[40px] rounded-lg flex items-center justify-center text-sm uppercase ${
-                        selectedSize === s
-                          ? "border-2 border-blue-800 bg-white text-gray-800"
-                          : "border border-gray-800 bg-transparent text-gray-800"
-                      }`}
-                    >
-                      {sizeShortMap[s?.toLowerCase()] || s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+      </>
+        }
 
-            {weights.length > 0 && (
-              <div>
-                <div className="text-base font-normal mb-2 text-gray-800">
-                  Weight:
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {weights.map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => setSelectedWeight(w)}
-                      className={`px-3 py-2 rounded-lg flex items-center justify-center text-sm ${
-                        selectedWeight === w
-                          ? "border-2 border-blue-800 bg-white text-gray-800"
-                          : "border border-gray-800 bg-transparent text-gray-800"
-                      }`}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {(colors?.length > 0 || weights.length > 0 || sizes.length > 0) && (
-          <hr className="border-gray-300" />
-        )}
-
+   
         {/* Price Section */}
         <div className="px-4 py-3 space-y-2">
           {discountPercent > 0 && (
