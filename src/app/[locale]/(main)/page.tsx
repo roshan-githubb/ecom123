@@ -39,11 +39,10 @@ interface CategoryItem {
 
 const topSectionProducts = [
   { name: "Flash Sale", image: "/images/home-top-card/flash-sale.png", link: "/flash-sale" },
-  { name: "Upto 20% OFF", image: "/images/home-top-card/20-percent-off.png" },
-  { name: "New Arrivals", image: "/images/home-top-card/add-cart.png" },
-  { name: "Best Sellers", image: "/images/home-top-card/buy-any-three.png" },
+  { name: "Trending", image: "/images/home-top-card/20-percent-off.png", link: "/trending-products"  },
+  { name: "Popular", image: "/images/home-top-card/add-cart.png", link: "/popular-products" },
+  { name: "BestSelling", image: "/images/home-top-card/buy-any-three.png", link: "/bestselling-products" },
 ];
-
 
 
 // Async components for each section
