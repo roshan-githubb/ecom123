@@ -687,23 +687,25 @@ function ProductCardInternal({
           </motion.div>
         </button>
 
-        <div className="flex-1 mx-3 min-w-0">
+        <div className="absolute left-1/2 transform -translate-x-1/2 max-w-[60%] px-2">
           <h1 className="text-sm font-medium text-gray-800 truncate text-center">
             {product.title}
           </h1>
         </div>
 
-        <div className="flex gap-2 flex-shrink-0">
-          <button
-            onClick={handleWishlistToggle}
-            className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
-          >
-            <FaRegBookmark size={14} />
-          </button>
-          <button className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 flex-shrink-0">
-            <IoShareOutline size={18} />
-          </button>
-        </div>
+        {false && (
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={handleWishlistToggle}
+              className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
+            >
+              <FaRegBookmark size={14} />
+            </button>
+            <button className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 flex-shrink-0">
+              <IoShareOutline size={18} />
+            </button>
+          </div>
+        )}
       </div>
 
       <motion.div
@@ -1080,12 +1082,13 @@ function ProductCardInternal({
           <details className="py-2" open={isFullScreen}>
             <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
               <span>
-                Questions & Reviews ({questions.length + reviews.length})
+                Reviews ({reviews.length})
               </span>
               <MdOutlineKeyboardArrowDown />
             </summary>
             <div className="mt-4 space-y-6">
-              {/* Questions Section */}
+              
+              {false && (
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-800 text-sm">
@@ -1483,12 +1486,13 @@ function ProductCardInternal({
                   <NoQuestions />
                 )}
               </div>
+              )}
 
               {/* Reviews Section */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="font-semibold text-gray-800 text-sm mb-4">
+              <div className="">
+                {/* <h3 className="font-semibold text-gray-800 text-sm mb-4">
                   Reviews ({reviews.length})
-                </h3>
+                </h3> */}
                 {loadingReviews ? (
                   <div className="text-sm text-gray-600">
                     Loading reviews...
