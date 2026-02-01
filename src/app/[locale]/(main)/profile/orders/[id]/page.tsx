@@ -10,6 +10,8 @@ import { SellerProps } from "@/types/seller"
 import { HttpTypes } from "@medusajs/types"
 import { OrderProductListItem } from "@/components/cells"
 import { OrderAddresses } from "@/components/cells"
+import { getOrderDisplayStatus, getOrderStatusColor } from "@/lib/helpers/order-status"
+import { cn } from "@/lib/utils"
 
 
 
@@ -30,6 +32,11 @@ export default async function OrderDetailPage({
   if (!user || !order) return redirect("/profile")
 
   const { seller } = order
+
+  const displayStatus = getOrderDisplayStatus(
+    order.status,
+    order.fulfillment_status
+  )
 
   console.log('order detail ', user, order)
 
@@ -61,10 +68,18 @@ export default async function OrderDetailPage({
         </div>}
         <div className="my-4"></div>
         <div className="flex items-center justify-between text-secondary border border-primary bg-component-secondary py-6 px-4 rounded-sm w-full ">
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <h2 className="heading-sm uppercase text-secondary">
-              Status: <span className="text-primary">{order.status}</span>
+              Status:
             </h2>
+            <span
+              className={cn(
+                "px-3 py-1 text-sm rounded-full font-medium border",
+                getOrderStatusColor(displayStatus)
+              )}
+            >
+              {displayStatus}
+            </span>
           </div>
           <div className="flex justify-end">
             <h2 className="label-md text-secondary">

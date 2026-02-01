@@ -40,6 +40,7 @@ export default async function UserPage() {
                     items={order.items || []}
                     currency_code={order.currency_code}
                     status={order.status}
+                    fulfillmentStatus={order.fulfillment_status}
                   />
                 ))}
               </div>
