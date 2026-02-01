@@ -14,7 +14,7 @@ async function Category({
     locale: string
   }>
 }) {
-  const { category: handle } = await params
+  const { category: handle, locale } = await params
 
   const category = await getCategoryByHandle([handle])
 
@@ -28,8 +28,8 @@ async function Category({
       <h1 className="heading-md uppercase">{category.name}</h1>
 
       <Suspense fallback={<ProductListingSkeleton />}>
-          <div className="test">
-            <ProductListing category_id={category.id}  />
+          <div className="">
+            <ProductListing category_id={category.id} locale={locale} />
           </div>
       </Suspense>
     </main>

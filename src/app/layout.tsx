@@ -7,6 +7,7 @@ import Head from "next/head"
 import { retrieveCart } from "@/lib/data/cart"
 import { Providers } from "./providers"
 import Script from "next/script"
+import ScrollToTop from "@/components/utils/ScrollToTop"
 
 // Existing Funnel_Display font (optional, still available)
 const funnelDisplay = Funnel_Display({
@@ -147,6 +148,7 @@ export default async function RootLayout({
           src="/flutter-listener.js"
           strategy="beforeInteractive"
         />
+        <ScrollToTop />
         <Providers cart={mappedCart}>{children}</Providers>
         <Toaster position="top-right" />
         <HotToaster position="top-right" />
