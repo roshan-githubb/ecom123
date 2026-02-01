@@ -14,7 +14,7 @@ async function Category({
     locale: string
   }>
 }) {
-  const { category: handle } = await params
+  const { category: handle, locale } = await params
 
   const category = await getCategoryByHandle([handle])
 
@@ -29,7 +29,7 @@ async function Category({
 
       <Suspense fallback={<ProductListingSkeleton />}>
           <div className="">
-            <ProductListing category_id={category.id}  />
+            <ProductListing category_id={category.id} locale={locale} />
           </div>
       </Suspense>
     </main>

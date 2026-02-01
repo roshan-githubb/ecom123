@@ -6,14 +6,19 @@ import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProd
 import { getSimilarProducts } from "@/services/category-products/category-products";
 import { filter, String } from "lodash";
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts";
+import LocalizedLink from "@/components/molecules/LocalizedLink/LocalizedLink";
+import { IoArrowForward } from "react-icons/io5";
 
-export default function SimilarProducts({ categoryId, productId }: { categoryId: string, productId: String }) {
+export default function SimilarProducts({ categoryId, categoryHandle, productId }: { categoryId: string, categoryHandle?: string, productId: String }) {
   const [similarProducts, setSimilarProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [detectedCategoryHandle, setDetectedCategoryHandle] = useState<string>("");
   const containerRef = useRef<HTMLDivElement>(null);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const finalCategoryHandle = categoryHandle || detectedCategoryHandle;
 
   useEffect(() => {
     if (!categoryId || hasLoaded || loading) return;
@@ -34,6 +39,11 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
               .then((data) => {
                 const products = data?.products || data?.items || [];
                 setSimilarProducts(products);
+                
+                if (!categoryHandle && products.length > 0 && products[0]?.categories?.[0]?.handle) {
+                  setDetectedCategoryHandle(products[0].categories[0].handle);
+                }
+                
                 setError(null);
               })
               .catch((err) => {
@@ -69,6 +79,8 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
   const filteredProducts = similarProducts.filter((product: any) => product?.id != productId);
 
   const sortedProducts = useMemo(() => { return sortProductsByInventory(filteredProducts) }, [filteredProducts])
+  
+  const limitedProducts = sortedProducts.slice(0, 5);
 
   return (
     <div ref={containerRef} className="px-2">
@@ -100,15 +112,29 @@ export default function SimilarProducts({ categoryId, productId }: { categoryId:
             msOverflowStyle: 'none' as const
           }}
         >
-          {sortedProducts.map((item: any, index: number) => (
+          {limitedProducts.map((item: any, index: number) => (
             <div key={item.id} className="w-[180px] flex-shrink-0">
               <HomeProductCard
                 api_product={item}
-                allProducts={sortedProducts}
+                allProducts={limitedProducts}
                 productIndex={index}
               />
             </div>
           ))}
+        
+          {finalCategoryHandle && (
+            <LocalizedLink href={`/categories/${finalCategoryHandle}`} scroll={true}>
+              <div className="w-[180px] h-[280px] flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-all duration-200 border-2 border-gray-200 hover:border-gray-300">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3 shadow-md">
+                  <IoArrowForward className="text-gray-700 text-2xl" />
+                </div>
+                <p className="text-gray-800 font-semibold text-base mb-1">See All</p>
+                <p className="text-gray-600 text-xs px-4 text-center">
+                  View all products
+                </p>
+              </div>
+            </LocalizedLink>
+          )}
         </div>
       )}
     </div>

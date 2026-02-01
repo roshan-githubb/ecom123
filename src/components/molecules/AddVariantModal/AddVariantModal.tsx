@@ -1562,6 +1562,7 @@ function ProductCardInternal({
             <div className="py-2">
               <SimilarProducts
                 categoryId={(product as any).categories[0]?.id}
+                categoryHandle={(product as any).categories[0]?.handle}
                 productId={(product as any)?.id}
               />
             </div>
