@@ -18,7 +18,11 @@ export default async function FlashItems({ locale = 'np', regionId }: FlashItems
             const { response: { products: jsonLdProducts } } = await listProducts({
                 countryCode: locale,
                 regionId,
-                queryParams: { limit: 8, order: "-created_at" },
+                queryParams: { 
+                    limit: 8, 
+                    order: "-created_at",
+                    fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
+                },
             })
 
             const sortedProducts = sortProductsByInventory(jsonLdProducts)

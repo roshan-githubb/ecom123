@@ -34,11 +34,14 @@ export const listProducts = async ({
         console.warn("No region_id - prices will be missing!")
       }
 
+    
+      const defaultFields = "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
+      
       const response = await publicProductClient.store.product.list({
         limit,
         offset,
         region_id: regionId!,
-        fields: ["*variants.calculated_price", "+variants.inventory_quantity", "*seller", "*categories", "*variants", "*seller.products", "*seller.reviews", "*seller.reviews.customer",].join(","),
+        fields: defaultFields,
         ...queryParams,
       })
 
