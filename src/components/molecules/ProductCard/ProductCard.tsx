@@ -12,6 +12,7 @@ import { RatingSummary, SimpleRatingSummary } from "@/types/reviews"
 import { motion } from "framer-motion"
 import { getStockDisplayInfo } from "@/lib/helpers/stock-display"
 import { useInventorySync } from "@/hooks/useInventorySync"
+import { CartIcon } from "@/icons"
 
 export const ProductCard = ({
   api_product,
@@ -238,14 +239,14 @@ export const ProductCard = ({
           )}
         </div>
 
-        <p className="text-sm font-bold mt-1 flex items-center">
+        {/* <p className="text-sm font-bold mt-1 flex items-center">
           <span className="bg-green-100 text-[clamp(10px,1vw,12px)] font-medium text-[#008000] rounded">
             Savings
           </span>
           <span className="text-[#777777] text-[clamp(10px,1vw,12px)] font-normal ml-2">
             Buy one, get one free
           </span>
-        </p>
+        </p> */}
 
         {stockInfo.showWarning && (
           <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1" style={{ color: stockInfo.textColor }}>
@@ -253,9 +254,9 @@ export const ProductCard = ({
           </p>
         )}
 
-        <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
+        {/* <p className="text-[clamp(10px,1vw,12px)] font-normal mt-1">
           FREE delivery on <strong>Sat, 27 Sept</strong> for members
-        </p>
+        </p> */}
 
         <motion.button
           onClick={handleAddToCart}
@@ -268,13 +269,14 @@ export const ProductCard = ({
               : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
             } text-[#FFFFFF]`}
         >
-          <Image
+          {/* <Image
             src="/images/icons/cart.png"
             alt="Add to cart logo"
             className="w-4 h-4"
             width={16}
             height={16}
-          />
+          /> */}
+          <CartIcon size={16} color="white"/>
           {isAddingToCart ? "Adding..." : (totalInventory <= 0 ? "Out of Stock" : "Add to Cart")}
         </motion.button>
 

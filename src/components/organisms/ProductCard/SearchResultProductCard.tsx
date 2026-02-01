@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { StarRating } from "@/components/atoms/StarRating/StarRating"
 import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
+import { CartIcon } from "@/icons"
 
 interface AlgoliaProductHit {
   id: string
@@ -168,13 +169,8 @@ export const SearchResultProductCard = ({
                                 : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
                             } text-[#FFFFFF]`}
           >
-            <Image
-              src="/images/icons/cart.png"
-              alt="Home Product Card logo"
-              className="w-4 h-4 mr-2"
-              height={14}
-              width={14}
-            />
+                      <CartIcon size={16} color="white"/>
+            
             {isAddingToCart
               ? "Adding..."
               : !product?.in_stock

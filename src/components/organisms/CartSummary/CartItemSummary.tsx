@@ -10,9 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/sections/Checkout/DeliveryAddress";
 import { Modal } from "@/components/molecules/Modal/Modal";
 import { useRouter } from "next/navigation";
-import { placeOrder } from "@/lib/data/cart";
-import { AuthErrorModal } from "@/components/molecules/InvalidAuthModal/InvalidAuthModal";
-import { useParams } from "next/navigation";
+
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink";
 
 interface OrderSummaryProps {
@@ -407,42 +405,42 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false)
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
+  // const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
   const {
     cartId,
     fetchCart,
     totalPayable
   } = useCartStore()
 
-  const onPaymentCompleted = async () => {
-    try {
-      const res = await placeOrder()
-      if (res?.status === 401) {
-        setShowAuthInvalidModal(true)
-      } else if (!res?.error) {
-        const { useCartStore } = await import("@/store/useCartStore");
-        useCartStore.getState().clearLocal();
-      }
-      if (res?.success) {
-        localStorage.removeItem("cart_id")
-        localStorage.removeItem("global-cart")
+  // const onPaymentCompleted = async () => {
+  //   try {
+  //     const res = await placeOrder()
+  //     if (res?.status === 401) {
+  //       setShowAuthInvalidModal(true)
+  //     } else if (!res?.error) {
+  //       const { useCartStore } = await import("@/store/useCartStore");
+  //       useCartStore.getState().clearLocal();
+  //     }
+  //     if (res?.success) {
+  //       localStorage.removeItem("cart_id")
+  //       localStorage.removeItem("global-cart")
 
 
-        useCartStore.getState().reset()
+  //       useCartStore.getState().reset()
 
 
-        router.push(`/order/${res.orderId}/confirmed`)
-      }
-    }
-    catch (err: any) {
-      if (err.message === "NEXT_REDIRECT") {
-        const { useCartStore } = await import("@/store/useCartStore");
-        useCartStore.getState().clearLocal();
-      } else {
-        setErrorMessage(err.message)
-      }
-    }
-  }
+  //       router.push(`/order/${res.orderId}/confirmed`)
+  //     }
+  //   }
+  //   catch (err: any) {
+  //     if (err.message === "NEXT_REDIRECT") {
+  //       const { useCartStore } = await import("@/store/useCartStore");
+  //       useCartStore.getState().clearLocal();
+  //     } else {
+  //       setErrorMessage(err.message)
+  //     }
+  //   }
+  // }
 
   const handlePlaceOrderClick = async () => {
     if (!hasAddress) {
@@ -624,14 +622,11 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
               Checking...
             </>
           ) : (
-            'Place Order'
+            'Proceed'
           )}
         </Button>
       </div>
-      <AuthErrorModal
-        open={showAuthInvalidModal}
-        onOpenChange={setShowAuthInvalidModal}
-      />
+     
     </>
   )
 }

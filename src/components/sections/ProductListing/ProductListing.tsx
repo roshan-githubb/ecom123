@@ -32,13 +32,14 @@ export const ProductListing = async ({
     pageParam: 1,
     queryParams: {
       q: '',
-      limit: PRODUCT_LIMIT,
+      limit: 2,
       category_id,
       collection_id,
       seller_id,
     },
     regionId: region.id,   // ← THIS IS THE ONLY CHANGE INSIDE listProducts call
   })
+  console.log('list products response ', response)
 
   const sortedProducts = sortProductsByInventory(response?.products)
 
@@ -49,14 +50,14 @@ export const ProductListing = async ({
   return (
     <div className="py-4">
       <ProductListingHeader total={count} />
-      <div className="grid grid-cols-1 md:grid-cols-4 mt-6 gap-4">
-        <section className={showSidebar ? "col-span-3" : "col-span-4"}>
-          <div className="flex flex-wrap gap-4">
+      <div className="mt-3"></div>
+      < >
+        {/* <section className={showSidebar ? "col-span-3" : "col-span-4"}> */}
+          
             <ProductsList products={sortedProducts} locale={locale} />
-          </div>
           <ProductsPagination pages={pages} />
-        </section>
-      </div>
+        {/* </section> */}
+      </>
     </div>
   )
 }

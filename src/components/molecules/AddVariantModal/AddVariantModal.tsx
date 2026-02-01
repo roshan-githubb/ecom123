@@ -748,13 +748,13 @@ function ProductCardInternal({
                             className="min-h-[245px] md:h-[320px] relative rounded-2xl overflow-hidden cursor-zoom-in"
                             onClick={() => {
                               if (!isFullScreen) return
-                              console.log('image clicked ', isFullScreen, img)
+                              console.log("image clicked ", isFullScreen, img)
 
                               const anchors =
                                 document.querySelectorAll<HTMLAnchorElement>(
                                   `#product-gallery-${product.id} a`
                                 )
-                                console.log('anchors ', anchors)
+                              console.log("anchors ", anchors)
                               if (anchors.length === 1) {
                                 // directly open PhotoSwipe manually for the single item
                                 const pswp = new PhotoSwipe({
@@ -897,46 +897,58 @@ function ProductCardInternal({
         </div>
 
         {/* Product Info */}
-        <div className="px-4 py-3 border-b border-gray-200">
-          <div
-            className={`flex items-center mb-2 ${isFullScreen ? "gap-2" : "gap-0"}`}
-          >
-            <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold flex-shrink-0">
-              #Best Seller
-            </span>
-            <div className={`flex ${isFullScreen ? "gap-16" : "gap-4"}`}>
-              <span className="text-xs ml-1 font-medium text-blue-600 min-w-0 truncate flex-1">
-                in {product.collection?.title}
-              </span>
-              <div className="flex ml-6 flex-shrink-0">
-                {ratingSummary && ratingSummary.total_reviews > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center">
-                      <StarRating
-                        rate={ratingSummary.average_rating}
-                        starSize={12}
-                      />
+        {(product.soldLastMonth > 0 ||
+          (ratingSummary && ratingSummary?.total_reviews > 0) ||
+          product.collection?.title) && (
+          <>
+            <div className="px-4 py-2">
+              {
+                <div
+                  className={`flex items-center mb-2 ${isFullScreen ? "gap-2" : "gap-0"}`}
+                >
+                  {product.collection?.title && (
+                    <>
+                      <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold flex-shrink-0">
+                        #Best Seller
+                      </span>
+                      <span className="text-xs ml-1 font-medium text-blue-600 min-w-0 truncate flex-1">
+                        in {product.collection?.title}
+                      </span>
+                    </>
+                  )}
+                  <div className={`flex ${isFullScreen ? "gap-16" : "gap-4"}`}>
+                    <div className="flex ml-6 flex-shrink-0">
+                      {ratingSummary && ratingSummary.total_reviews > 0 && (
+                        <div className="flex items-center gap-1">
+                          <div className="flex items-center">
+                            <StarRating
+                              rate={ratingSummary.average_rating}
+                              starSize={12}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-600">
+                            ({ratingSummary.total_reviews})
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-600">
-                      ({ratingSummary.total_reviews})
-                    </span>
                   </div>
-                )}
-              </div>
+                </div>
+              }
+              {product.soldLastMonth > 0 && (
+                <div className="text-sm text-gray-800">
+                  <span className="font-semibold">
+                    {product.soldLastMonth || "0"}
+                  </span>{" "}
+                  Sold Out in past month
+                </div>
+              )}
             </div>
-          </div>
-          {product.soldLastMonth > 0 && (
-            <div className="text-sm text-gray-800">
-              <span className="font-semibold">
-                {product.soldLastMonth || "0"}
-              </span>{" "}
-              Sold Out in past month
-            </div>
-          )}
-        </div>
 
-        <hr className="border-gray-300" />
+</>)}
 
+        { product?.options.length > 0 && 
+      <>
         <div className="px-4 py-4 space-y-4">
           {product.options?.map((option: any) => {
             const isColorOpt = isColorOption(option.title)
@@ -996,9 +1008,12 @@ function ProductCardInternal({
             )
           })}
         </div>
+                  <hr className="border-gray-300" />
 
-        <hr className="border-gray-300" />
+      </>
+        }
 
+   
         {/* Price Section */}
         <div className="px-4 py-3 space-y-2">
           {discountPercent > 0 && (
@@ -1036,40 +1051,75 @@ function ProductCardInternal({
 
         {/* Expandable Sections */}
         <div className="px-4 space-y-4 pb-20">
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
-              <span>Product Details</span>
-              <MdOutlineKeyboardArrowDown />
-            </summary>
-            <div className="mt-2">
-              <table className="w-full text-sm">
-                <tbody>
-                  <tr>
-                    <td className="py-2 w-32 font-semibold">Material</td>
-                    <td className="py-2">
-                      {product.material || "Not specified"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-semibold">Fit</td>
-                    <td className="py-2">Regular</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-semibold">Care</td>
-                    <td className="py-2">Machine wash cold</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </details>
+          {(product?.height ||
+            product?.width ||
+            product?.length ||
+            product?.material ||
+            product?.material ||
+            product?.origin_country) && (
+            <>
+              <details className="group py-2" open={isFullScreen}>
+                <summary className="list-none cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
+                  <span>Product Details</span>
+                  <MdOutlineKeyboardArrowDown className="transition-transform duration-200 group-open:rotate-180" />
+                </summary>
+                <div className="mt-2">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {product?.material && (
+                        <tr>
+                          <td className="py-2 w-32 font-semibold">Height</td>
+                          <td className="py-2">
+                            {product.height || "Not specified"} cm
+                          </td>
+                        </tr>
+                      )}
+                      {product?.height && (
+                        <tr>
+                          <td className="py-2 w-32 font-semibold">Width</td>
+                          <td className="py-2">
+                            {product.width || "Not specified"}
+                          </td>
+                        </tr>
+                      )}
+                      {product?.width && (
+                        <tr>
+                          <td className="py-2 w-32 font-semibold">Length</td>
+                          <td className="py-2">
+                            {product.Length || "Not specified"}
+                          </td>
+                        </tr>
+                      )}
+                      {product?.length && (
+                        <tr>
+                          <td className="py-2 w-32 font-semibold">Weight</td>
+                          <td className="py-2">
+                            {product.weight || "Not specified"}
+                          </td>
+                        </tr>
+                      )}
+                      {product?.weight && (
+                        <tr>
+                          <td className="py-2 w-32 font-semibold">Material</td>
+                          <td className="py-2">
+                            {product.material || "Not specified"}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+              <hr className="border-gray-300" />
+            </>
+          )}
 
-          <hr className="border-gray-300" />
-
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
+          <details className="group py-2" open={isFullScreen}>
+            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
               <span>Product Description</span>
-              <MdOutlineKeyboardArrowDown />
+              <MdOutlineKeyboardArrowDown className="transition-transform duration-200 group-open:rotate-180" />
             </summary>
+
             <div className="mt-2">
               <p className="text-sm text-gray-700 leading-relaxed">
                 {product.description || "No description available"}
@@ -1079,12 +1129,12 @@ function ProductCardInternal({
 
           <hr className="border-gray-300" />
 
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
+          <details className="group py-2" open={isFullScreen}>
+            <summary className="list-none cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
               <span>
                 Reviews ({reviews.length})
               </span>
-              <MdOutlineKeyboardArrowDown />
+              <MdOutlineKeyboardArrowDown className="transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <div className="mt-4 space-y-6">
               
@@ -1534,8 +1584,8 @@ function ProductCardInternal({
 
           <hr className="border-gray-300" />
 
-          <details className="py-2" open={isFullScreen}>
-            <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
+          {/* <details className="group py-2" open={isFullScreen}>
+            <summary className=" cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center list-none">
               <Link
                 href={
                   (product as any).seller?.handle
@@ -1554,9 +1604,9 @@ function ProductCardInternal({
                 products
               </Link>
             </summary>
-          </details>
+          </details> */}
 
-          <hr className="border-gray-300" />
+          {/* <hr className="border-gray-300" /> */}
 
           {(product as any).categories?.length > 0 && (
             <div className="py-2">

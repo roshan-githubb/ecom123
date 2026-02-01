@@ -1,17 +1,17 @@
-export const steps = ["Received", "Preparing", "Shipped", "Delivered"]
+export const steps = ["Pending", "Ready to Ship", "Shipped", "Delivered"]
 
 export const parcelStatuses = (
-  order: "not_fulfilled" | "fulfilled" | "delivered" | "shipped"
+  fulfillmentStatus: "not_fulfilled" | "fulfilled" | "delivered" | "shipped"
 ) => {
-  switch (order) {
+  switch (fulfillmentStatus) {
     case "not_fulfilled":
-      return 0
+      return 0 
     case "fulfilled":
-      return 1
-    case "delivered":
-      return 3
+      return 1 
     case "shipped":
-      return 2
+      return 2 
+    case "delivered":
+      return 3 
     default:
       return 0
   }
