@@ -102,7 +102,7 @@ export const retriveReturnMethods = async (order_id: string) => {
 }
 
 export const listOrders = async (
-  limit: number = 10,
+  limit: number = 50,
   offset: number = 0,
   filters?: Record<string, any>
 ) => {

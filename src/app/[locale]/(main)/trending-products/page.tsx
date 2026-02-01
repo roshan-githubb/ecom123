@@ -2,10 +2,10 @@ import { ProductListingSkeleton } from "@/components/organisms/ProductListingSke
 import { Suspense } from "react"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
-import { listProducts } from "@/lib/data/products"
 import { ProductsList } from "@/components/organisms"
+import { getTopProducts } from "@/lib/data/top-products"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
-import { getFlashSaleProducts } from "@/lib/data/flash-products"
+import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 
 
 export const revalidate = 60
@@ -24,16 +24,16 @@ export async function generateMetadata({
     let languages: Record<string, string> = {}
 
 
-    const title = "Flash sales"
-    const description = `Browse all products on Flash Sales`
-    const canonical = `${baseUrl}/${locale}/flash-sale`
+    const title = "Trending Products"
+    const description = `Browse all products on Trending Products`
+    const canonical = `${baseUrl}/${locale}/trending-products`
 
     return {
         title,
         description,
         alternates: {
             canonical,
-            languages: { ...languages, "x-default": `${baseUrl}/flash-sale` },
+            languages: { ...languages, "x-default": `${baseUrl}/trending-products` },
         },
         robots: { index: true, follow: true },
         openGraph: {
@@ -47,37 +47,22 @@ export async function generateMetadata({
 }
 
 
-async function FlashSales({
-    params,
-}: {
-    params: Promise<{ locale: string }>
-}) {
-    const {
-        response: { products: jsonLdProducts },
-    } = await listProducts({
-        // countryCode: locale,
-        queryParams: { limit: 8, order: "created_at" },
-    })
-
-    const flashProducts = await getFlashSaleProducts({})
-    console.log('flash items ', flashProducts)
-
-    const sortedProducts = sortProductsByInventory(jsonLdProducts)
-
-
-
+async function TrendingProducts() {
+    const trendingProducts = await getTopProducts({ limit: 16, type: "trending" })
+    const sortedProducts = sortProductsByInventory(trendingProducts?.products)
+    
+    const productIds = sortedProducts?.map((p: any) => p.id) || []
+    const ratingsMap = await getProductRatingSummaries(productIds)
 
     return (
-        <main className="container">
+            <main className="container">
+                <h1 className="heading-md uppercase mb-4">Trending Products</h1>
 
-            <h1 className="heading-md uppercase mb-4">Flash Sales</h1>
-
-            <Suspense fallback={<ProductListingSkeleton />}>
-                <ProductsList products={sortedProducts} locale={"np"} />
-
-            </Suspense>
-        </main>
+                <Suspense fallback={<ProductListingSkeleton />}>
+                    <ProductsList products={sortedProducts} locale={"np"} ratingsMap={ratingsMap} />
+                </Suspense>
+            </main>
     )
 }
 
-export default FlashSales
+export default TrendingProducts

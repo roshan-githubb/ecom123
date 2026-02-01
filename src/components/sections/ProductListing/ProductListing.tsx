@@ -32,13 +32,14 @@ export const ProductListing = async ({
     pageParam: 1,
     queryParams: {
       q: '',
-      limit: PRODUCT_LIMIT,
+      limit: 2,
       category_id,
       collection_id,
       seller_id,
     },
     regionId: region.id,   // ← THIS IS THE ONLY CHANGE INSIDE listProducts call
   })
+  console.log('list products response ', response)
 
   const sortedProducts = sortProductsByInventory(response?.products)
 
