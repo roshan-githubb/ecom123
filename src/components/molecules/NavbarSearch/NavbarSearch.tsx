@@ -18,22 +18,23 @@ export function NavbarSearch() {
 
   return (
     <form
-      className="flex items-center flex-1 min-w-0 max-w-[420px]"
-      method="POST"
       onSubmit={submitHandler}
+      className="flex items-center w-full max-w-md bg-white border  rounded-full overflow-hidden shadow-sm"
+      role="search"
     >
       <Input
-        icon={<SearchIcon className="w-5 h-5 text-gray-500" />}
-        placeholder="Search product"
+        placeholder="Search products"
         value={search}
         changeValue={setSearch}
-        className="
-          pl-10      
-          md:pl-12  
-          w-full
-        "
+        className="flex-1 px-4 py-2 rounded-l-full focus:outline-none focus:border-none"
       />
-      <input type="submit" className="hidden" />
+      <button
+        type="submit"
+        className="bg-myBlue hover:opacity-90 text-white p-3 rounded-r-full transition-colors"
+        aria-label="Search"
+      >
+        <SearchIcon className="w-5 h-5 text-white" color="white"/>
+      </button>
     </form>
   )
 }

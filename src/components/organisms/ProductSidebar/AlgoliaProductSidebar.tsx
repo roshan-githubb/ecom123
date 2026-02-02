@@ -40,7 +40,8 @@ export const AlgoliaProductSidebar = ({isOpen, setIsOpen}: {isOpen: boolean, set
     <>
       
       {isOpen && (
-        <Modal heading="Filters" onClose={() => setIsOpen(false)}>
+        <Modal heading="Filters" onClose={() => setIsOpen(false)} className="pb-2 min-h-[50vh]" >
+          <div className="pt-4"></div>
           <div className="px-4">
             <ProductListingActiveFilters />
             <PriceFilter
@@ -48,6 +49,7 @@ export const AlgoliaProductSidebar = ({isOpen, setIsOpen}: {isOpen: boolean, set
                 allSearchParams.min_price || allSearchParams.max_price
               )}
             />
+            <div className="mt-4"></div>
             <SizeFilter defaultOpen={Boolean(allSearchParams.size)} />
             <ColorFilter defaultOpen={Boolean(allSearchParams.color)} />
             {/* <ConditionFilter defaultOpen={Boolean(allSearchParams.condition)} /> */}
@@ -185,8 +187,8 @@ function PriceFilter({ defaultOpen = true }: { defaultOpen?: boolean }) {
     updateSearchParams("max_price", max)
   }
   return (
-    <Accordion heading="Price" defaultOpen={defaultOpen}>
-      <div className="flex gap-2 mb-4">
+    <Accordion heading="Price" defaultOpen={defaultOpen} >
+      <div className="flex gap-x-2  mb-4">
         <form method="POST" onSubmit={updateMinPriceHandler}>
           <Input
             placeholder="Min"
