@@ -111,7 +111,7 @@ export function CheckoutClient({
         <div className="max-w-md mx-auto mb-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mx-4 md:mx-0">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
-            <p className="text-xs text-blue-700">Loading product details...</p>
+            <p className="text-xs text-blue-700">Loading checkout details...</p>
           </div>
         </div>
       )}
