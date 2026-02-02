@@ -20,7 +20,10 @@ export const ProductsList = ({
       <div
         className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
       >
-        {products.map((product, index) => (
+        {products.map((product, index) => {
+           const price = product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+            if(price == 0) return null;
+          return (
           // <SkeletonProductCard key={product.id} />
           
           <HomeProductCard 
@@ -31,7 +34,8 @@ export const ProductsList = ({
             productIndex={index}
             ratingSummary={ratingsMap[product.id]}
           />
-        ))}
+        )
+        })}
       </div>
     </>
   )

@@ -135,7 +135,9 @@ export const HomeProductCard = ({
     }
 
     const handleAddToCart = async (e: React.MouseEvent) => {
+        console.log('Add to cart button clicked');
         e.stopPropagation()
+        console.log("Add to cart clicked for product:", api_product.id, api_product.variants?.[0]?.id, totalInventory)
         if (isAddingToCart || !api_product.variants?.[0]?.id || totalInventory <= 0) return
 
         setIsAddingToCart(true)

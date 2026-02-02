@@ -40,6 +40,7 @@ export async function addToServerCart(variantId: string, quantity = 1) {
         }),
     });
     const resData = await res.json();
+    console.log("addToServerCart response:", resData);
     return resData;
 }
 

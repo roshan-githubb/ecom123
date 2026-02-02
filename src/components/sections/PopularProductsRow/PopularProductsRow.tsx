@@ -69,6 +69,8 @@ export default async function PopularProductsRows({type, link, title}:{type?: st
       <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
         {sortedProducts.map((r, index) => {
           try {
+            const price = r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+            if(price == 0) return null;
             return (
               <div key={r.id || index} className="w-[180px] flex-shrink-0">
                 <HomeProductCard
