@@ -50,7 +50,6 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   availableShippingMethods,
   onShippingUpdate,
 }) => {
-  const [isLoadingPrices, setIsLoadingPrices] = useState(false)
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
   const [missingModal, setMissingModal] = useState(false)
@@ -58,20 +57,160 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   const [isRemovingItems, setIsRemovingItems] = useState(false)
   const [loadingVendorId, setLoadingVendorId] = useState<string | null>(null)
   const [expandedVendors, setExpandedVendors] = useState<Set<string>>(new Set())
+  const [hasInitialized, setHasInitialized] = useState(false)
+  const [clientShippingMethods, setClientShippingMethods] = useState<any>(availableShippingMethods)
   // Use ref to persist cache across renders without causing re-renders
   const sellerIdCacheRef = useRef<Record<string, string>>({})
 
   const router = useRouter()
   const fetchCart = useCartStore(state => state.fetchCart)
 
-  // Memoize _shippingMethods to prevent infinite loop
-  const _shippingMethods = useMemo(() =>
-    availableShippingMethods?.filter(
-      (sm) =>
+ 
+  const sellersInCart = useMemo(() => {
+    const sellers: Record<string, { id: string; name: string }> = {}
+    cart.items?.forEach((item) => {
+      const seller = item.product?.seller
+      if (seller?.id) {
+        sellers[seller.id] = {
+          id: seller.id,
+          name: seller.name || "Vendor"
+        }
+      }
+    })
+    return sellers
+  }, [cart.items])
+
+  
+  useEffect(() => {
+    if (cart.id && Object.keys(sellersInCart).length > 0) {
+      const sellerIds = Object.keys(sellersInCart).sort().join(',')
+      const currentCacheKey = `shipping_methods_${cart.id}_${sellerIds}`
+      
+      
+      const needsUpdate = !localStorage.getItem(currentCacheKey)
+      
+      if (needsUpdate) {
+       
+        const validMethods: any[] = []
+        
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(`shipping_methods_${cart.id}_`)) {
+            try {
+              const cachedData = JSON.parse(localStorage.getItem(key) || '[]')
+              cachedData.forEach((method: any) => {
+               
+                if (method.seller_id && sellersInCart[method.seller_id]) {
+                  const exists = validMethods.some((m: any) => m.id === method.id)
+                  if (!exists) {
+                    validMethods.push(method)
+                  }
+                }
+              })
+            } catch (e) {
+              
+            }
+          }
+        })
+        
+      
+        if (validMethods.length > 0) {
+          localStorage.setItem(currentCacheKey, JSON.stringify(validMethods))
+        }
+        
+      
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(`shipping_methods_${cart.id}_`) && key !== currentCacheKey) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
+    }
+  }, [cart.id, sellersInCart])
+ 
+  useEffect(() => {
+    const fetchAndCacheShippingMethods = async () => {
+      if (cart.id) {
+        
+        const sellerIds = Object.keys(sellersInCart).sort().join(',')
+        const cacheKey = `shipping_methods_${cart.id}_${sellerIds}`
+        
+        
+        const allCachedMethods: any[] = []
+        const cacheKeysToCleanup: string[] = []
+        
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(`shipping_methods_${cart.id}_`)) {
+            try {
+              const cachedData = JSON.parse(localStorage.getItem(key) || '[]')
+              cachedData.forEach((method: any) => {
+             
+                const exists = allCachedMethods.some((m: any) => m.id === method.id)
+                if (!exists) {
+                  allCachedMethods.push(method)
+                }
+              })
+            
+              if (key !== cacheKey) {
+                cacheKeysToCleanup.push(key)
+              }
+            } catch (e) {
+              
+            }
+          }
+        })
+        
+        
+        let finalMethods: any[] = []
+        
+        if (availableShippingMethods && availableShippingMethods.length > 0) {
+          
+          finalMethods = [...availableShippingMethods]
+         
+          allCachedMethods.forEach((cachedMethod: any) => {
+            const exists = finalMethods.some((m: any) => m.id === cachedMethod.id)
+            if (!exists) {
+              finalMethods.push(cachedMethod)
+            }
+          })
+        } else if (allCachedMethods.length > 0) {
+          
+          finalMethods = allCachedMethods
+        } else {
+      
+          try {
+            const response = await fetch(`/api/cart/shipping-options?cart_id=${cart.id}`)
+            const data = await response.json()
+            if (data.shipping_options && data.shipping_options.length > 0) {
+              finalMethods = data.shipping_options
+            }
+          } catch (error) {
+          
+          }
+        }
+        
+       
+        if (finalMethods.length > 0) {
+          setClientShippingMethods(finalMethods)
+          localStorage.setItem(cacheKey, JSON.stringify(finalMethods))
+          
+         
+          cacheKeysToCleanup.forEach(key => localStorage.removeItem(key))
+        }
+      }
+    }
+    fetchAndCacheShippingMethods()
+  }, [cart.id, availableShippingMethods, sellersInCart])
+
+
+  const _shippingMethods = useMemo(() => {
+    const methods = clientShippingMethods || availableShippingMethods
+    const filtered = methods?.filter(
+      (sm: any) =>
         sm.rules?.find((rule: any) => rule.attribute === "is_return")?.value !==
         "true"
-    ), [availableShippingMethods]
-  )
+    )
+    return filtered
+  }, [clientShippingMethods, availableShippingMethods])
 
   useEffect(() => {
     if (missingModal) {
@@ -124,7 +263,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
   // Build and cache the seller_id mapping from available shipping methods
   useEffect(() => {
     if (_shippingMethods?.length) {
-      _shippingMethods.forEach(method => {
+      _shippingMethods.forEach((method: StoreCardShippingMethod) => {
         if (method.id && method.seller_id) {
           sellerIdCacheRef.current[method.id] = method.seller_id
         }
@@ -140,7 +279,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       }
     })
 
-    const sellerMethods = _shippingMethods?.map(({ seller_id }) => seller_id)
+    const sellerMethods = _shippingMethods?.map(({ seller_id }: StoreCardShippingMethod) => seller_id)
     const missingSellerIds = [...set].filter(
       (sellerId) => !sellerMethods?.includes(sellerId)
     )
@@ -154,10 +293,9 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
 
   useEffect(() => {
     if (_shippingMethods?.length) {
-      setIsLoadingPrices(true)
       const promises = _shippingMethods
-        .filter((sm) => sm.price_type === "calculated")
-        .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
+        .filter((sm: StoreCardShippingMethod) => sm.price_type === "calculated")
+        .map((sm: StoreCardShippingMethod) => calculatePriceForShippingOption(sm.id, cart.id))
 
       if (promises.length) {
         Promise.allSettled(promises).then((res) => {
@@ -167,13 +305,10 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
             .forEach((p) => (pricesMap[p.value?.id || ""] = p.value?.amount!))
 
           setCalculatedPricesMap(pricesMap)
-          setIsLoadingPrices(false)
         })
-      } else {
-        setIsLoadingPrices(false)
       }
     }
-  }, [availableShippingMethods])
+  }, [availableShippingMethods, _shippingMethods, cart.id])
 
   const handleSetShippingMethod = async (id: string | null, sellerId: string) => {
     setError(null)
@@ -192,15 +327,9 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
 
       await fetchCart()
 
-      // Notify parent to refresh cart data and wait for it to complete
       await onShippingUpdate?.()
 
-      // Collapse vendor section after successful selection
-      setExpandedVendors(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(sellerId)
-        return newSet
-      })
+  
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -220,21 +349,6 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     })
   }
 
-  // Identify all sellers from the items currently in the cart
-  const sellersInCart = useMemo(() => {
-    const sellers: Record<string, { id: string; name: string }> = {}
-    cart.items?.forEach((item) => {
-      const seller = item.product?.seller
-      if (seller?.id) {
-        sellers[seller.id] = {
-          id: seller.id,
-          name: seller.name || "Vendor"
-        }
-      }
-    })
-    return sellers
-  }, [cart.items])
-
   const selectedShippingByVendor = useMemo(() => {
     return cart.shipping_methods?.reduce((acc: any, method: any) => {
       // Try to find seller_id from:
@@ -243,7 +357,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       // 3. The shipping_option object itself (if retrieved)
       // 4. Default to first seller if only one exists in cart (risky but better than nothing)
 
-      const matchingMethod = _shippingMethods?.find(sm => sm.id === method.shipping_option_id)
+      const matchingMethod = _shippingMethods?.find((sm: StoreCardShippingMethod) => sm.id === method.shipping_option_id)
       let sellerId = matchingMethod?.seller_id || sellerIdCacheRef.current[method.shipping_option_id]
 
       if (!sellerId && method.shipping_option) {
@@ -263,6 +377,28 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
     }, {}) || {}
   }, [cart.shipping_methods, _shippingMethods, sellersInCart])
 
+  useEffect(() => {
+    if (!hasInitialized && Object.keys(sellersInCart).length > 0) {
+      setExpandedVendors(new Set(Object.keys(sellersInCart)))
+      setHasInitialized(true)
+    }
+  }, [sellersInCart, hasInitialized])
+
+  useEffect(() => {
+    if (hasInitialized) {
+      const vendorsWithoutSelection = Object.keys(sellersInCart).filter(
+        sellerId => !selectedShippingByVendor[sellerId]
+      )
+      if (vendorsWithoutSelection.length > 0) {
+        setExpandedVendors(prev => {
+          const newSet = new Set(prev)
+          vendorsWithoutSelection.forEach(id => newSet.add(id))
+          return newSet
+        })
+      }
+    }
+  }, [sellersInCart, selectedShippingByVendor, hasInitialized])
+
   // Group available methods by seller ID
   const groupedBySellerId = useMemo(() => {
     const acc: Record<string, any[]> = {}
@@ -272,19 +408,26 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
       acc[id] = []
     })
 
-    // Fill with available methods
-    _shippingMethods?.forEach((method) => {
+    // Fill with available methods - ONLY for sellers currently in cart
+    _shippingMethods?.forEach((method: StoreCardShippingMethod) => {
       const sellerId = method.seller_id!
-      if (!acc[sellerId]) {
-        acc[sellerId] = []
+      // Only include methods for sellers that are currently in the cart
+      if (sellersInCart[sellerId]) {
+        if (!acc[sellerId]) {
+          acc[sellerId] = []
+        }
+        acc[sellerId].push(method)
       }
-      acc[sellerId].push(method)
     })
 
-    // Ensure selected methods are in the list even if missing from _shippingMethods
-    // This handles the case where _shippingMethods might be empty but we have a selection
+
     Object.entries(selectedShippingByVendor).forEach(([sellerId, selected]: [string, any]) => {
-      const alreadyInList = acc[sellerId]?.some(m => m.id === selected.shipping_option_id)
+      // Skip if this seller is no longer in the cart
+      if (!sellersInCart[sellerId]) {
+        return
+      }
+      
+      const alreadyInList = acc[sellerId]?.some((m: any) => m.id === selected.shipping_option_id)
 
       if (!alreadyInList) {
         if (!acc[sellerId]) acc[sellerId] = []
@@ -452,6 +595,12 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
                           })}
                         </span>
                       </div>
+                      <button
+                        onClick={() => toggleVendor(sellerId)}
+                        className="mt-2 text-xs text-green-700 hover:text-green-900 font-medium underline"
+                      >
+                        Change shipping method
+                      </button>
                     </div>
                   </div>
                 )}
@@ -476,18 +625,11 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
                         : (method.amount ?? 0)
 
                       return (
-                        <label
+                        <div
                           key={method.id}
-                          className={`block cursor-pointer ${isLoadingThisVendor ? "pointer-events-none" : ""}`}
+                          onClick={() => !isLoadingThisVendor && handleSetShippingMethod(method.id, sellerId)}
+                          className={`cursor-pointer ${isLoadingThisVendor ? "pointer-events-none" : ""}`}
                         >
-                          <input
-                            type="radio"
-                            name={`shipping-${sellerId}`}
-                            checked={isSelected}
-                            onChange={() => handleSetShippingMethod(method.id, sellerId)}
-                            disabled={isLoadingThisVendor}
-                            className="sr-only"
-                          />
                           <div
                             className={`p-4 rounded-xl border-2 transition-all ${isSelected
                               ? "border-myBlue bg-gradient-to-r from-blue-50 to-blue-100 shadow-sm"
@@ -540,7 +682,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
                               </div>
                             </div>
                           </div>
-                        </label>
+                        </div>
                       )
                     })}
 

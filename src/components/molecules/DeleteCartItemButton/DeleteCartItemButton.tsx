@@ -3,17 +3,23 @@
 import { Button } from "@/components/atoms"
 import { BinIcon } from "@/icons"
 import { deleteLineItem } from "@/lib/data/cart"
+import { useCartStore } from "@/store/useCartStore"
 import { useState } from "react"
 
 export const DeleteCartItemButton = ({ id }: { id: string }) => {
   const [isDeleting, setIsDeleting] = useState(false)
+  const fetchCart = useCartStore(state => state.fetchCart)
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
-    await deleteLineItem(id).finally(() => {
+    try {
+      await deleteLineItem(id)
+      await fetchCart()
+    } finally {
       setIsDeleting(false)
-    })
+    }
   }
+  
   return (
     <Button
       variant="text"
