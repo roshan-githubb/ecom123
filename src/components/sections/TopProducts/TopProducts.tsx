@@ -40,7 +40,8 @@ export default async function TopProducts({
         countryCode: "np",
         regionId,
         queryParams: {
-          limit: 100,
+          limit: 20,
+          fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
         },
       })
 

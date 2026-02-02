@@ -473,7 +473,7 @@ const CartShippingMethodsSection: React.FC<ShippingProps> = ({
                       const isSelected = selectedMethod?.shipping_option_id === method.id
                       const price = method.price_type === "calculated" && calculatedPricesMap[method.id]
                         ? calculatedPricesMap[method.id]
-                        : method.amount
+                        : (method.amount ?? 0)
 
                       return (
                         <label

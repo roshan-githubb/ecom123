@@ -54,20 +54,8 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>
 }>) {
   const { locale } = await params
-  const cart = await retrieveCart()
-
-  // Fix TypeScript type mismatch by mapping StoreCart to expected Cart type
-  const mappedCart = cart
-    ? {
-        ...cart,
-        promotions: (cart.promotions ?? []).map((promo: any) => ({
-          ...promo,
-          created_at: promo.created_at || new Date().toISOString(),
-          updated_at: promo.updated_at || new Date().toISOString(),
-          deleted_at: promo.deleted_at ?? null,
-        })),
-      }
-    : null
+  // REMOVED: Cart fetching moved to client-side CartProvider
+  // This allows the layout to render instantly without waiting for cart API
 
   const ALGOLIA_APP = process.env.NEXT_PUBLIC_ALGOLIA_ID
   const htmlLang = locale || "en"
@@ -149,7 +137,7 @@ export default async function RootLayout({
           strategy="beforeInteractive"
         />
         <ScrollToTop />
-        <Providers cart={mappedCart}>{children}</Providers>
+        <Providers cart={null}>{children}</Providers>
         <Toaster position="top-right" />
         <HotToaster position="top-right" />
       </body>

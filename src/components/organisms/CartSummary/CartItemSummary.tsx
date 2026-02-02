@@ -259,7 +259,6 @@ export function OrderSummary() {
     serviceFee,
     totalPayable,
     currency,
-    fetchCart,
     discountTotal,
     promotions
   } = useCartStore()
@@ -278,14 +277,14 @@ export function OrderSummary() {
     promotions
   }
 
+  // Only set loading to false once we have cart data
   useEffect(() => {
-    const fetchCartData = async () => {
-      setLoading(true)
-      await fetchCart();
+    if (cartId && items.length > 0) {
+      setLoading(false)
+    } else if (!cartId) {
       setLoading(false)
     }
-    fetchCartData()
-  }, [fetchCart])
+  }, [cartId, items])
 
 
 

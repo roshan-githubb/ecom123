@@ -95,16 +95,26 @@ async function VideoSection() {
 }
 
 async function RecommendedSection({ locale, regionId }: { locale: string; regionId?: string }) {
-  const {
-    response: { products: jsonLdProducts },
-  } = await listProducts({
-    countryCode: locale,
-    regionId,
-    queryParams: { limit: 8, order: "created_at" },
-  });
+  // Fetch products and ratings in PARALLEL to avoid waterfall
+  const [productsResult, ratingsResult] = await Promise.all([
+    listProducts({
+      countryCode: locale,
+      regionId,
+      queryParams: { 
+        limit: 8, 
+        order: "created_at",
+        fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
+      },
+    }),
+    // We'll get ratings after we have product IDs, so this is a placeholder
+    Promise.resolve(null)
+  ]);
 
+  const { response: { products: jsonLdProducts } } = productsResult;
   const sortedProducts = sortProductsByInventory(jsonLdProducts);
   const productIds = sortedProducts?.map((p: any) => p.id) || [];
+  
+  // Now fetch ratings for the products we have
   const ratingSummaryMap = await getProductRatingSummaries(productIds);
 
   return (

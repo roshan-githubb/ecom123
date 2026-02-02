@@ -7,9 +7,17 @@ import {
   addToServerCart,
   updateCartItemQuantity,
   removeFromCart,
-  getCart
+  getLocalCartId
 } from "@/services/cart";
 import { useInventoryStore } from "./useInventoryStore";
+
+// Import retrieveCart from data layer (uses proper GET requests)
+let retrieveCartPromise: Promise<any> | null = null;
+
+async function getRetrieveCart() {
+  const { retrieveCart } = await import("@/lib/data/cart");
+  return retrieveCart;
+}
 
 export interface CartItem {
   id: string;
@@ -117,19 +125,36 @@ export const useCartStore = create<CartState>()(
       currency: "NPR",
 
       fetchCart: async () => {
-        const data = await getCart();
+        // Deduplicate simultaneous requests
+        if (retrieveCartPromise) {
+          await retrieveCartPromise;
+          return;
+        }
 
-        if (data?.cart) {
-          const mappedCart = mapCart(data.cart);
-          set(mappedCart);
+        const cartId = getLocalCartId();
+        if (!cartId) {
+          return;
+        }
 
+        try {
+          // Use proper GET request via retrieveCart
+          const retrieveCart = await getRetrieveCart();
+          retrieveCartPromise = retrieveCart(cartId);
+          const cart = await retrieveCartPromise;
 
-          const cartItems = mappedCart.items.map(item => ({
-            variantId: item.variantId || '',
-            quantity: item.quantity
-          })).filter(item => item.variantId);
+          if (cart) {
+            const mappedCart = mapCart(cart);
+            set(mappedCart);
 
-          useInventoryStore.getState().syncWithCart(cartItems);
+            const cartItems = mappedCart.items.map(item => ({
+              variantId: item.variantId || '',
+              quantity: item.quantity
+            })).filter(item => item.variantId);
+
+            useInventoryStore.getState().syncWithCart(cartItems);
+          }
+        } finally {
+          retrieveCartPromise = null;
         }
       },
       reset: async () => {
@@ -183,11 +208,13 @@ export const useCartStore = create<CartState>()(
           try {
             const data = await removeFromCart(lineItemId);
 
-
-            // Fetch fresh cart data after removal
-            const cartData = await getCart();
-            if (cartData?.cart) {
-              set(mapCart(cartData.cart));
+            const retrieveCart = await getRetrieveCart();
+            const cartId = getLocalCartId();
+            if (cartId) {
+              const cart = await retrieveCart(cartId);
+              if (cart) {
+                set(mapCart(cart));
+              }
             }
 
 
