@@ -1,18 +1,45 @@
-import { PropsWithChildren, useEffect, useState } from "react"
+"use client"
 
+import { PropsWithChildren, useEffect, useState } from "react"
 import { CartContext } from "./context"
 import { Cart, StoreCartLineItemOptimisticUpdate } from "@/types/cart"
+import { retrieveCart } from "@/lib/data/cart"
 
 interface CartProviderProps extends PropsWithChildren {
   cart: Cart | null
 }
 
-export function CartProvider({ cart, children }: CartProviderProps) {
-  const [cartState, setCartState] = useState(cart)
+export function CartProvider({ cart: initialCart, children }: CartProviderProps) {
+  const [cartState, setCartState] = useState<Cart | null>(initialCart)
+  const [isLoading, setIsLoading] = useState(true)
 
+  // Fetch cart on client-side to avoid blocking server render
   useEffect(() => {
-    setCartState(cart)
-  }, [cart])
+    async function fetchCart() {
+      try {
+        const cart = await retrieveCart()
+        if (cart) {
+          // Map cart to expected type
+          const mappedCart = {
+            ...cart,
+            promotions: (cart.promotions ?? []).map((promo: any) => ({
+              ...promo,
+              created_at: promo.created_at || new Date().toISOString(),
+              updated_at: promo.updated_at || new Date().toISOString(),
+              deleted_at: promo.deleted_at ?? null,
+            })),
+          } as Cart
+          setCartState(mappedCart)
+        }
+      } catch (error) {
+        console.error("Failed to fetch cart:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchCart()
+  }, [])
 
   function handleAddToCart(
     newItem: StoreCartLineItemOptimisticUpdate,
@@ -88,6 +115,7 @@ export function CartProvider({ cart, children }: CartProviderProps) {
       value={{
         cart: cartState,
         onAddToCart: handleAddToCart,
+        isLoading,
       }}
     >
       {children}

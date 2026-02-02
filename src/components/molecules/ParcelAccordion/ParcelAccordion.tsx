@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { format } from "date-fns"
 import { convertToLocale } from "@/lib/helpers/money"
+import { getOrderDisplayStatus, getOrderStatusColor } from "@/lib/helpers/order-status"
 import {
   Package,
   Layers,
@@ -22,6 +23,7 @@ export const ParcelAccordion = ({
   currency_code = "eur",
   items,
   status,
+  fulfillmentStatus,
   defaultOpen = false,
 }: {
   orderId: string
@@ -31,6 +33,7 @@ export const ParcelAccordion = ({
   currency_code?: string
   items: any[]
   status?: string
+  fulfillmentStatus?: string
   defaultOpen?: boolean
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen)
@@ -42,6 +45,12 @@ export const ParcelAccordion = ({
       setHeight(contentRef.current.scrollHeight)
     }
   }, [items])
+
+  const displayStatus = status && fulfillmentStatus 
+    ? getOrderDisplayStatus(status, fulfillmentStatus)
+    : status 
+      ? formatOrderStatus(status)
+      : "Unknown"
 
   return (
     <>
@@ -61,11 +70,11 @@ export const ParcelAccordion = ({
               {status && (
                 <span
                   className={cn(
-                    "px-2 py-0.5 text-xs rounded-full font-medium",
-                    getStatusColor(status)
+                    "px-2 py-0.5 text-xs rounded-full font-medium border",
+                    getOrderStatusColor(displayStatus)
                   )}
                 >
-                  {formatOrderStatus(status)}
+                  {displayStatus}
                 </span>
               )}
             </div>
@@ -165,18 +174,5 @@ export const ParcelAccordion = ({
 
 export const formatOrderStatus = (status: string) => {
   return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-}
-
-export const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'completed':
-      return 'bg-green-100 text-green-800'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'canceled':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
 }
 

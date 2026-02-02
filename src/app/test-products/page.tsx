@@ -1,5 +1,7 @@
 import { ProductListing } from "@/components/sections"
 
+export const dynamic = 'force-dynamic'
+
 export default async function TestProductsPage() {
   return (
     <div className="p-4">

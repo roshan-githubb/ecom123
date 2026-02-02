@@ -156,7 +156,7 @@ export const HomeProductCard = ({
     return (
         <div
             className={cn(
-                "w-[180px] bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
+                "w-full bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
                 className
             )}
         >

@@ -8,6 +8,7 @@ interface CartContextInterface {
     item: StoreCartLineItemOptimisticUpdate,
     currency_code: string
   ) => void
+  isLoading?: boolean
 }
 
 export const CartContext = createContext<CartContextInterface | null>(null)

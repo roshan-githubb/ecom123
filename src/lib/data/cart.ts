@@ -47,6 +47,58 @@ export async function retrieveCart(cartId?: string) {
     .catch(() => null)
 }
 
+export async function retrieveCartFast(cartId?: string) {
+  const id = cartId || (await getCartId())
+
+  if (!id) {
+    return null
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return await sdk.client
+    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
+      method: "GET",
+      query: {
+        
+        fields: "*items,*region,*shipping_address,*billing_address,*shipping_methods",
+      },
+      headers,
+      cache: "no-cache",
+    })
+    .then(({ cart }) => cart)
+    .catch(() => null)
+}
+
+/**
+ * Retrieve cart with timeout fallback
+ * Returns partial data if full fetch takes too long
+ */
+export async function retrieveCartWithTimeout(timeoutMs: number = 3000) {
+  const cartId = await getCartId()
+  
+  if (!cartId) {
+    return null
+  }
+
+  try {
+    // Race between fast fetch and timeout
+    const result = await Promise.race([
+      retrieveCartFast(cartId),
+      new Promise<null>((resolve) => 
+        setTimeout(() => resolve(null), timeoutMs)
+      )
+    ])
+
+    return result
+  } catch (error) {
+    console.error('Cart fetch error:', error)
+    return null
+  }
+}
+
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)
 
