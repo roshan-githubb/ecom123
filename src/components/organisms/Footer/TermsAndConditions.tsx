@@ -7,7 +7,7 @@ const TermsConditions = () => {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl font-black text-gray-900 mb-4">Terms of Service</h1>
-                    <p className="text-gray-500">Last updated: November 2025</p>
+                    <p className="text-gray-500">Last updated: November 2026</p>
                 </div>
 
                 <div className="prose prose-lg prose-pink mx-auto text-gray-600">

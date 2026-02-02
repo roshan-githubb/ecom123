@@ -116,7 +116,7 @@ export default function BottombarIMEPayPage() {
 
         <div className="p-4 text-center mt-4 pb-8">
           <p className="text-[10px] text-gray-500 leading-tight">
-            2025 © IME Digital Solution Ltd. All rights reserved. Version:
+            2026 © IME Digital Solution Ltd. All rights reserved. Version:
             4.5.532
           </p>
         </div>

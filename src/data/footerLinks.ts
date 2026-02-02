@@ -8,7 +8,7 @@ const links = {
   ],
   about: [
     { label: 'About us', path: '/footer/about-us' },
-    { label: 'Blog', path: '/footer/blog' },
+    // { label: 'Blog', path: '/footer/blog' },
     { label: 'Privacy Policy', path: '/footer/privacy-policy' },
     { label: 'Terms & Conditions', path: '/footer/terms-and-conditions' },
   ],
