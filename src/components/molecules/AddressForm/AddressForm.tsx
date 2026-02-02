@@ -12,10 +12,10 @@ interface AddressFormProps {
   initialData?: Address;
   index?: number;
   onClose: () => void;
-
+  redirectAfterSave?: boolean;
 }
 
-export const AddressForm: React.FC<AddressFormProps> = ({ initialData, index, onClose }) => {
+export const AddressForm: React.FC<AddressFormProps> = ({ initialData, index, onClose, redirectAfterSave = true }) => {
   const addAddress = useAddressStore((state) => state.addAddress);
   const updateAddress = useAddressStore((state) => state.updateAddress);
   
@@ -98,9 +98,11 @@ export const AddressForm: React.FC<AddressFormProps> = ({ initialData, index, on
     if (result) {
       setError(result as string); 
     } else {
-   
       onClose();
-      router.push("/np/check");
+      // Only redirect if redirectAfterSave is true (default behavior for checkout flow)
+      if (redirectAfterSave) {
+        router.push("/np/check");
+      }
     }
     setLoading(false);
   };

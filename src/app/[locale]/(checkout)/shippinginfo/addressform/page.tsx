@@ -11,6 +11,7 @@ interface AddressFormProps {
   onClose: () => void
   isUserLoggedIn?: boolean
   hideCheckbox?: boolean
+  redirectAfterSave?: boolean
 }
 
 export const AddressForm: React.FC<AddressFormProps> = ({

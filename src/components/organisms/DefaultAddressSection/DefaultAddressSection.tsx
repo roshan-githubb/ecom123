@@ -7,6 +7,7 @@ import { useState } from "react"
 import { Modal } from "@/components/molecules"
 import { AddressForm } from "@/app/[locale]/(checkout)/shippinginfo/addressform/page"
 import { Address } from "@/store/addressStore"
+import { useRouter } from "next/navigation"
 
 interface DefaultAddressSectionProps {
   customer: HttpTypes.StoreCustomer
@@ -14,7 +15,7 @@ interface DefaultAddressSectionProps {
 
 export const DefaultAddressSection = ({ customer }: DefaultAddressSectionProps) => {
   const [showForm, setShowForm] = useState(false)
-
+  const router = useRouter()
 
   const defaultAddress = customer.addresses?.find(addr => addr.is_default_shipping) || customer.addresses?.[0]
 
@@ -39,8 +40,7 @@ export const DefaultAddressSection = ({ customer }: DefaultAddressSectionProps) 
 
   const handleFormClose = () => {
     setShowForm(false)
-
-    window.location.reload()
+    router.refresh()
   }
 
   return (
@@ -120,6 +120,7 @@ export const DefaultAddressSection = ({ customer }: DefaultAddressSectionProps) 
             onClose={handleFormClose}
             isUserLoggedIn={true}
             hideCheckbox={true}
+            redirectAfterSave={false}
           />
         </Modal>
       )}
