@@ -7,6 +7,7 @@ import CartPaymentSection from "@/components/sections/CartPaymentSection/CartPay
 import { OrderSummary, RememberUserInfo } from "@/components/organisms/CartSummary/CartItemSummary"
 import { AddVariantSheet } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { useProductModalStore } from "@/store/useProductModalStore"
+import { useCartStore } from "@/store/useCartStore"
 import { retrieveCart } from "@/lib/data/cart"
 import { listCartShippingMethods } from "@/lib/data/fulfillment"
 import { listCartPaymentMethods } from "@/lib/data/payment"
@@ -29,6 +30,26 @@ export function CheckoutClient({
   const [isLoadingAfterShipping, setIsLoadingAfterShipping] = useState(false)
   const [isEnrichingData, setIsEnrichingData] = useState(false)
   const { isOpen, product, closeModal } = useProductModalStore()
+  
+ 
+  const cartItems = useCartStore(state => state.items)
+
+ 
+  useEffect(() => {
+    const refreshCart = async () => {
+      if (cart?.id) {
+        const updatedCart = await retrieveCart(cart.id)
+        if (updatedCart) {
+          setCart(updatedCart)
+        }
+      }
+    }
+    
+   
+    if (cart && cartItems.length !== cart.items?.length) {
+      refreshCart()
+    }
+  }, [cartItems.length, cart?.id])
 
   // Enrich cart data in background if we got minimal data
   useEffect(() => {
