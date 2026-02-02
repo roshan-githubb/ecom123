@@ -20,6 +20,7 @@ import { Suspense } from "react"
 import { getBanners } from "@/lib/get-banners"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
+import PopularProductsRows from "@/components/sections/PopularProductsRow/PopularProductsRow"
 
 interface CategoryItemMetadata {
   thumbnail_url: string
@@ -252,17 +253,30 @@ export default async function HomePage({
           <CategoriesSection />
         </Suspense>
 
-        {/* Flash Sale Section */}
+        {/* Popular products Section */}
         <Suspense fallback={<FlashItemsSkeleton />}>
-          <FlashItems locale={locale} regionId={regionId} />
+          <PopularProductsRows
+            link="popular-products"
+            title="Popular Products"
+            type="new-popular"
+          />
+        </Suspense>
+
+        {/* Trending products Section */}
+        <Suspense fallback={<FlashItemsSkeleton />}>
+          <PopularProductsRows
+            link="trending-products"
+            title="Trending Products"
+            type="trending"
+          />
         </Suspense>
 
         {/* Recommended for you */}
-        <Suspense
+        {/* <Suspense
           fallback={<ProductsSectionSkeleton title="Recommended for you" />}
         >
           <RecommendedSection locale={locale} regionId={regionId} />
-        </Suspense>
+        </Suspense> */}
 
         {/* Top brands
         <Suspense fallback={<BrandsSkeleton />}>

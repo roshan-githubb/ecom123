@@ -7,6 +7,7 @@ export async function getTopProducts({
   limit = 20,
   offset = 0,
   type,
+  from,
   fields = "*variants,*variants.calculated_price,*variants.options,+variants.inventory_quantity,*options,*options.values,*seller,*seller.reviews,*seller.reviews.customer",
 }: {
   min_discount?: number
@@ -18,6 +19,7 @@ export async function getTopProducts({
   offset?: number
   fields?: string
   type?: string
+  from?: string
 }) {
   const result = await safeDataFetch(
     async () => {
@@ -51,11 +53,13 @@ export async function getTopProducts({
       }
 
       const data = await res.json()
+      console.log('get top products and type', data, type, from)
       return data || { products: [] }
     },
     { products: [] },
     'getTopProducts'
   )
+  // console.log( " result ", result)
 
   return result.data || { products: [] }
 }

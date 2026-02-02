@@ -1,46 +1,39 @@
-'use client'
+"use client"
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import Link from "next/link"
 
 export function SectionHeader({
   title,
   actionLabel,
   titleSize = "text-[20px]",
   actionSize = "text-[14px]",
-  // actionColor = "#144293",
   link,
-  locale: providedLocale,
+  locale = "np",
 }: {
-  title: string;
-  actionLabel?: string;
-  titleSize?: string;
-  actionSize?: string;
-  titleColor?: string;
-  actionColor?: string;
-  link?: string;
-  locale?: string;
+  title: string
+  actionLabel?: string
+  titleSize?: string
+  actionSize?: string
+  link?: string
+  locale?: string
 }) {
-  const params = useParams();
-
-  const locale = providedLocale || params?.locale || 'en';
-  const href = link ? `/${locale}${link}` : `/${locale}/coming-soon`;
+  const href = link ? `/${locale}/${link}` : `/${locale}/coming-soon`
 
   return (
     <div className="flex items-center justify-between mb-1">
-      <h3 className={`${titleSize} font-medium text-myBlue`} >
+      <h3 className={`${titleSize} font-medium text-myBlue`}>
         {title}
       </h3>
+
       {actionLabel && (
         <Link
           href={href}
-          className={`${actionSize} font-medium transition-opacity text-myBlue hover:opacity-70 active:opacity-50`}
-          // style={{ color: actionColor }}
-          prefetch={true}
+          className={`${actionSize} font-medium text-myBlue hover:opacity-70`}
+          prefetch
         >
           {actionLabel}
         </Link>
       )}
     </div>
-  );
+  )
 }
