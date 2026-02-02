@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { HttpTypes } from "@medusajs/types"
 import { isEmpty } from "lodash"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export const Addresses = ({
   user,
@@ -18,6 +19,7 @@ export const Addresses = ({
 }) => {
   const [showForm, setShowForm] = useState(false)
   const [deleteAddress, setDeleteAddress] = useState<string | null>(null)
+  const router = useRouter()
 
   const [defaultValues, setDefaultValues] = useState<AddressFormData | null>(
     null
@@ -48,6 +50,7 @@ export const Addresses = ({
   const handleDelete = async (addressId: string) => {
     await deleteCustomerAddress(addressId)
     setDeleteAddress(null)
+    router.refresh()
   }
 
   const handleAdd = () => {
@@ -143,7 +146,10 @@ export const Addresses = ({
         >
           <AddressForm
             // regions={regions}
-            onClose={() => setShowForm(false)}
+            onClose={() => {
+              setShowForm(false)
+              router.refresh()
+            }}
             defaultValues={defaultValues}
           />
         </Modal>
