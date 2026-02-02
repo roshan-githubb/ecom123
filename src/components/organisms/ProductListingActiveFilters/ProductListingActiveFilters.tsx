@@ -15,7 +15,7 @@ export const ProductListingActiveFilters = () => {
   )
 
   return (
-    <div className="gap-4 overflow-x-scroll no-scrollbar flex">
+    <div className="gap-x-4 flex flex-wrap">
       {filters.map((filter) => (
         <ActiveFilterElement key={filter[0]} filter={filter} />
       ))}
