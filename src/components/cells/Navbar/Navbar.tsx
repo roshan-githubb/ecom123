@@ -96,7 +96,7 @@ export default function Navbar({
         </button>
       )}
       {!showBackArrow && (
-        <MobileNavbar parentCategories={[]} childrenCategories={categories} />
+        <MobileNavbar parentCategories={[]} childrenCategories={categories?.slice(0,7)} />
       )}
 
       <div className="mr-2 lg:mr-0"></div>
@@ -127,7 +127,7 @@ export default function Navbar({
                 Products
               </LocalizedClientLink>
 
-              {categories.map((category) => {
+              {categories.slice(0,8).map((category) => {
                 const categoryHref = `/categories/${category?.handle}`
 
                 return (

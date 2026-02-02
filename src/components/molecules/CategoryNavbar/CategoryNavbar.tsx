@@ -48,6 +48,16 @@ export const CategoryNavbar = ({
           {/* <CollapseIcon size={18} className="-rotate-90 md:hidden" /> */}
         </LocalizedClientLink>
       ))}
+      <LocalizedClientLink
+          href={`/categories/`}
+          onClick={() => (onClose ? onClose(false) : null)}
+          className={cn(
+            "label-md uppercase px-4 my-3 md:my-0 flex items-center justify-between",
+           
+          )}
+        >
+          More Categories
+        </LocalizedClientLink>
     </nav>
   )
 }

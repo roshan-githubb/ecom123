@@ -1,17 +1,14 @@
-import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { Suspense } from "react"
 
-import { ProductListing } from "@/components/sections"
-import { getRegion } from "@/lib/data/regions"
+
 import isBot from "@/lib/helpers/isBot"
 import { headers } from "next/headers"
 import Script from "next/script"
-import { listProducts } from "@/lib/data/products"
+import { listCategories } from "@/lib/data/categories"
+import { PARENT_CATEGORIES } from "@/const"
+import { HttpTypes } from "@medusajs/types"
+import { CategoriesSection } from "@/components/cells/CategoriesSection/CategoriesSection"
 
-export const revalidate = 60
 
-const ALGOLIA_ID = process.env.NEXT_PUBLIC_ALGOLIA_ID
-const ALGOLIA_SEARCH_KEY = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY
 
 async function AllCategories({
   params,
@@ -23,33 +20,21 @@ async function AllCategories({
   const ua = (await headers()).get("user-agent") || ""
   const bot = isBot(ua)
 
-  const breadcrumbsItems = [
-    {
-      path: "/",
-      label: "All Products",
-    },
-  ]
+  const { categories, parentCategories } = (await listCategories({
+    headingCategories: PARENT_CATEGORIES,
+  })) as {
+    categories: HttpTypes.StoreProductCategory[]
+    parentCategories: HttpTypes.StoreProductCategory[]
+  }
 
-  const currency_code = (await getRegion(locale))?.currency_code || "usd"
+  console.log("categoires list page categories and parentcategories ", categories, parentCategories)
 
-  // Fetch a small cached list for ItemList JSON-LD
+
   const headersList = await headers()
   const host = headersList.get("host")
   const protocol = headersList.get("x-forwarded-proto") || "https"
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
-  const {
-    response: { products: jsonLdProducts },
-  } = await listProducts({
-    countryCode: locale,
-    queryParams: { limit: 8, order: "created_at", fields: "id,title,handle" },
-  })
 
-  const itemList = jsonLdProducts.slice(0, 8).map((p : any, idx) => ({
-    "@type": "ListItem",
-    position: idx + 1,
-    url: `${baseUrl}/${locale}/products/${p.handle}`,
-    name: p.title,
-  }))
 
   return (
     <main className="container">
@@ -71,24 +56,10 @@ async function AllCategories({
           }),
         }}
       />
-      <Script
-        id="ld-itemlist-categories"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            itemListElement: itemList,
-          }),
-        }}
-      />
-      
-
-      <h1 className="heading-md uppercase">All Products</h1>
-
-      <Suspense fallback={<ProductListingSkeleton />}>
-          <ProductListing  locale={locale} />
-      </Suspense>
+<div className="my-3"></div>
+      <h1 className="heading-md uppercase">Browse Categories</h1>
+      <div className="my-6"></div>
+      <CategoriesSection categories={categories}  />
     </main>
   )
 }
