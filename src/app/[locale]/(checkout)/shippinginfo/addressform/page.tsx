@@ -163,65 +163,87 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     onClose()
   }
 
-  const handleUseCurrentLocation = () => {
+  const handleUseCurrentLocation = async () => {
     setIsLoadingLocation(true)
     setLocationError(null)
 
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser")
-      setIsLoadingLocation(false)
-      return
-    }
+   
+    const isFlutter = typeof window !== 'undefined' && 
+      (window as any).flutter_inappwebview !== undefined
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords
+    if (isFlutter) {
+      
+      try {
+        const { requestLocationFromFlutter } = await import("@/lib/bridge/mobileBridge")
+        const { latitude, longitude } = await requestLocationFromFlutter()
 
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-            {
-              headers: {
-                'User-Agent': 'YourAppName/1.0'
-              }
-            }
-          )
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch address")
-          }
-
-          const data = await response.json()
-          const address = data.address
-
-          if (address.state) setProvince(address.state)
-          if (address.city || address.town || address.village) {
-            setDistrict(address.city || address.town || address.village)
-          }
-          if (address.road || address.suburb) {
-            setLine1(address.road || address.suburb || "")
-          }
-          if (address.postcode) setPostalCode(address.postcode)
-          if (address.country_code) {
-            setCountryCode(address.country_code.toLowerCase())
-          }
-
-          setIsLoadingLocation(false)
-        } catch (error) {
-          setLocationError("Failed to get address from location")
-          setIsLoadingLocation(false)
-        }
-      },
-      (error) => {
-        setLocationError("Unable to retrieve your location. Please enable location access.")
+        
+        await fetchAddressFromCoordinates(latitude, longitude)
+      } catch (error: any) {
+        setLocationError(error?.message || "Unable to get location from app. Please enable location permissions in your device settings.")
         setIsLoadingLocation(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
       }
-    )
+    } else {
+     
+      if (!navigator.geolocation) {
+        setLocationError("Geolocation is not supported by your browser")
+        setIsLoadingLocation(false)
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords
+          await fetchAddressFromCoordinates(latitude, longitude)
+        },
+        (error) => {
+          setLocationError("Unable to retrieve your location. Please enable location access.")
+          setIsLoadingLocation(false)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      )
+    }
+  }
+
+  const fetchAddressFromCoordinates = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'YourAppName/1.0'
+          }
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch address")
+      }
+
+      const data = await response.json()
+      const address = data.address
+
+      if (address.state) setProvince(address.state)
+      if (address.city || address.town || address.village) {
+        setDistrict(address.city || address.town || address.village)
+      }
+      if (address.road || address.suburb) {
+        setLine1(address.road || address.suburb || "")
+      }
+      if (address.postcode) setPostalCode(address.postcode)
+      if (address.country_code) {
+        setCountryCode(address.country_code.toLowerCase())
+      }
+
+      setIsLoadingLocation(false)
+    } catch (error) {
+      setLocationError("Failed to get address from location")
+      setIsLoadingLocation(false)
+    }
   }
 
   return (
