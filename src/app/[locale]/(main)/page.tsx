@@ -39,9 +39,9 @@ export interface CategoryItem {
 
 const topSectionProducts = [
   {
-    name: "Flash Sale",
-    image: "/images/home-top-card/flash-sale.png",
-    link: "/flash-sale",
+    name: "Products",
+    image: "/images/home-top-card/shopping-aisle.webp",
+    link: "/products",
   },
   {
     name: "Trending",
@@ -222,7 +222,7 @@ export default async function HomePage({
 
   try {
     return (
-      <div className="space-y-6 px-4 lg:px-8 py-4">
+      <div className="space-y-6 px-4 lg:px-8 py-4 pt-7">
         {/* Top horizontal category scroller */}
         <Suspense fallback={<TopCategoriesSkeleton />}>
           <HorizontalScroller>
