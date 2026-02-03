@@ -1,21 +1,13 @@
 "use client"
 
-import Image from "next/image"
-import Link from "next/link"
 import { useState, useMemo, useRef, useEffect } from "react"
-import { StarRating } from "@/components/atoms"
 import { useCartStore } from "@/store/useCartStore"
-import { Review } from "@/types/reviews"
+import { Review, SimpleRatingSummary } from "@/types/reviews"
 import { cartToast } from "@/lib/cart-toast"
-import { motion } from "framer-motion"
 import { Toaster } from "react-hot-toast"
-import { NoReviews } from "@/components/molecules/AddVariantModal/AddVariantModal"
+import { ProductCardInternal } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { useInventoryStore } from "@/store/useInventoryStore"
-import { MdOutlineKeyboardArrowDown } from "react-icons/md"
-import { FaRegBookmark } from "react-icons/fa"
-import { IoShareOutline } from "react-icons/io5"
-
-
+// import { FaRegBookmark } from "react-icons/fa"
 interface ProductOptionValue {
   id: string
   value: string
@@ -66,9 +58,11 @@ interface ColorOption {
 export default function ProductDetailClient({
   product,
   reviews,
+  ratingSummary,
 }: {
   product: Product
   reviews: Review[]
+  ratingSummary?: SimpleRatingSummary
 }) {
   const [index, setIndex] = useState(0)
   const { getAdjustedInventory } = useInventoryStore()
@@ -86,7 +80,9 @@ export default function ProductDetailClient({
 
   const totalReviews = reviews.length
 
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >(() => {
     const initial: Record<string, string> = {}
     product.options?.forEach((option: any) => {
       if (option.values && option.values.length > 0) {
@@ -97,22 +93,23 @@ export default function ProductDetailClient({
   })
 
   const handleOptionSelect = (optionTitle: string, value: string) => {
-    setSelectedOptions(prev => ({
+    setSelectedOptions((prev) => ({
       ...prev,
-      [optionTitle]: value
+      [optionTitle]: value,
     }))
   }
 
-  const selectedVariant = product.variants?.find((variant: any) => {
-    return variant.options?.every((variantOption: any) => {
-      const optionTitle = product.options?.find((opt: any) => 
-        opt.values?.some((val: any) => val.value === variantOption.value)
-      )?.title
-      
-      if (!optionTitle) return true
-      return selectedOptions[optionTitle] === variantOption.value
-    })
-  }) || product.variants?.[0]
+  const selectedVariant =
+    product.variants?.find((variant: any) => {
+      return variant.options?.every((variantOption: any) => {
+        const optionTitle = product.options?.find((opt: any) =>
+          opt.values?.some((val: any) => val.value === variantOption.value)
+        )?.title
+
+        if (!optionTitle) return true
+        return selectedOptions[optionTitle] === variantOption.value
+      })
+    }) || product.variants?.[0]
 
   const colorOption = product.options?.find(
     (opt) => opt.title.toLowerCase() === "color"
@@ -309,13 +306,15 @@ export default function ProductDetailClient({
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: product.title,
-        text: `Check out ${product.title}`,
-        url: window.location.href,
-      }).catch(() => {
-        // User cancelled share
-      })
+      navigator
+        .share({
+          title: product.title,
+          text: `Check out ${product.title}`,
+          url: window.location.href,
+        })
+        .catch(() => {
+          // User cancelled share
+        })
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href)
@@ -323,27 +322,31 @@ export default function ProductDetailClient({
     }
   }
 
+  console.log(
+    "product:",
+    product?.images?.map((img: any) => img.url)
+  )
+
   return (
     <main className="min-h-screen bg-white">
       <Toaster position="top-right" reverseOrder={false} />
 
-      <div className="max-w-4xl mx-auto">
-        {/* Header with Title and Icons */}
+      {/* <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white sticky top-0 z-10">
           <div className="flex-1 mx-3 min-w-0">
             <h1 className="text-sm font-medium text-gray-800 truncate">
-              - {product.title}
+              {product.title}
             </h1>
           </div>
 
           <div className="flex gap-2 flex-shrink-0">
-            <button 
+            <button
               onClick={handleWishlistToggle}
               className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
             >
               <FaRegBookmark size={14} />
             </button>
-            <button 
+            <button
               onClick={handleShare}
               className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
             >
@@ -352,7 +355,6 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        {/* Image Section */}
         <div
           className="w-full bg-gray-200 py-4 relative flex justify-center select-none"
           onTouchStart={onTouchStart}
@@ -400,13 +402,13 @@ export default function ProductDetailClient({
             <button
               key={i}
               onClick={() => setIndex(i)}
-              className={`w-2 h-2 rounded-full transition-all active:scale-95 ${i === index ? "bg-blue-800 w-4" : "bg-gray-300"
-                }`}
+              className={`w-2 h-2 rounded-full transition-all active:scale-95 ${
+                i === index ? "bg-blue-800 w-4" : "bg-gray-300"
+              }`}
             />
           ))}
         </div>
 
-        {/* Visit Store + ADD Button */}
         <div className="px-4 py-3 flex justify-between items-center border-b border-gray-200">
           <div className="text-sm text-blue-600 font-medium">
             <Link
@@ -417,7 +419,8 @@ export default function ProductDetailClient({
               }
               className="inline-flex items-end text-[14px] leading-[21px] font-medium text-[#425699] hover:underline font-poppins"
             >
-              Visit the {(product as any).seller?.name || product.store?.name || "Store"}
+              Visit the{" "}
+              {(product as any).seller?.name || product.store?.name || "Store"}
             </Link>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -425,7 +428,8 @@ export default function ProductDetailClient({
               <span className="text-xs text-red-600 font-medium mr-3">
                 Out of stock
               </span>
-            ) : selectedVariantInventory > 0 && selectedVariantInventory < 10 ? (
+            ) : selectedVariantInventory > 0 &&
+              selectedVariantInventory < 10 ? (
               <span className="text-xs text-red-600 font-medium mr-3">
                 Only {selectedVariantInventory} left in stock
               </span>
@@ -433,27 +437,45 @@ export default function ProductDetailClient({
             <button
               onClick={handleAddToCart}
               disabled={isSelectedVariantOutOfStock || isAdding}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors shadow-md min-w-[80px] ${isSelectedVariantOutOfStock
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : isAdding
-                ? "bg-myBlue/70 text-white cursor-wait"
-                : "bg-myBlue text-white hover:bg-blue-700"
-                }`}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors shadow-md min-w-[80px] ${
+                isSelectedVariantOutOfStock
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : isAdding
+                    ? "bg-myBlue/70 text-white cursor-wait"
+                    : "bg-myBlue text-white hover:bg-blue-700"
+              }`}
             >
               {isAdding ? (
                 <span className="flex items-center justify-center gap-1">
-                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-3 w-3"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Adding...
                 </span>
-              ) : "ADD MORE"}
+              ) : (
+                "ADD MORE"
+              )}
             </button>
           </div>
         </div>
 
-        {/* Product Info */}
         <div className="px-4 py-3 border-b border-gray-200">
           <div className="flex items-center mb-2 gap-2">
             <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-semibold flex-shrink-0">
@@ -495,9 +517,7 @@ export default function ProductDetailClient({
                   <div key={option.id}>
                     <div className="text-base font-normal text-black mb-2">
                       {option.title}:{" "}
-                      <span className="font-semibold">
-                        {selectedValue}
-                      </span>
+                      <span className="font-semibold">{selectedValue}</span>
                     </div>
 
                     {isColorOpt && colors.length > 0 ? (
@@ -505,7 +525,9 @@ export default function ProductDetailClient({
                         {colors.map((c) => (
                           <button
                             key={c.id}
-                            onClick={() => handleOptionSelect(option.title, c.label)}
+                            onClick={() =>
+                              handleOptionSelect(option.title, c.label)
+                            }
                             className={`w-[84px] h-[74px] rounded-lg overflow-hidden flex items-center justify-center ${
                               selectedValue === c.label
                                 ? "border-2 border-blue-800"
@@ -517,26 +539,25 @@ export default function ProductDetailClient({
                         ))}
                       </div>
                     ) : (
-    
                       <div className="flex gap-2 flex-wrap">
                         {option.values?.map((value: any) => (
                           <button
                             key={value.id}
-                            onClick={() => handleOptionSelect(option.title, value.value)}
+                            onClick={() =>
+                              handleOptionSelect(option.title, value.value)
+                            }
                             className={`${
-                              isSizeOpt 
-                                ? 'w-[50px] h-[40px]' 
-                                : 'px-3 py-2'
+                              isSizeOpt ? "w-[50px] h-[40px]" : "px-3 py-2"
                             } rounded-lg flex items-center justify-center text-sm ${
                               selectedValue === value.value
                                 ? "border-2 border-blue-800 bg-white text-gray-800"
                                 : "border border-gray-800 bg-transparent text-gray-800"
                             }`}
                           >
-                            {isSizeOpt 
-                              ? (sizeShortMap[value.value?.toLowerCase()] || value.value)
-                              : value.value
-                            }
+                            {isSizeOpt
+                              ? sizeShortMap[value.value?.toLowerCase()] ||
+                                value.value
+                              : value.value}
                           </button>
                         ))}
                       </div>
@@ -549,7 +570,6 @@ export default function ProductDetailClient({
           </>
         )}
 
-        {/* Price Section */}
         <div className="px-4 py-3 space-y-2">
           {discountPercent > 0 && (
             <div className="bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold w-fit">
@@ -584,7 +604,6 @@ export default function ProductDetailClient({
 
         <hr className="border-gray-300" />
 
-        {/* Expandable Sections */}
         <div className="px-4 space-y-4 pb-20">
           <details className="py-2" open>
             <summary className="cursor-pointer font-medium text-lg text-gray-800 flex justify-between items-center">
@@ -643,24 +662,32 @@ export default function ProductDetailClient({
                       {averageRating.toFixed(1)} out of 5
                     </span>
                     <span className="text-xs font-normal ml-1">
-                      ({totalReviews.toLocaleString()} review{totalReviews !== 1 ? "s" : ""})
+                      ({totalReviews.toLocaleString()} review
+                      {totalReviews !== 1 ? "s" : ""})
                     </span>
                   </div>
                   {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                    <div
+                      key={review.id}
+                      className="border-b border-gray-200 pb-4 last:border-b-0"
+                    >
                       <div className="items-center gap-2 mb-2">
                         <div className="flex gap-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {review.customer?.first_name} {review.customer?.last_name}
+                            {review.customer?.first_name}{" "}
+                            {review.customer?.last_name}
                           </span>
                           <div className="flex mt-1">
                             <StarRating rate={review.rating} starSize={12} />
                           </div>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-700">{review.customer_note}</p>
+                      <p className="text-sm text-gray-700">
+                        {review.customer_note}
+                      </p>
                       <span className="text-xs text-gray-500">
-                        Posted on {new Date(review.created_at).toLocaleDateString()}
+                        Posted on{" "}
+                        {new Date(review.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
@@ -671,7 +698,18 @@ export default function ProductDetailClient({
             </div>
           </details>
         </div>
-      </div>
+      </div> */}
+      <ProductCardInternal
+        product={product}
+        // onClose={smoothClose}
+        isFullScreen={true}
+        // onScrollChange={handleScrollChange}
+        // onOverscrollUp={goToSheet}
+        // overscrollY={overscrollY}
+        lightboxImages={product?.images?.map((img: any) => img.url) || []}
+        ratingSummary={ratingSummary}
+        // onToggleMode={isFullscreen ? goToSheet : goToFullscreen}
+      />
     </main>
   )
 }

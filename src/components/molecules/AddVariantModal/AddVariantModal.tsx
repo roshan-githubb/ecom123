@@ -86,7 +86,7 @@ interface AddVariantSheetProps {
   onProductChange?: (index: number) => void
 }
 
-function ProductCardInternal({
+export function ProductCardInternal({
   product,
   onClose,
   isFullScreen,
@@ -99,13 +99,13 @@ function ProductCardInternal({
   lightboxImages,
 }: {
   product: any
-  onClose: () => void
-  isFullScreen: boolean
-  onScrollChange: (isAtTop: boolean) => void
+  onClose?: () => void
+  isFullScreen?: boolean
+  onScrollChange?: (isAtTop: boolean) => void
   onOverscrollUp?: () => void
   overscrollY?: any
   ratingSummary?: SimpleRatingSummary
-  onToggleMode: () => void
+  onToggleMode?: () => void
   locale?: string
   lightboxImages: string[]
 }) {
@@ -373,7 +373,9 @@ function ProductCardInternal({
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const atTop = e.currentTarget.scrollTop <= 5
     setIsAtTop(atTop)
-    onScrollChange(atTop)
+    if (onScrollChange) {
+      onScrollChange(atTop)
+    }
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -670,12 +672,13 @@ function ProductCardInternal({
 
   const handleToggleMode = () => {
     // setLightboxImages([])
-    onToggleMode()
+    onToggleMode?.()
   }
+  console.log("lightboximages", lightboxImages)
   return (
     <div className="flex flex-col h-full bg-white relative overflow-hidden">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white z-10 sticky top-0 flex-shrink-0">
-        <button
+       {onToggleMode && <button
           onClick={handleToggleMode}
           className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
         >
@@ -685,7 +688,9 @@ function ProductCardInternal({
           >
             <MdOutlineKeyboardArrowUp size={28} />
           </motion.div>
-        </button>
+        </button>}
+
+        {!onToggleMode && <div className="w-full h-12" />}
 
         <div className="absolute left-1/2 transform -translate-x-1/2 max-w-[60%] px-2">
           <h1 className="text-sm font-medium text-gray-800 truncate text-center">
