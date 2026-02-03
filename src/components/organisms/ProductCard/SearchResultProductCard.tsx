@@ -7,6 +7,7 @@ import { StarRating } from "@/components/atoms/StarRating/StarRating"
 import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
 import { CartIcon } from "@/icons"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 interface AlgoliaProductHit {
   id: string
@@ -84,11 +85,6 @@ export const SearchResultProductCard = ({
   // const totalInventory = 0
   // const stockInfo = getStockDisplayInfo(totalInventory)
 
-  const handleOpenProduct = () => {
-    if (!product.handle) return
-    window.location.href = `/products/${product.id}`
-  }
-
   return (
     <div
       className={cn(
@@ -96,8 +92,8 @@ export const SearchResultProductCard = ({
         className
       )}
     >
-      <div
-        onClick={handleOpenProduct}
+      <LocalizedClientLink
+        href={`/products/${product.id}`}
         className="w-full aspect-square  flex flex-col relative cursor-pointer"
       >
         <Image
@@ -107,17 +103,17 @@ export const SearchResultProductCard = ({
           height={300}
           className="w-full h-full object-cover rounded-t-xl"
         />
-      </div>
+      </LocalizedClientLink>
 
       <div className="p-3 flex flex-col justify-between h-[55%]">
         <div className="flex flex-col">
-          <p
-            onClick={handleOpenProduct}
+          <LocalizedClientLink
+            href={`/products/${product.id}`}
             className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
             style={{ color: "#32425A" }}
           >
             {title}
-          </p>
+          </LocalizedClientLink>
           <div className="flex items-center gap-x-2 mt-1">
             <span
               className="text-[12px] font-semibold"
@@ -158,7 +154,7 @@ export const SearchResultProductCard = ({
           </p>
         )}
         */}
-        <div className="mt-3"></div>
+          <div className="mt-3"></div>
           <button
             onClick={handleAddToCart}
             disabled={isAddingToCart}
@@ -169,8 +165,8 @@ export const SearchResultProductCard = ({
                                 : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
                             } text-[#FFFFFF]`}
           >
-                      <CartIcon size={16} color="white"/>
-            
+            <CartIcon size={16} color="white" />
+
             {isAddingToCart
               ? "Adding..."
               : !product?.in_stock
