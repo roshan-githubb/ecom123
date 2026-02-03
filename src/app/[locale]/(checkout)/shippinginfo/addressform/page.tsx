@@ -74,6 +74,63 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     setIsSaving(true)
     setSaveError(null)
 
+    if (!name.trim()) {
+      setSaveError("Full name is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (!phone.trim()) {
+      setSaveError("Phone number is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (phone.trim().length < 10) {
+      setSaveError("Please enter a valid phone number (at least 10 digits)")
+      setIsSaving(false)
+      return
+    }
+
+    if (!province.trim()) {
+      setSaveError("Province is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (!district.trim()) {
+      setSaveError("District/City is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (!line1.trim()) {
+      setSaveError("Address Line 1 is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (!postalCode.trim()) {
+      setSaveError("Postal code is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (!isUserLoggedIn && !email.trim()) {
+      setSaveError("Email is required")
+      setIsSaving(false)
+      return
+    }
+
+    if (!isUserLoggedIn && email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email.trim())) {
+        setSaveError("Please enter a valid email address")
+        setIsSaving(false)
+        return
+      }
+    }
+
     const addr: Address = {
       name,
       email,
@@ -137,8 +194,10 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
           const result = await response.json()
         } catch (customerError) {
-
+          console.error("Error saving to profile:", customerError)
         }
+      } else {
+        console.log("NOT saving to profile (saveToProfile:", saveToProfile, ")")
       }
 
       setIsSaving(false)
@@ -282,7 +341,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
       <input
         type="text"
-        placeholder="Full Name"
+        placeholder="Full Name *"
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="border p-2 w-full rounded"
@@ -290,7 +349,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       />
       <input
         type="text"
-        placeholder="Phone Number"
+        placeholder="Phone Number *"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         className="border p-2 w-full rounded"
@@ -298,7 +357,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       />
       <input
         type="text"
-        placeholder="Province"
+        placeholder="Province *"
         value={province}
         onChange={(e) => setProvince(e.target.value)}
         className="border p-2 w-full rounded"
@@ -306,7 +365,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       />
       <input
         type="text"
-        placeholder="District / City"
+        placeholder="District / City *"
         value={district}
         onChange={(e) => setDistrict(e.target.value)}
         className="border p-2 w-full rounded"
@@ -314,7 +373,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       />
       <input
         type="text"
-        placeholder="Address Line 1"
+        placeholder="Address Line 1 *"
         value={line1}
         onChange={(e) => setLine1(e.target.value)}
         className="border p-2 w-full rounded"
@@ -332,7 +391,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
       {!isUserLoggedIn && (
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Email *"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="border p-2 w-full rounded"
@@ -342,7 +401,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
       <input
         type="text"
-        placeholder="Postal Code"
+        placeholder="Postal Code *"
         value={postalCode}
         onChange={(e) => setPostalCode(e.target.value)}
         className="border p-2 w-full rounded"
