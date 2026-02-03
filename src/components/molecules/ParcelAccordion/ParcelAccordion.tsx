@@ -20,7 +20,7 @@ export const ParcelAccordion = ({
   orderDisplayId,
   createdAt,
   total,
-  currency_code = "eur",
+  currency_code = "np",
   items,
   status,
   fulfillmentStatus,
