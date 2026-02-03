@@ -8,10 +8,10 @@ const OrderConfirmationHeading = () => {
         <>
             <Heading
                 level="h1"
-                className="flex flex-col gap-y-3 text-ui-fg-base text-3xl mb-4"
+                className="flex flex-col gap-y-2 text-gray-800 mb-2"
             >
-                <span>Thank you!</span>
-                <span>Your order was placed successfully.</span>
+                <span className="text-2xl font-bold">Thank you!</span>
+                <span className="text-base font-normal text-gray-600">Your order was placed successfully.</span>
             </Heading>
         </>
     )
