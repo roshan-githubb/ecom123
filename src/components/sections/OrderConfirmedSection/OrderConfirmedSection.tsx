@@ -1,7 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
 import OrderConfirmationHeading from "./OrderConfirmationHeading"
-import { Button } from "@/components/atoms/Button/Button"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 export const OrderConfirmedSection = ({
@@ -32,23 +31,19 @@ export const OrderConfirmedSection = ({
 
           <div className="flex flex-row gap-3 justify-center items-center w-full mt-6 px-4">
             <LocalizedClientLink href={`/profile/orders/${order.id}`}>
-              <Button 
-                variant="tonal" 
-                size="small"
-                className="px-4 text-sm whitespace-nowrap"
+              <button 
+                className="px-4 py-2 text-sm whitespace-nowrap rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
               >
                 Order Details
-              </Button>
+              </button>
             </LocalizedClientLink>
             
             <LocalizedClientLink href="/">
-              <Button 
-                variant="filled" 
-                size="small"
-                className="px-4 text-sm whitespace-nowrap"
+              <button 
+                className="px-4 py-2 text-sm whitespace-nowrap rounded-md bg-myBlue text-white hover:opacity-90 transition-opacity"
               >
                 Keep Shopping
-              </Button>
+              </button>
             </LocalizedClientLink>
           </div>
           
