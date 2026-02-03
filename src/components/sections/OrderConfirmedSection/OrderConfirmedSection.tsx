@@ -1,10 +1,8 @@
-import OrderDetails from "@/components/organisms/OrderDefails/OrderDetails"
-import OrderShipping from "@/components/organisms/OrderDefails/OrderShipping"
-import OrderTotals from "@/components/organisms/OrderDefails/OrderTotals"
-import OrderItems from "@/components/organisms/OrderItems/OrderItems"
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text } from "@medusajs/ui"
+import { Text } from "@medusajs/ui"
 import OrderConfirmationHeading from "./OrderConfirmationHeading"
+import { Button } from "@/components/atoms/Button/Button"
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 export const OrderConfirmedSection = ({
   order,
@@ -19,18 +17,39 @@ export const OrderConfirmedSection = ({
           className="flex flex-col gap-4 max-w-4xl h-full bg-white w-full py-10"
           data-testid="order-complete-container"
         >
-          <div className="text-center w-full">
+          <div className="text-center w-full space-y-3">
             <OrderConfirmationHeading/>
-            <Text>
+            <Text className="text-sm text-gray-600 px-4">
               We have sent the order confirmation details to{" "}
               <span
-                className="text-ui-fg-medium-plus font-semibold"
+                className="text-gray-900 font-medium"
                 data-testid="order-email"
               >
                 {order.email}
               </span>
-              .
             </Text>
+          </div>
+
+          <div className="flex flex-row gap-3 justify-center items-center w-full mt-6 px-4">
+            <LocalizedClientLink href={`/profile/orders/${order.id}`}>
+              <Button 
+                variant="tonal" 
+                size="small"
+                className="px-4 text-sm whitespace-nowrap"
+              >
+                Order Details
+              </Button>
+            </LocalizedClientLink>
+            
+            <LocalizedClientLink href="/">
+              <Button 
+                variant="filled" 
+                size="small"
+                className="px-4 text-sm whitespace-nowrap"
+              >
+                Keep Shopping
+              </Button>
+            </LocalizedClientLink>
           </div>
           
           {/* <OrderDetails order={order} />
