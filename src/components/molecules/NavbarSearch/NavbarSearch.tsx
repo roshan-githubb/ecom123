@@ -26,7 +26,7 @@ export function NavbarSearch() {
         placeholder="Search products"
         value={search}
         changeValue={setSearch}
-        className="flex-1 px-4 py-2 rounded-l-full bg-none border-none focus:outline-none focus:border-none"
+        className="flex-1 px-4 py-2 rounded-l-full bg-white border-none focus:outline-none focus:border-none"
       />
       <button
         type="submit"

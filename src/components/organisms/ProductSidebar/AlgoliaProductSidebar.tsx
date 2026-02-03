@@ -1,6 +1,7 @@
 "use client"
 
-import { Button, Chip, Input, StarRating } from "@/components/atoms"
+import {  Chip, StarRating } from "@/components/atoms"
+import * as Slider from "@radix-ui/react-slider"
 import { Accordion, FilterCheckboxOption, Modal } from "@/components/molecules"
 import useFilters from "@/hooks/useFilters"
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams"
@@ -10,6 +11,7 @@ import React, { useEffect, useState } from "react"
 import { useRefinementList } from "react-instantsearch"
 import { ProductListingActiveFilters } from "../ProductListingActiveFilters/ProductListingActiveFilters"
 import useGetAllSearchParams from "@/hooks/useGetAllSearchParams"
+import { useDebounce } from "@/hooks/useDebounce"
 
 const filters = [
   { label: "5", amount: 40 },
@@ -166,67 +168,74 @@ function SizeFilter({ defaultOpen = true }: { defaultOpen?: boolean }) {
 }
 
 function PriceFilter({ defaultOpen = true }: { defaultOpen?: boolean }) {
-  const [min, setMin] = useState("")
-  const [max, setMax] = useState("")
+  const MIN_PRICE = 0
+  const MAX_PRICE = 50000
+  const STEP = 100
 
-  const updateSearchParams = useUpdateSearchParams()
   const searchParams = useSearchParams()
+  const updateSearchParams = useUpdateSearchParams()
 
+  const [range, setRange] = useState<[number, number]>([
+    MIN_PRICE,
+    MAX_PRICE,
+  ])
+
+  // Sync from URL → slider
   useEffect(() => {
-    setMin(searchParams.get("min_price") || "")
-    setMax(searchParams.get("max_price") || "")
+    const min = Number(searchParams.get("min_price") ?? MIN_PRICE)
+    const max = Number(searchParams.get("max_price") ?? MAX_PRICE)
+    setRange([min, max])
   }, [searchParams])
 
-  const updateMinPriceHandler = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    updateSearchParams("min_price", min)
-  }
+  // Debounce API updates
+  const debouncedRange = useDebounce(range, 500)
 
-  const updateMaxPriceHandler = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    updateSearchParams("max_price", max)
-  }
+  useEffect(() => {
+    const [min, max] = debouncedRange
+
+    updateSearchParams({
+      min_price: min > MIN_PRICE ? String(min) : undefined,
+      max_price: max < MAX_PRICE ? String(max) : undefined,
+    })
+  }, [debouncedRange])
+
   return (
-    <Accordion heading="Price" defaultOpen={defaultOpen} >
-      <div className="flex gap-x-2  mb-4">
-        <form method="POST" onSubmit={updateMinPriceHandler}>
-          <Input
-            placeholder="Min"
-            onChange={(e) => setMin(e.target.value)}
-            value={min}
-            onBlur={(e) => {
-              setTimeout(() => {
-                updateMinPriceHandler(
-                  e as unknown as React.FormEvent<HTMLFormElement>
-                )
-              }, 500)
-            }}
-            type="number"
-            className="no-arrows-number-input"
+    <Accordion heading="Price" defaultOpen={defaultOpen}>
+      <div className="px-3 py-4">
+        {/* Labels */}
+        <div className="flex justify-between text-sm text-muted mb-3">
+          <span>Min: {range[0]}</span>
+          <span>Max: {range[1]}</span>
+        </div>
+
+        {/* SINGLE dual-thumb slider */}
+        <Slider.Root
+          className="relative flex items-center select-none touch-none w-full h-5"
+          min={MIN_PRICE}
+          max={MAX_PRICE}
+          step={STEP}
+          value={range}
+          onValueChange={(value) =>
+            setRange(value as [number, number])
+          }
+        >
+          <Slider.Track className="bg-gray-400 border relative grow rounded-full h-2">
+            <Slider.Range className="absolute bg-gray-400 rounded-full h-full" />
+          </Slider.Track>
+
+          <Slider.Thumb
+            className="block w-4 h-4 bg-myBlue rounded-full shadow focus:outline-none"
           />
-          <input type="submit" className="hidden" />
-        </form>
-        <form method="POST" onSubmit={updateMaxPriceHandler}>
-          <Input
-            placeholder="Max"
-            onChange={(e) => setMax(e.target.value)}
-            onBlur={(e) => {
-              setTimeout(() => {
-                updateMaxPriceHandler(
-                  e as unknown as React.FormEvent<HTMLFormElement>
-                )
-              }, 500)
-            }}
-            value={max}
-            type="number"
-            className="no-arrows-number-input"
+          <Slider.Thumb
+            className="block w-4 h-4 bg-myBlue rounded-full shadow focus:outline-none"
           />
-          <input type="submit" className="hidden" />
-        </form>
+        </Slider.Root>
       </div>
     </Accordion>
   )
 }
+
+
 
 function RatingFilter() {
   const { updateFilters, isFilterActive } = useFilters("rating")
