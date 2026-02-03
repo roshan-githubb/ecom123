@@ -41,15 +41,19 @@ export const AlgoliaProductsListing = ({
   const page: number = +(searchParamas.get("page") || 1)
   const query: string = searchParamas.get("query") || ""
 
-  const filters = `${seller_handle
-    ? `NOT seller:null AND seller.handle:${seller_handle}`
-    : "NOT seller:null"}
-    ${currency_code ? ` AND variants.prices.currency_code:${currency_code}` : ""}${category_id
-      ? ` AND categories.id:${category_id}${collection_id !== undefined
-        ? ` AND collections.id:${collection_id}`
-        : ""
-      } ${facetFilters}`
-      : ` ${facetFilters}`
+  const filters = `${
+    seller_handle
+      ? `NOT seller:null AND seller.handle:${seller_handle}`
+      : "NOT seller:null"
+  }
+    ${currency_code ? ` AND variants.prices.currency_code:${currency_code}` : ""}${
+      category_id
+        ? ` AND categories.id:${category_id}${
+            collection_id !== undefined
+              ? ` AND collections.id:${collection_id}`
+              : ""
+          } ${facetFilters}`
+        : ` ${facetFilters}`
     }`
 
   return (
@@ -73,15 +77,11 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
   } = useHits()
   const [isOpen, setIsOpen] = useState(false)
 
-
   console.log("Algolia items and results:", items, results)
 
-
-  const [ratingSummaryMap, setRatingSummaryMap] =
-    useState<Record<string, SimpleRatingSummary>>({})
-
-
-
+  const [ratingSummaryMap, setRatingSummaryMap] = useState<
+    Record<string, SimpleRatingSummary>
+  >({})
 
   const updateSearchParams = useUpdateSearchParams()
 
@@ -90,8 +90,6 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
   }
 
   if (!results?.processingTimeMS) return <ProductListingSkeleton />
-
-
 
   return (
     <>
@@ -150,11 +148,12 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
               >
                 {items?.map((item: any) => (
                   <li key={item.objectID} className="w-full">
-                    <SearchResultProductCard key={item.objectId} product={item} />
+                    <SearchResultProductCard
+                      key={item.objectId}
+                      product={item}
+                    />
                   </li>
-
                 ))}
-
               </ul>
             </div>
           )}

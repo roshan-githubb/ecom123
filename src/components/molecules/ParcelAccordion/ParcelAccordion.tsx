@@ -54,119 +54,71 @@ export const ParcelAccordion = ({
 
   return (
     <>
-      {/* HEADER */}
-      <div
-        onClick={() => setIsOpen((p) => !p)}
-        className="border border-gray-400 bg-component-secondary rounded-sm px-4 py-3 cursor-pointer"
-      >
-        <div className="flex items-center justify-between gap-4">
-          {/* LEFT */}
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-secondary">
-                ORDER {orderDisplayId}
-              </h2>
+     <div className="border border-gray-300 bg-component-secondary rounded-md px-4 py-3">
+  <div className="flex items-start justify-between gap-4">
+    {/* LEFT */}
+    <div className="flex flex-col gap-2">
+      {/* Order ID */}
+      <h2 className="text-sm font-semibold text-secondary">
+        ORDER {orderDisplayId}
+      </h2>
 
-              {status && (
-                <span
-                  className={cn(
-                    "px-2 py-0.5 text-xs rounded-full font-medium border",
-                    getOrderStatusColor(displayStatus)
-                  )}
-                >
-                  {displayStatus}
-                </span>
-              )}
-            </div>
+      {/* Status (right below ID) */}
+      {displayStatus && (
+        <span
+          className={cn(
+            "w-fit px-2.5 py-0.5 text-xs rounded-full font-medium border",
+            getOrderStatusColor(displayStatus)
+          )}
+        >
+          {displayStatus}
+        </span>
+      )}
 
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              {/* Date */}
-              <div className="flex items-center gap-1.5">
-                <CalendarIcon className="w-3.5 h-3.5" />
-                <span>{format(new Date(createdAt), "MMM dd, yyyy")}</span>
-              </div>
+      {/* Meta info */}
+      <div className="flex justify-between gap-4 text-xs text-muted-foreground mt-1 w-full">
+        {/* Date */}
+        <div className="flex justify-between gap-1.5">
+          <CalendarIcon className="w-3.5 h-3.5" />
+          <span>{format(new Date(createdAt), "MMM dd, yyyy")}</span>
+        </div>
 
-              {/* Total */}
-              <div className="flex items-center gap-1.5 font-medium text-secondary">
-                <Banknote className="w-3.5 h-3.5" />
-                <span>
-                  {convertToLocale({ amount: total, currency_code })}
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* RIGHT */}
-          <div className="flex items-center gap-1">
-            <LocalizedClientLink href={`/profile/orders/${orderId}`}>
-              <Button
-                variant="tonal"
-                className="bg-myBlue text-white hover:bg-myBlue/90 text-[12px] py-1"
-                onClick={(e) => e.stopPropagation()}
-              >
-                View order
-              </Button>
-
-            </LocalizedClientLink>
-
-            <CollapseIcon
-              size={18}
-              className={cn(
-                "transition-transform",
-                isOpen && "rotate-180"
-              )}
-            />
-          </div>
+        {/* Total */}
+        <div className="flex justify-between gap-1.5 font-medium text-secondary">
+          <Banknote className="w-3.5 h-3.5" />
+          <span>
+            {convertToLocale({ amount: total, currency_code })}
+          </span>
         </div>
       </div>
+    </div>
 
-      {/* EXPANDED CONTENT */}
-      <Card
-        className="overflow-hidden transition-all"
-        style={{
-          maxHeight: isOpen ? `${height}px` : "0px",
-          opacity: isOpen ? 1 : 0,
-        }}
+    <div className="flex flex-col items-end gap-2 shrink-0">
+      <LocalizedClientLink
+        href={`/profile/orders/${orderId}`}
+        className="inline-flex items-center justify-center rounded-md bg-myBlue px-3 py-1.5 text-xs font-medium text-white hover:bg-myBlue/90 transition-colors min-h-[32px]"
       >
-        {isOpen && (
-          <ul ref={contentRef} className="divide-y px-4 py-3">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="flex justify-between gap-4 py-3"
-              >
-                {/* LEFT */}
-                <div className="flex gap-3">
-                  <Package className="w-4 h-4 text-myBlue mt-0.5" />
+        View order
+      </LocalizedClientLink>
 
-                  <div className="text-sm">
-                    <p className="font-medium text-secondary">
-                      {item.title}
-                    </p>
+      {/* Cancel Order to be implemented */}
+      {/*
+      {displayStatus === "pending" && (
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-md border border-red-500 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors min-h-[32px]"
+          onClick={handleCancelOrder}
+        >
+          Cancel order
+        </button>
+      )}
+      */}
+    </div>
+  </div>
+</div>
 
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      <Layers className="w-3 h-3" />
-                      <span>{item.variant_title || "Default"}</span>
 
-                      <Hash className="w-3 h-3 ml-2" />
-                      <span>Qty {item.quantity}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* RIGHT */}
-                <div className="text-sm font-medium text-secondary whitespace-nowrap">
-                  {convertToLocale({
-                    amount: item.total || item.unit_price * item.quantity,
-                    currency_code,
-                  })}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+    
     </>
   )
 }
