@@ -173,6 +173,7 @@ export const useCartStore = create<CartState>()(
       },
 
       add: async (variantId, quantity = 1) => {
+        console.log("Adding to cart:", variantId, quantity);
         const data = await addToServerCart(variantId, quantity);
         if (data?.cart) {
           set(mapCart(data.cart));
