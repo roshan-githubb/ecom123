@@ -110,10 +110,6 @@ export const listOrders = async (
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("orders")),
-  }
-
   return sdk.client
     .fetch<{
       orders: Array<
@@ -131,8 +127,7 @@ export const listOrders = async (
         ...filters,
       },
       headers,
-      next,
-      cache: "force-cache",
+      cache: "no-store", 
     })
     .then(({ orders }) => orders)
     .catch((err) => medusaError(err))
