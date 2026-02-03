@@ -6,7 +6,6 @@ import {
   ProductsPagination,
 } from "@/components/organisms"
 import { client } from "@/lib/client"
-import { HttpTypes } from "@medusajs/types"
 import { SimpleRatingSummary } from "@/types/reviews"
 import { Configure, useHits } from "react-instantsearch"
 import { InstantSearchNext } from "react-instantsearch-nextjs"
