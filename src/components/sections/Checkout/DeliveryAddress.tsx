@@ -66,6 +66,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   const [customerDefaultAddress, setCustomerDefaultAddress] = useState<any>(null)
   const [guestAddress, setGuestAddress] = useState<any>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [customerEmail, setCustomerEmail] = useState<string>('')
 
 
   useEffect(() => {
@@ -83,6 +84,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
 
           if (customer) {
             setIsLoggedIn(true)
+            setCustomerEmail(customer.email || '')
 
             if (customer.addresses && customer.addresses.length > 0) {
               const defaultAddr = customer.addresses.find((addr: any) => addr.is_default_shipping)
@@ -133,6 +135,19 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                   
                   onAddressUpdate?.()
                 } else {
+                  const cartMatchesDefault = existingAddress && defaultAddr &&
+                    existingAddress.first_name === defaultAddr.first_name &&
+                    existingAddress.last_name === defaultAddr.last_name &&
+                    existingAddress.address_1 === defaultAddr.address_1 &&
+                    existingAddress.city === defaultAddr.city &&
+                    existingAddress.province === defaultAddr.province &&
+                    existingAddress.phone === defaultAddr.phone
+
+                  if (!cartMatchesDefault) {
+                    setCustomerDefaultAddress(null)
+                    setGuestAddress(existingAddress)
+                  }
+                  
                   onAddressUpdate?.()
                 }
               }
@@ -180,8 +195,61 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
         const cartData = await retrieveCart(cartId)
         const shippingAddr = cartData?.shipping_address
         
-        if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
-          setGuestAddress(shippingAddr)
+        
+        if (isLoggedIn) {
+          try {
+            const res = await fetch("/api/customer/me", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+            })
+
+            if (res.ok) {
+              const data = await res.json()
+              const customer = data?.customer
+
+              if (customer && customer.addresses && customer.addresses.length > 0) {
+                const defaultAddr = customer.addresses.find((addr: any) => addr.is_default_shipping)
+                  || customer.addresses[0]
+                
+                
+                const cartMatchesDefault = shippingAddr && defaultAddr &&
+                  shippingAddr.first_name === defaultAddr.first_name &&
+                  shippingAddr.last_name === defaultAddr.last_name &&
+                  shippingAddr.address_1 === defaultAddr.address_1 &&
+                  shippingAddr.city === defaultAddr.city &&
+                  shippingAddr.province === defaultAddr.province &&
+                  shippingAddr.phone === defaultAddr.phone
+
+
+                if (cartMatchesDefault) {
+                  setCustomerDefaultAddress(defaultAddr)
+                  setGuestAddress(null)
+                } else {
+                  setCustomerDefaultAddress(null)
+                  if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+                    setGuestAddress(shippingAddr)
+                  }
+                }
+                
+                setCustomerEmail(customer.email || '')
+              } else {
+                setCustomerDefaultAddress(null)
+                if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+                  setGuestAddress(shippingAddr)
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Failed to reload customer address:", err)
+            if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+              setGuestAddress(shippingAddr)
+            }
+          }
+        } else {
+          if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+            setGuestAddress(shippingAddr)
+          }
         }
       } catch (err) {
         console.error("Failed to reload address:", err)
@@ -194,12 +262,29 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   if (!cartId) return null
   if (loading) return <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4"><CheckoutSkeleton /></div>
 
+  const convertToAddressFormat = (addr: any, customerEmail?: string) => {
+    if (!addr) return undefined
+    return {
+      name: `${addr.first_name || ''} ${addr.last_name || ''}`.trim(),
+      email: customerEmail || addr.email || '',
+      phone: addr.phone || '',
+      province: addr.province || '',
+      district: addr.city || '',
+      line1: addr.address_1 || '',
+      line2: addr.address_2 || '',
+      postalCode: addr.postal_code || '',
+      countryCode: addr.country_code || 'np',
+      label: addr.address_name || 'Home',
+      isDefault: addr.is_default_shipping || false,
+    }
+  }
+
   if (customerDefaultAddress) {
     return (
       <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
         {showForm ? (
           <AddressForm
-            initialData={undefined}
+            initialData={convertToAddressFormat(customerDefaultAddress, customerEmail)}
             index={undefined}
             onClose={handleFormClose}
             isUserLoggedIn={isLoggedIn}
@@ -256,7 +341,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
       <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
         {showForm ? (
           <AddressForm
-            initialData={undefined}
+            initialData={convertToAddressFormat(guestAddress)}
             index={undefined}
             onClose={handleFormClose}
             isUserLoggedIn={isLoggedIn}
