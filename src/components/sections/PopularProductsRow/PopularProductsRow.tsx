@@ -1,6 +1,5 @@
 import { SectionHeader } from "@/components/atoms/SectionHeader/SectionHeader"
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
-import { listProducts } from "@/lib/data/products"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import { safeDataFetch } from "@/lib/utils/safe-data"
@@ -22,14 +21,15 @@ export default async function PopularProductsRows({type, link, title}:{type?: st
 
       })
 
-       console.log(
-        "jsonld and sortedprod, ratingsMap ",
-        popularProducts
-        // sortedProducts,
-        // ratingsMap
-      )
+      //  console.log(
+      //   "jsonld and sortedprod, ratingsMap ",
+      //   popularProducts
+      //   // sortedProducts,
+      //   // ratingsMap
+      // )
+                        // products={allProducts.length > 0 ? allProducts.filter((p) => p?.variants?.[0]?.calculated_price?.calculated_amount) : [api_product]}
 
-      const sortedProducts = sortProductsByInventory(popularProducts?.products)
+      const sortedProducts = sortProductsByInventory(popularProducts?.products.filter((p:any) => p?.variants?.[0]?.calculated_price?.calculated_amount))
 
       if (!sortedProducts || sortedProducts.length === 0) {
         return { products: [], ratingsMap: {} }

@@ -14,10 +14,7 @@ import { getFacedFilters } from "@/lib/helpers/get-faced-filters"
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams"
 import { PRODUCT_LIMIT } from "@/const"
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
-import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
-import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
-import { useEffect, useState } from "react"
-import { listProducts } from "@/lib/data/products"
+import {  useState } from "react"
 import { SearchResultProductCard } from "@/components/organisms/ProductCard/SearchResultProductCard"
 
 export const AlgoliaProductsListing = ({
@@ -75,14 +72,16 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
     // sendEvent,
   } = useHits()
   const [isOpen, setIsOpen] = useState(false)
-
-  console.log("Algolia items and results:", items, results)
-
   const [ratingSummaryMap, setRatingSummaryMap] = useState<
     Record<string, SimpleRatingSummary>
   >({})
-
   const updateSearchParams = useUpdateSearchParams()
+
+  const sortedProducts = sortAlgoliaProductsByInventory(
+    items.filter((p: any) => p?.variants?.[0]?.prices[0]?.amount)
+  )
+
+  console.log("Algolia items and results:", items, results)
 
   const selectOptionHandler = (value: string) => {
     updateSearchParams("sortBy", value)
@@ -145,7 +144,7 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
     gap-3
   "
               >
-                {items?.map((item: any) => (
+                {sortedProducts?.map((item: any) => (
                   <li key={item.objectID} className="w-full">
                     <SearchResultProductCard
                       key={item.objectId}
@@ -161,4 +160,20 @@ const ProductsListing = ({ currency_code }: { currency_code?: string }) => {
       <ProductsPagination pages={results?.nbPages || 1} />
     </>
   )
+}
+
+function sortAlgoliaProductsByInventory(products: any[]): any[] {
+  return [...products].sort((a, b) => {
+    const aTotalInventory = a.total_stock
+    const bTotalInventory = b.total_stock
+
+    // both have stock → keep order
+    if (aTotalInventory > 0 && bTotalInventory > 0) return 0
+
+    // both out of stock → keep order
+    if (aTotalInventory === 0 && bTotalInventory === 0) return 0
+
+    // out-of-stock goes last
+    return aTotalInventory === 0 ? 1 : -1
+  })
 }

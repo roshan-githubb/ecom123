@@ -247,7 +247,7 @@ export const HomeProductCard = ({
                         product={allProducts.length > 0 ? allProducts[currentModalProductIndex] : api_product}
                         cardPos={cardPos}
                         onClose={() => setShowModal(false)}
-                        products={allProducts.length > 0 ? allProducts : [api_product]}
+                        products={allProducts.length > 0 ? allProducts.filter((p) => p?.variants?.[0]?.calculated_price?.calculated_amount) : [api_product]}
                         currentProductIndex={currentModalProductIndex}
                         onProductChange={(newIndex) => setCurrentModalProductIndex(newIndex)}
                         ratingSummary={ratingSummary}
