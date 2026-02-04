@@ -109,7 +109,7 @@ export const SearchResultProductCard = ({
         <div className="flex flex-col">
           <LocalizedClientLink
             href={`/products/${product.id}`}
-            className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
+            className="text-[12px] font-medium min-h-[35px] line-clamp-2 cursor-pointer hover:underline"
             style={{ color: "#32425A" }}
           >
             {title}
@@ -124,7 +124,7 @@ export const SearchResultProductCard = ({
           </div>
 
           {/* {ratingSummary && ratingSummary.total_reviews > 0 && ( */}
-          <div className="flex items-center gap-1 mt-2">
+          <div className="flex items-center gap-1 min-h-[10px]">
             {product?.average_rating && (
               <>
                 <StarRating rate={product.average_rating} starSize={12} />
@@ -140,7 +140,7 @@ export const SearchResultProductCard = ({
           </div>
           {/* )} */}
           <p
-            className="text-[9px] max-h-[32px] leading-snug mt-2 line-clamp-2"
+            className="text-[9px] min-h-[27px] max-h-[27px] leading-snug mt-2 line-clamp-2 overflow-hidden"
             style={{ color: "#768397" }}
           >
             {description}
@@ -165,7 +165,7 @@ export const SearchResultProductCard = ({
                                 : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
                             } text-[#FFFFFF]`}
           >
-            <CartIcon size={16} color="white" />
+            <CartIcon size={16} color="white" className="mr-3" />
 
             {isAddingToCart
               ? "Adding..."

@@ -112,7 +112,10 @@ export default function SimilarProducts({ categoryId, categoryHandle, productId 
             msOverflowStyle: 'none' as const
           }}
         >
-          {limitedProducts.map((item: any, index: number) => (
+          {limitedProducts.map((item: any, index: number) => {
+             const price = item?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+            if(price == 0) return null;
+            return (
             <div key={item.id} className="w-[180px] flex-shrink-0">
               <HomeProductCard
                 api_product={item}
@@ -120,7 +123,8 @@ export default function SimilarProducts({ categoryId, categoryHandle, productId 
                 productIndex={index}
               />
             </div>
-          ))}
+          )
+          })}
         
           {finalCategoryHandle && (
             <LocalizedLink href={`/categories/${finalCategoryHandle}`} scroll={true}>
