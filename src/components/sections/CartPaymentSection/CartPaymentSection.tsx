@@ -74,10 +74,10 @@ const CartPaymentSection = ({
     try {
       const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
       
-      toast({
-        title: "Processing Payment",
-        description: "Initiating eSewa payment...",
-      })
+      // toast({
+      //   title: "Processing Payment",
+      //   description: "Initiating eSewa payment...",
+      // })
 
       const response = await fetch("/api/initiate-payment", {
         method: "POST",
@@ -147,6 +147,16 @@ const CartPaymentSection = ({
     if (isProcessingEsewa || isProcessingKhalti) return
     
     const total = cart?.total || 0
+    const cartId = cart?.id
+    
+    if (!cartId) {
+      toast({
+        title: "Cart Error",
+        description: "Cart ID not found. Please refresh the page.",
+        variant: "destructive",
+      })
+      return
+    }
     
     if (total <= 0) {
       toast({
@@ -159,12 +169,7 @@ const CartPaymentSection = ({
     
     setIsProcessingKhalti(true)
     try {
-      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-      
-      toast({
-        title: "Processing Payment",
-        description: "Initiating Khalti payment...",
-      })
+      const transactionId = `${cartId}_${Date.now()}`
 
       const response = await fetch("/api/initiate-payment", {
         method: "POST",
@@ -176,6 +181,7 @@ const CartPaymentSection = ({
           amount: total.toString(),
           productName: `Order from Marketplace (${cart.items?.length || 0} items)`,
           transactionId: transactionId,
+          cartId: cartId, 
         }),
       })
 
@@ -190,11 +196,6 @@ const CartPaymentSection = ({
       if (!data.khaltiPaymentUrl) {
         throw new Error("Khalti payment URL not received")
       }
-      
-      toast({
-        title: "Redirecting to Khalti",
-        description: "Please complete your payment on Khalti...",
-      })
 
       window.location.href = data.khaltiPaymentUrl
     } catch (error) {
@@ -284,12 +285,10 @@ const CartPaymentSection = ({
             })}
           </RadioGroup>
 
-          {/* Nepal Payment Methods */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Nepal Payment Methods</h3>
             <div className="space-y-2">
               {/* eSewa Button */}
-              <button
+              {/* <button
                 onClick={handleEsewaPayment}
                 disabled={isProcessing}
                 className={`w-full bg-white p-4 flex items-center justify-between rounded-lg border-2 border-gray-200 transition-all ${
@@ -317,7 +316,7 @@ const CartPaymentSection = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 )}
-              </button>
+              </button> */}
 
               {/* Khalti Button */}
               <button
