@@ -73,10 +73,23 @@ export async function POST(req: Request) {
 
       case "khalti": {
         console.log("Initiating Khalti payment");
+        
+        if (!process.env.KHALTI_SECRET_KEY) {
+          console.error("KHALTI_SECRET_KEY is not configured");
+          return NextResponse.json(
+            { 
+              error: "Khalti payment is not configured. Please contact support.",
+              details: "Missing KHALTI_SECRET_KEY environment variable"
+            },
+            { status: 500 }
+          );
+        }
+        
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        const cartIdFromPayload = (paymentData as any).cartId;
         
         const khaltiConfig = {
-          return_url: `${baseUrl}/success?method=khalti`,
+          return_url: `${baseUrl}/success?method=khalti${cartIdFromPayload ? `&cartId=${cartIdFromPayload}` : ''}`,
           website_url: baseUrl,
           amount: Math.round(parseFloat(amount) * 100),
           purchase_order_id: transactionId,
@@ -88,12 +101,14 @@ export async function POST(req: Request) {
           },
         };
 
+        console.log("Khalti config:", { ...khaltiConfig, secretKey: "***hidden***" });
+
         const response = await fetch(
           "https://a.khalti.com/api/v2/epayment/initiate/",
           {
             method: "POST",
             headers: {
-              Authorization: `Key ${process.env.NEXT_PUBLIC_KHALTI_SECRET_KEY}`,
+              Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify(khaltiConfig),
@@ -101,7 +116,7 @@ export async function POST(req: Request) {
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
           console.error("Khalti API Error:", errorData);
           throw new Error(
             `Khalti payment initiation failed: ${JSON.stringify(errorData)}`

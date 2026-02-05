@@ -3,6 +3,7 @@
 import { Button } from "@/components/atoms"
 import { updateLineItem } from "@/lib/data/cart"
 import { toast } from "@/lib/helpers/toast"
+import { useCartStore } from "@/store/useCartStore"
 import { useState, useRef, useEffect } from "react"
 
 export const UpdateCartItemButton = ({
@@ -15,6 +16,7 @@ export const UpdateCartItemButton = ({
   const [pendingQuantity, setPendingQuantity] = useState(quantity)
   const [isUpdating, setIsUpdating] = useState(false)
   const debounceTimerRef = useRef<NodeJS.Timeout>(null)
+  const fetchCart = useCartStore(state => state.fetchCart)
 
   useEffect(() => {
     setPendingQuantity(quantity)
@@ -47,6 +49,7 @@ export const UpdateCartItemButton = ({
           setPendingQuantity(quantity)
           return handleError(res.error?.message)
         }
+        await fetchCart()
       } catch (error: any) {
         setPendingQuantity(quantity)
         handleError(error.message.replace("Error setting up the request: ", ""))

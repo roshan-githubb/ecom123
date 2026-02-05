@@ -33,23 +33,26 @@ export function CheckoutClient({
   
  
   const cartItems = useCartStore(state => state.items)
+  const cartItemsCount = cartItems.length
+  const cartSubtotal = useCartStore(state => state.subtotal)
 
- 
   useEffect(() => {
-    const refreshCart = async () => {
+    const refreshCartData = async () => {
       if (cart?.id) {
         const updatedCart = await retrieveCart(cart.id)
         if (updatedCart) {
           setCart(updatedCart)
+          
+          if (updatedCart.shipping_address?.address_1) {
+            const shipping = await listCartShippingMethods(updatedCart.id)
+            setShippingMethods(shipping)
+          }
         }
       }
     }
     
-   
-    if (cart && cartItems.length !== cart.items?.length) {
-      refreshCart()
-    }
-  }, [cartItems.length, cart?.id])
+    refreshCartData()
+  }, [cartItemsCount, cartSubtotal])
 
   // Enrich cart data in background if we got minimal data
   useEffect(() => {
