@@ -14,7 +14,7 @@ import { useInventorySync } from "@/hooks/useInventorySync"
 import { StarRating } from "@/components/atoms/StarRating/StarRating"
 import { SimpleRatingSummary } from "@/types/reviews"
 import { CartIcon } from "@/icons"
-import { SelectVariantModal } from "../SelectVariant.tsx/SelectVariantModal"
+import { SelectVariantModal } from "../SelectVariantModal/SelectVariantModal"
 
 interface HomeProductCardProps {
   api_product: HttpTypes.StoreProduct
@@ -33,7 +33,7 @@ export const HomeProductCard = ({
   productIndex = 0,
   ratingSummary,
 }: HomeProductCardProps) => {
-  // console.log("HomeProductCard product: ", api_product );
+  console.log("HomeProductCard product: ", api_product );
 
   const [showModal, setShowModal] = useState(false)
   const [showSelectVariantModal, setShowSelectVariantModal] =
@@ -67,7 +67,7 @@ export const HomeProductCard = ({
     api_product.images?.[0]?.url || "/images/not-available/not-available.png"
   const hasMultipleVariants: boolean = useMemo(() => {
     return (api_product.variants?.length || 0) > 1
-  }, [api_product])
+  }, [api_product?.variants])
 
   const currentPrice =
     api_product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0

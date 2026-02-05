@@ -674,7 +674,7 @@ export function ProductCardInternal({
     // setLightboxImages([])
     onToggleMode?.()
   }
-  console.log("lightboximages", lightboxImages)
+  // console.log("lightboximages", lightboxImages)
   return (
     <div className="flex flex-col h-full bg-white relative overflow-hidden">
       <div className="flex justify-between items-center p-3 border-b border-gray-100 bg-white z-10 sticky top-0 flex-shrink-0">

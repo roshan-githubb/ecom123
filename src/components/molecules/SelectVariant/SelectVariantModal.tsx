@@ -12,7 +12,7 @@ interface SelectVariantModalProps {
     onClose: () => void;
 }
 
-export function SelectVariantModal({ product, onClose }: SelectVariantModalProps) {
+export function SelectVariant({ product, onClose }: SelectVariantModalProps) {
     const colorOption = product?.options?.find(
         (opt: any) => opt.title.toLowerCase() === "color"
     )

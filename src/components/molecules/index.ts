@@ -34,6 +34,7 @@ import { ReviewForm } from "./ReviewForm/ReviewForm"
 import { ProfileDetails } from "./ProfileDetails/ProfileDetails"
 import { ComingSoon } from "./ComingSoon/ComingSoon"
 import { DefaultAddressForm } from "./DefaultAddressForm/DefaultAddressForm"
+import { SelectVariantModal } from "./SelectVariantModal/SelectVariantModal"
 
 export {
   PrimeCategoryNavbar,
@@ -72,4 +73,5 @@ export {
   ProfileDetails,
   ComingSoon,
   DefaultAddressForm,
+  SelectVariantModal,
 }
