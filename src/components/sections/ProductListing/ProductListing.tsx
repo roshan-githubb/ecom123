@@ -7,6 +7,7 @@ import { PRODUCT_LIMIT } from "@/const"
 import { listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
+// import { usePagination } from "react-instantsearch"
 
 
 export const ProductListing = async ({
@@ -15,21 +16,25 @@ export const ProductListing = async ({
   seller_id,
   showSidebar = false,
   locale = process.env.NEXT_PUBLIC_DEFAULT_REGION || "np",
+  searchParams,
 }: {
   category_id?: string
   collection_id?: string
   seller_id?: string
   showSidebar?: boolean
   locale?: string
+  searchParams?: { page?: string }
 }) => {
 
   const region = await getRegion(locale)   // "pl", "np", "us", etc.
+  const currentPage = parseInt(searchParams?.page || "1", 10)
+  
   if (!region) throw new Error("Region not found")
 
     console.log('region ', region)
 
   const { response } = await listProducts({
-    pageParam: 1,
+    pageParam: currentPage || 1,
     queryParams: {
       q: '',
       limit: PRODUCT_LIMIT,
@@ -39,7 +44,7 @@ export const ProductListing = async ({
     },
     regionId: region.id,
   })
-  console.log('list products response ', response)
+  // console.log('list products response ', response)
 
   const sortedProducts = sortProductsByInventory(response?.products)
 

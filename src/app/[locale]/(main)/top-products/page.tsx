@@ -48,7 +48,7 @@ export async function generateMetadata({
 
 
 async function TopProducts() {
-    const topProducts = await getTopProducts({ limit: 16 })
+    const topProducts = await getTopProducts({ limit: 8 })
     const sortedProducts = sortProductsByInventory(topProducts?.products)
     
     const productIds = sortedProducts?.map((p: any) => p.id) || []

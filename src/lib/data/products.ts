@@ -44,7 +44,7 @@ export const listProducts = async ({
         fields: defaultFields,
         ...queryParams,
       })
-
+      console.log('listProducts response ', response)
       const products = safeAccess(response, 'products', [], 'listProducts')
       const count = safeAccess(response, 'count', 0, 'listProducts')
 
@@ -54,7 +54,7 @@ export const listProducts = async ({
       )
 
       return {
-        response: { products: validProducts, count: validProducts.length },
+        response: { products: validProducts, count: response.count },
         nextPage: count > offset + limit ? pageParam + 1 : null,
       }
     },

@@ -25,6 +25,7 @@ export const Pagination = ({
     if (currentPage > 1) {
       buttons.push(
         <PaginationButton
+        className="mx-2"
           key={`page-${currentPage - 1}`}
           aria-label={`Go to page ${currentPage - 1}`}
           onClick={() => setPage(currentPage - 1)}

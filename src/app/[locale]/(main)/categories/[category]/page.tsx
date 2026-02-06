@@ -8,13 +8,16 @@ export const revalidate = 60
 
 async function Category({
   params,
+  searchParams,
 }: {
   params: Promise<{
     category: string
     locale: string
   }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { category: handle, locale } = await params
+  const resolvedSearchParams = await searchParams
 
   const category = await getCategoryByHandle([handle])
 
@@ -29,7 +32,7 @@ async function Category({
 
       <Suspense fallback={<ProductListingSkeleton />}>
           <div className="">
-            <ProductListing category_id={category.id} locale={locale} />
+            <ProductListing category_id={category.id} locale={locale} searchParams={resolvedSearchParams} />
           </div>
       </Suspense>
     </main>
