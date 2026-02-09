@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { StarRating } from "@/components/atoms/StarRating/StarRating"
@@ -8,6 +8,7 @@ import { useCartStore } from "@/store/useCartStore"
 import { cartToast } from "@/lib/cart-toast"
 import { CartIcon } from "@/icons"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { SelectVariantModal } from "@/components/molecules"
 
 interface AlgoliaProductHit {
   id: string
@@ -42,11 +43,16 @@ export const SearchResultProductCard = ({
 }: SearchResultProductCardProps) => {
   const [isHydrated, setIsHydrated] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [showSelectVariantModal, setShowSelectVariantModal] = useState(false)
   const addToCart = useCartStore((state) => state.add)
 
   useEffect(() => {
     setIsHydrated(true)
   }, [])
+
+  const hasMultipleVariants: boolean = useMemo(() => {
+    return (product.variants?.length || 0) > 1
+  }, [product.variants])
 
   const title = product.title
   const description = product.description
@@ -60,6 +66,10 @@ export const SearchResultProductCard = ({
     e.stopPropagation()
     if (isAddingToCart) return
 
+    if (hasMultipleVariants) {
+      setShowSelectVariantModal(true)
+      return
+    }
     setIsAddingToCart(true)
     try {
       if (!product.variants || product.variants.length === 0) {
@@ -175,6 +185,12 @@ export const SearchResultProductCard = ({
           </button>
         </div>
       </div>
+      {showSelectVariantModal && (
+        <SelectVariantModal
+          product={product}
+          onClose={() => setShowSelectVariantModal(false)}
+        />
+      )}
     </div>
   )
 }
