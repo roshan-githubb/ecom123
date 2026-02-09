@@ -46,7 +46,8 @@ export async function getFlashSaleProducts({
     )
 
     if (!res.ok) throw new Error("Failed to fetch flash sale products ",)
-
-    return res.json()
+    
+    const data = await res.json()
+    return data || {products: []}
 }
 // ?${params.toString()}
