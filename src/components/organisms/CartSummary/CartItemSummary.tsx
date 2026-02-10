@@ -2,19 +2,27 @@
 
 import { FiShoppingCart } from "react-icons/fi"
 import React, { useEffect, useState } from "react"
-import { useCartStore } from "@/store/useCartStore"
-import { mapCartToOrderSummary, OrderSummaryData, OrderSummaryItem } from "@/lib/mapper/cartMapper";
-import Image from "next/image";
-import Link from "next/link";
+import { CartItem, useCartStore } from "@/store/useCartStore"
+import {
+  mapCartToOrderSummary,
+  OrderSummaryData,
+  OrderSummaryItem,
+} from "@/lib/mapper/cartMapper"
+import Image from "next/image"
+import Link from "next/link"
 
-import { Button } from "@/components/sections/Checkout/DeliveryAddress";
-import { Modal } from "@/components/molecules/Modal/Modal";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/sections/Checkout/DeliveryAddress"
+import { Modal } from "@/components/molecules/Modal/Modal"
+import { useRouter } from "next/navigation"
 
-import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink";
+import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
+import { initiatePaymentSession } from "@/lib/data/cart"
+import { cart } from "@/data/cartMock"
+import { HttpTypes } from "@medusajs/types"
+import { toast } from "@medusajs/ui"
 
 interface OrderSummaryProps {
-  summary: OrderSummaryData;
+  summary: OrderSummaryData
 }
 
 export interface OrderItem {
@@ -28,13 +36,12 @@ export interface OrderItem {
   options?: Record<string, string>
 }
 
-
-const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: string; totalItems: number }> = ({
-  quantity,
-  lineItemId,
-  variantId,
-  totalItems
-}) => {
+const ItemCounter: React.FC<{
+  quantity: number
+  lineItemId: string
+  variantId?: string
+  totalItems: number
+}> = ({ quantity, lineItemId, variantId, totalItems }) => {
   const [isIncreasing, setIsIncreasing] = useState(false)
   const [isDecreasing, setIsDecreasing] = useState(false)
   const [showRemoveModal, setShowRemoveModal] = useState(false)
@@ -52,29 +59,30 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
     try {
       await increase(lineItemId, quantity)
 
-
       setTimeout(() => {
         const { items } = useCartStore.getState()
-        const updatedItem = items.find(item => item.id === lineItemId)
+        const updatedItem = items.find((item) => item.id === lineItemId)
 
         if (updatedItem && updatedItem.quantity === currentQuantity) {
           // Quantity didn't increase, show out of stock toast
           const { cartToast } = require("@/lib/cart-toast")
-          cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
+          cartToast.showOutOfStockToast(
+            "Cannot add more items. It is out of stock."
+          )
         }
         setIsIncreasing(false)
       }, 200)
-
     } catch (error) {
       const { cartToast } = require("@/lib/cart-toast")
-      cartToast.showOutOfStockToast("Cannot add more items. It is out of stock.")
+      cartToast.showOutOfStockToast(
+        "Cannot add more items. It is out of stock."
+      )
       setIsIncreasing(false)
     }
   }
 
   const handleDecrease = async () => {
     if (isDecreasing) return
-
 
     if (quantity === 1 && totalItems === 1) {
       setShowRemoveModal(true)
@@ -95,23 +103,23 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
 
   const handleConfirmRemove = async () => {
     setShowRemoveModal(false)
-    
+
     try {
       // Remove the last item
       await decrease(lineItemId, quantity)
-      
+
       // Clear local cart state
       const { useCartStore } = await import("@/store/useCartStore")
       useCartStore.getState().clearLocal()
-      
+
       // Small delay to ensure state is cleared
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
       // Redirect to homepage
-      router.push('/')
+      router.push("/")
     } catch (error) {
       console.error("Failed to remove last item:", error)
-      router.push('/')
+      router.push("/")
     }
   }
 
@@ -119,10 +127,11 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
     <>
       <div className="flex items-center gap-1">
         <button
-          className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${isDecreasing
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'text-black hover:bg-gray-50 active:scale-95'
-            }`}
+          className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${
+            isDecreasing
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "text-black hover:bg-gray-50 active:scale-95"
+          }`}
           onClick={handleDecrease}
           disabled={isDecreasing}
         >
@@ -143,10 +152,11 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
         </span>
 
         <button
-          className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${isIncreasing
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'text-black hover:bg-gray-50 active:scale-95'
-            }`}
+          className={`flex justify-center items-center w-6 h-6 text-sm font-semibold border border-gray-300 rounded-full transition-all duration-200 ${
+            isIncreasing
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "text-black hover:bg-gray-50 active:scale-95"
+          }`}
           onClick={handleIncrease}
           disabled={isIncreasing}
         >
@@ -163,14 +173,27 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
         </button>
       </div>
 
-
       {showRemoveModal && (
-        <Modal heading="" onClose={() => setShowRemoveModal(false)} showCloseButton={false}>
+        <Modal
+          heading=""
+          onClose={() => setShowRemoveModal(false)}
+          showCloseButton={false}
+        >
           <div className="px-6 pb-6 max-w-sm">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  className="w-8 h-8 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
             </div>
@@ -180,7 +203,8 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
             </h2>
 
             <p className="text-gray-600 text-center text-sm mb-6 leading-relaxed">
-              This is the last item in your cart. Removing it will empty your cart and redirect you to the homepage.
+              This is the last item in your cart. Removing it will empty your
+              cart and redirect you to the homepage.
             </p>
 
             <div className="space-y-3">
@@ -207,7 +231,10 @@ const ItemCounter: React.FC<{ quantity: number; lineItemId: string; variantId?: 
 
 export default ItemCounter
 
-const OrderRow: React.FC<{ item: any; totalItems: number }> = ({ item, totalItems }) => {
+const OrderRow: React.FC<{ item: any; totalItems: number }> = ({
+  item,
+  totalItems,
+}) => {
   return (
     <div className="flex items-center justify-between gap-2">
       <LocalizedClientLink
@@ -238,10 +265,15 @@ const OrderRow: React.FC<{ item: any; totalItems: number }> = ({ item, totalItem
         )}
       </div>
       <div className="mr-5">
-        <ItemCounter quantity={item.quantity} lineItemId={item?.lineId} variantId={item?.variantId} totalItems={totalItems} />
+        <ItemCounter
+          quantity={item.quantity}
+          lineItemId={item?.lineId}
+          variantId={item?.variantId}
+          totalItems={totalItems}
+        />
       </div>
       <span className="text-[#444444] font-semibold text-sm w-20 text-right">
-        Rs {(item.unitPrice).toLocaleString()}
+        Rs {item.unitPrice.toLocaleString()}
       </span>
     </div>
   )
@@ -260,9 +292,8 @@ export function OrderSummary() {
     totalPayable,
     currency,
     discountTotal,
-    promotions
+    promotions,
   } = useCartStore()
-
 
   const summary = {
     currency,
@@ -274,7 +305,7 @@ export function OrderSummary() {
     totalPayable,
     items,
     cartId,
-    promotions
+    promotions,
   }
 
   // Only set loading to false once we have cart data
@@ -286,14 +317,10 @@ export function OrderSummary() {
     }
   }, [cartId, items])
 
-
-
-
   if (loading || !cartId) {
     return (
       <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-6 animate-pulse">
         <div className="h-5 w-32 bg-gray-200 rounded mb-4"></div>
-
 
         {[1, 2].map((i) => (
           <div key={i} className="flex items-center gap-2 mb-3">
@@ -330,8 +357,6 @@ export function OrderSummary() {
     )
   }
 
-
-
   const cartSummary = mapCartToOrderSummary(summary)
 
   return (
@@ -358,7 +383,7 @@ export function OrderSummary() {
         {summary.discountTotal > 0 && (
           <div className="flex justify-between items-center py-1">
             <span className="text-sm font-medium text-green-600">
-              Promotion ({summary.promotions.map(p => p.code).join(", ")})
+              Promotion ({summary.promotions.map((p) => p.code).join(", ")})
             </span>
             <span className="text-sm font-medium text-green-600">
               − Rs {summary.discountTotal.toLocaleString()}
@@ -374,9 +399,7 @@ export function OrderSummary() {
           </span>
         </div>
         <div className="flex justify-between items-center py-1">
-          <span className="text-sm font-medium text-[#777777]">
-            Tax Total
-          </span>
+          <span className="text-sm font-medium text-[#777777]">Tax Total</span>
           <span className="text-sm font-medium text-[#444444]">
             Rs {summary?.taxTotal.toLocaleString()}
           </span>
@@ -394,7 +417,15 @@ export function OrderSummary() {
   )
 }
 
-export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
+export const RememberUserInfo = ({
+  isReady = true,
+  selectedPaymentMethod,
+  cart,
+}: {
+  isReady?: boolean
+  selectedPaymentMethod: string
+  cart: HttpTypes.StoreCart
+}) => {
   const [checked, setChecked] = useState(false)
   const [hasAddress, setHasAddress] = useState(false)
   const [hasPaymentMethod, setHasPaymentMethod] = useState(false)
@@ -404,141 +435,162 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false)
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  // const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
-  const {
-    cartId,
-    fetchCart,
-    totalPayable
-  } = useCartStore()
+  const [submitting, setSubmitting] = useState(false)
+  const { cartId, fetchCart, totalPayable } = useCartStore()
+  const activeSession = cart.payment_collection?.payment_sessions?.find(
+    (paymentSession: any) => paymentSession.status === "pending"
+  )
+  console.log("RememberUserInfo render", {
+    isReady,
+    cart,
+    hasAddress,
+    hasPaymentMethod,
+    hasShippingMethod,
+    selectedPaymentMethod
+  })
 
-  // const onPaymentCompleted = async () => {
-  //   try {
-  //     const res = await placeOrder()
-  //     if (res?.status === 401) {
-  //       setShowAuthInvalidModal(true)
-  //     } else if (!res?.error) {
-  //       const { useCartStore } = await import("@/store/useCartStore");
-  //       useCartStore.getState().clearLocal();
-  //     }
-  //     if (res?.success) {
-  //       localStorage.removeItem("cart_id")
-  //       localStorage.removeItem("global-cart")
-
-
-  //       useCartStore.getState().reset()
-
-
-  //       router.push(`/order/${res.orderId}/confirmed`)
-  //     }
-  //   }
-  //   catch (err: any) {
-  //     if (err.message === "NEXT_REDIRECT") {
-  //       const { useCartStore } = await import("@/store/useCartStore");
-  //       useCartStore.getState().clearLocal();
-  //     } else {
-  //       setErrorMessage(err.message)
-  //     }
-  //   }
-  // }
+  console.log(
+    "RememberUserInfo render",
+    isCheckingAddress,
+    isReady,
+    hasPaymentMethod
+  )
 
   const handlePlaceOrderClick = async () => {
-    if (!hasAddress) {
-      const { cartToast } = await import("@/lib/cart-toast")
-      cartToast.showErrorToast("Please add a delivery address to continue")
-      return
-    }
-
+    console.log("proceed")
+    setSubmitting(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 300))
       
-      const res = await fetch("/api/cart/get", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart_id: cartId }),
-      })
-      const data = await res.json()
-      const cart = data?.cart
+      const checkActiveSession =
+        activeSession?.provider_id === selectedPaymentMethod
 
-      if (!cart) {
-        const { cartToast } = await import("@/lib/cart-toast")
-        cartToast.showErrorToast("Failed to load cart. Please try again.")
-        return
+      if (!checkActiveSession) {
+        console.log('activesession false', cart)
+        await initiatePaymentSession(cart, {
+          provider_id: selectedPaymentMethod,
+        })
+        // console.log("Payment session initiation response:", res)
       }
-
-      const uniqueSellers = new Set(
-        cart.items?.map((item: any) => item.product?.seller?.id).filter(Boolean)
-      )
-      const vendorCount = uniqueSellers.size
-      const shippingMethodCount = cart.shipping_methods?.length ?? 0
-
-      const hasShippingMethods = cart.shipping_methods && cart.shipping_methods.length > 0
-      const allVendorsHaveShipping = vendorCount > 0 && shippingMethodCount >= vendorCount
-
-      const hasPaymentSession = cart.payment_collection?.payment_sessions?.some(
-        (session: any) => session.status === "pending"
-      )
-
-      const missingItems: string[] = []
-
-      if (!hasShippingMethods) {
-        if (vendorCount > 1) {
-          missingItems.push("shipping methods for all vendors")
-        } else {
-          missingItems.push("shipping method")
-        }
-      } else if (vendorCount > 1 && !allVendorsHaveShipping) {
-        const { cartToast } = await import("@/lib/cart-toast")
-        cartToast.showErrorToast(`Please select shipping methods for all ${vendorCount} vendors`)
-        return
+      if (checkActiveSession) {
+        console.log("Active payment session already exists for selected method.")
       }
+      router.push("/order-summary")
+      console.log('proceed after session initiation')
 
-      if (!hasPaymentSession) {
-        missingItems.push("payment method")
-      }
-
-      // Show appropriate error message
-      if (missingItems.length > 0) {
-        const { cartToast } = await import("@/lib/cart-toast")
-        if (missingItems.length === 1) {
-          cartToast.showErrorToast(`Please add a ${missingItems[0]} to continue`)
-        } else if (missingItems.length === 2) {
-          cartToast.showErrorToast(`Please add ${missingItems[0]} and ${missingItems[1]} to continue`)
-        }
-        return
-      }
-
-      router.push('/order-summary')
-    } catch (err) {
-      console.error("Failed to validate checkout:", err)
-      const { cartToast } = await import("@/lib/cart-toast")
-      cartToast.showErrorToast("Failed to validate checkout. Please try again.")
-      return
+      // if (!shouldInputCard) {
+      //   return router.push(
+      //     pathname + "?" + createQueryString("step", "review"),
+      //     {
+      //       scroll: false,
+      //     }
+      //   )
+      // }
+    } catch (err: any) {
+      console.log("Failed to initiate payment session:", err)
+      toast.error("Failed to initiate payment session" )
+    } finally {
+      setSubmitting(false)
     }
   }
 
+  // const handlePlaceOrderClick = async () => {
+  //   if (!hasAddress) {
+  //     const { cartToast } = await import("@/lib/cart-toast")
+  //     cartToast.showErrorToast("Please add a delivery address to continue")
+  //     return
+  //   }
+
+  //   try {
+  //     await new Promise(resolve => setTimeout(resolve, 300))
+
+  //     const res = await fetch("/api/cart/get", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ cart_id: cartId }),
+  //     })
+  //     const data = await res.json()
+  //     const cart = data?.cart
+
+  //     if (!cart) {
+  //       const { cartToast } = await import("@/lib/cart-toast")
+  //       cartToast.showErrorToast("Failed to load cart. Please try again.")
+  //       return
+  //     }
+
+  //     const uniqueSellers = new Set(
+  //       cart.items?.map((item: any) => item.product?.seller?.id).filter(Boolean)
+  //     )
+  //     const vendorCount = uniqueSellers.size
+  //     const shippingMethodCount = cart.shipping_methods?.length ?? 0
+
+  //     const hasShippingMethods = cart.shipping_methods && cart.shipping_methods.length > 0
+  //     const allVendorsHaveShipping = vendorCount > 0 && shippingMethodCount >= vendorCount
+
+  //     const hasPaymentSession = cart.payment_collection?.payment_sessions?.some(
+  //       (session: any) => session.status === "pending"
+  //     )
+
+  //     const missingItems: string[] = []
+
+  //     if (!hasShippingMethods) {
+  //       if (vendorCount > 1) {
+  //         missingItems.push("shipping methods for all vendors")
+  //       } else {
+  //         missingItems.push("shipping method")
+  //       }
+  //     } else if (vendorCount > 1 && !allVendorsHaveShipping) {
+  //       const { cartToast } = await import("@/lib/cart-toast")
+  //       cartToast.showErrorToast(`Please select shipping methods for all ${vendorCount} vendors`)
+  //       return
+  //     }
+
+  //     if (!hasPaymentSession) {
+  //       missingItems.push("payment method")
+  //     }
+
+  //     // Show appropriate error message
+  //     if (missingItems.length > 0) {
+  //       const { cartToast } = await import("@/lib/cart-toast")
+  //       if (missingItems.length === 1) {
+  //         cartToast.showErrorToast(`Please add a ${missingItems[0]} to continue`)
+  //       } else if (missingItems.length === 2) {
+  //         cartToast.showErrorToast(`Please add ${missingItems[0]} and ${missingItems[1]} to continue`)
+  //       }
+  //       return
+  //     }
+
+  //     router.push('/order-summary')
+  //   } catch (err) {
+  //     console.error("Failed to validate checkout:", err)
+  //     const { cartToast } = await import("@/lib/cart-toast")
+  //     cartToast.showErrorToast("Failed to validate checkout. Please try again.")
+  //     return
+  //   }
+  // }
+
   useEffect(() => {
     checkAddress()
-    
+
     const handleAddressUpdate = () => {
       checkAddress()
     }
-    
+
     const handleShippingUpdate = () => {
       checkAddress()
     }
-    
+
     const handlePaymentUpdate = () => {
       checkAddress()
     }
-    
-    window.addEventListener('addressUpdated', handleAddressUpdate)
-    window.addEventListener('shippingUpdated', handleShippingUpdate)
-    window.addEventListener('paymentUpdated', handlePaymentUpdate)
-    
+
+    window.addEventListener("addressUpdated", handleAddressUpdate)
+    window.addEventListener("shippingUpdated", handleShippingUpdate)
+    window.addEventListener("paymentUpdated", handlePaymentUpdate)
+
     return () => {
-      window.removeEventListener('addressUpdated', handleAddressUpdate)
-      window.removeEventListener('shippingUpdated', handleShippingUpdate)
-      window.removeEventListener('paymentUpdated', handlePaymentUpdate)
+      window.removeEventListener("addressUpdated", handleAddressUpdate)
+      window.removeEventListener("shippingUpdated", handleShippingUpdate)
+      window.removeEventListener("paymentUpdated", handlePaymentUpdate)
     }
   }, [cartId])
 
@@ -559,14 +611,16 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
       })
       const data = await res.json()
       const cart = data?.cart
-      
+
       const shippingAddr = cart?.shipping_address
-      const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
+      const isValid =
+        shippingAddr && shippingAddr.first_name && shippingAddr.address_1
       setHasAddress(!!isValid)
-      
-      const hasShipping = cart?.shipping_methods && cart.shipping_methods.length > 0
+
+      const hasShipping =
+        cart?.shipping_methods && cart.shipping_methods.length > 0
       setHasShippingMethod(!!hasShipping)
-      
+
       const hasPayment = cart?.payment_collection?.payment_sessions?.some(
         (session: any) => session.status === "pending"
       )
@@ -581,13 +635,10 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
     }
   }
 
-  if (!cartId) return null;
-
-
+  if (!cartId) return null
 
   return (
     <>
-
       <div className="bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 mt-4 z-10 max-w-md mx-auto">
         {!isCheckingAddress && (
           <>
@@ -596,23 +647,26 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
                 Please add shipping method to continue
               </p>
             )}
-            
-            {hasAddress && hasShippingMethod && !hasPaymentMethod && isReady && (
-              <p className="text-xs text-red-600 mb-2 text-center font-medium">
-                Please select a payment method to enable Place Order
-              </p>
-            )}
+
+            {hasAddress &&
+              hasShippingMethod &&
+              !selectedPaymentMethod &&
+              isReady && (
+                <p className="text-xs text-red-600 mb-2 text-center font-medium">
+                  Please select a payment method to enable Place Order
+                </p>
+              )}
           </>
         )}
-        
+
         <Button
           variant="primary"
           onClick={handlePlaceOrderClick}
-          disabled={isCheckingAddress || !isReady || !hasPaymentMethod}
+          disabled={isCheckingAddress || !isReady || !selectedPaymentMethod}
           className={`flex items-center justify-center gap-2 ${
-            isCheckingAddress || !isReady || !hasPaymentMethod
-              ? 'bg-gray-400 cursor-not-allowed opacity-50'
-              : 'bg-myBlue hover:opacity-90'
+            isCheckingAddress || !isReady || !selectedPaymentMethod
+              ? "bg-gray-400 cursor-not-allowed opacity-50"
+              : "bg-myBlue hover:opacity-90"
           }`}
         >
           {isCheckingAddress ? (
@@ -621,15 +675,13 @@ export const RememberUserInfo = ({ isReady = true }: { isReady?: boolean }) => {
               Checking...
             </>
           ) : (
-            'Proceed'
+            "Proceed"
           )}
         </Button>
       </div>
-     
     </>
   )
 }
-
 
 export function EmptyCartCard() {
   return (

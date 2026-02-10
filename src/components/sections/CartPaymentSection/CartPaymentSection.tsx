@@ -1,12 +1,10 @@
 "use client"
-
-import { initiatePaymentSession } from "@/lib/data/cart"
 import { RadioGroup } from "@headlessui/react"
 import {
   isStripe as isStripeFunc,
   paymentInfoMap,
 } from "../../../lib/constants"
-import { useState } from "react"
+import { SetStateAction, useState } from "react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
@@ -20,21 +18,25 @@ type StoreCardPaymentMethod = any & {
 }
 
 const CartPaymentSection = ({
+  selectedPaymentMethod,
+  setSelectedPaymentMethod,
   cart,
   availablePaymentMethods,
   onPaymentUpdate,
 }: {
+  selectedPaymentMethod: string,
+  setSelectedPaymentMethod:(value: SetStateAction<string>) => void,
   cart: any
   availablePaymentMethods: StoreCardPaymentMethod[] | null
   onPaymentUpdate?: () => void
 }) => {
-  const activeSession = cart.payment_collection?.payment_sessions?.find(
-    (paymentSession: any) => paymentSession.status === "pending"
-  )
+  // const activeSession = cart.payment_collection?.payment_sessions?.find(
+  //   (paymentSession: any) => paymentSession.status === "pending"
+  // )
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.provider_id ?? ""
-  )
+  // const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
+  //   activeSession?.provider_id ?? ""
+  // )
   const [loadingPaymentMethod, setLoadingPaymentMethod] = useState<string | null>(null)
   const [isProcessingEsewa, setIsProcessingEsewa] = useState(false)
   const [isProcessingKhalti, setIsProcessingKhalti] = useState(false)
@@ -42,173 +44,180 @@ const CartPaymentSection = ({
 
   const setPaymentMethod = async (method: string) => {
     setSelectedPaymentMethod(method)
-    setLoadingPaymentMethod(method)
-
+    // notify other components that payment selection changed
     try {
-      await initiatePaymentSession(cart, {
-        provider_id: method,
-      })
-      await new Promise(resolve => setTimeout(resolve, 200))
+      window.dispatchEvent(new CustomEvent("paymentUpdated"))
       onPaymentUpdate?.()
-    } catch (err) {
-    } finally {
-      setLoadingPaymentMethod(null)
+    } catch (e) {
+      // no-op
     }
+    // setLoadingPaymentMethod(method)
+
+    // try {
+    //   await initiatePaymentSession(cart, {
+    //     provider_id: method,
+    //   })
+    //   await new Promise(resolve => setTimeout(resolve, 200))
+    //   onPaymentUpdate?.()
+    // } catch (err) {
+    // } finally {
+    //   setLoadingPaymentMethod(null)
+    // }
   }
 
-  const handleEsewaPayment = async () => {
-    if (isProcessingEsewa || isProcessingKhalti) return
+  // const handleEsewaPayment = async () => {
+  //   if (isProcessingEsewa || isProcessingKhalti) return
     
-    const total = cart?.total || 0
+  //   const total = cart?.total || 0
     
-    if (total <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Invalid payment amount. Please check your cart.",
-        variant: "destructive",
-      })
-      return
-    }
+  //   if (total <= 0) {
+  //     toast({
+  //       title: "Invalid Amount",
+  //       description: "Invalid payment amount. Please check your cart.",
+  //       variant: "destructive",
+  //     })
+  //     return
+  //   }
     
-    setIsProcessingEsewa(true)
-    try {
-      const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+  //   setIsProcessingEsewa(true)
+  //   try {
+  //     const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
       
-      // toast({
-      //   title: "Processing Payment",
-      //   description: "Initiating eSewa payment...",
-      // })
+  //     // toast({
+  //     //   title: "Processing Payment",
+  //     //   description: "Initiating eSewa payment...",
+  //     // })
 
-      const response = await fetch("/api/initiate-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          method: "esewa",
-          amount: total.toString(),
-          productName: `Order from Marketplace (${cart.items?.length || 0} items)`,
-          transactionId: transactionId,
-        }),
-      })
+  //     const response = await fetch("/api/initiate-payment", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         method: "esewa",
+  //         amount: total.toString(),
+  //         productName: `Order from Marketplace (${cart.items?.length || 0} items)`,
+  //         transactionId: transactionId,
+  //       }),
+  //     })
 
-      if (!response.ok) {
-        throw new Error(`Payment initiation failed: ${response.statusText}`)
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`Payment initiation failed: ${response.statusText}`)
+  //     }
 
-      const paymentData = await response.json()
+  //     const paymentData = await response.json()
       
-      toast({
-        title: "Redirecting to eSewa",
-        description: "Please complete your payment on eSewa...",
-      })
+  //     toast({
+  //       title: "Redirecting to eSewa",
+  //       description: "Please complete your payment on eSewa...",
+  //     })
 
-      const form = document.createElement("form")
-      form.method = "POST"
-      form.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"
+  //     const form = document.createElement("form")
+  //     form.method = "POST"
+  //     form.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form"
 
-      const esewaPayload = {
-        amount: paymentData.amount,
-        tax_amount: paymentData.esewaConfig.tax_amount,
-        total_amount: paymentData.esewaConfig.total_amount,
-        transaction_uuid: paymentData.esewaConfig.transaction_uuid,
-        product_code: paymentData.esewaConfig.product_code,
-        product_service_charge: paymentData.esewaConfig.product_service_charge,
-        product_delivery_charge: paymentData.esewaConfig.product_delivery_charge,
-        success_url: paymentData.esewaConfig.success_url,
-        failure_url: paymentData.esewaConfig.failure_url,
-        signed_field_names: paymentData.esewaConfig.signed_field_names,
-        signature: paymentData.esewaConfig.signature,
-      }
+  //     const esewaPayload = {
+  //       amount: paymentData.amount,
+  //       tax_amount: paymentData.esewaConfig.tax_amount,
+  //       total_amount: paymentData.esewaConfig.total_amount,
+  //       transaction_uuid: paymentData.esewaConfig.transaction_uuid,
+  //       product_code: paymentData.esewaConfig.product_code,
+  //       product_service_charge: paymentData.esewaConfig.product_service_charge,
+  //       product_delivery_charge: paymentData.esewaConfig.product_delivery_charge,
+  //       success_url: paymentData.esewaConfig.success_url,
+  //       failure_url: paymentData.esewaConfig.failure_url,
+  //       signed_field_names: paymentData.esewaConfig.signed_field_names,
+  //       signature: paymentData.esewaConfig.signature,
+  //     }
 
-      Object.entries(esewaPayload).forEach(([key, value]) => {
-        const input = document.createElement("input")
-        input.type = "hidden"
-        input.name = key
-        input.value = String(value)
-        form.appendChild(input)
-      })
+  //     Object.entries(esewaPayload).forEach(([key, value]) => {
+  //       const input = document.createElement("input")
+  //       input.type = "hidden"
+  //       input.name = key
+  //       input.value = String(value)
+  //       form.appendChild(input)
+  //     })
 
-      document.body.appendChild(form)
-      form.submit()
-      document.body.removeChild(form)
-    } catch (error) {
-      console.error("eSewa payment error:", error)
-      toast({
-        title: "Payment Failed",
-        description: "Failed to initiate eSewa payment. Please try again.",
-        variant: "destructive",
-      })
-      setIsProcessingEsewa(false)
-    }
-  }
+  //     document.body.appendChild(form)
+  //     form.submit()
+  //     document.body.removeChild(form)
+  //   } catch (error) {
+  //     console.error("eSewa payment error:", error)
+  //     toast({
+  //       title: "Payment Failed",
+  //       description: "Failed to initiate eSewa payment. Please try again.",
+  //       variant: "destructive",
+  //     })
+  //     setIsProcessingEsewa(false)
+  //   }
+  // }
 
-  const handleKhaltiPayment = async () => {
-    if (isProcessingEsewa || isProcessingKhalti) return
+  // const handleKhaltiPayment = async () => {
+  //   if (isProcessingEsewa || isProcessingKhalti) return
     
-    const total = cart?.total || 0
-    const cartId = cart?.id
+  //   const total = cart?.total || 0
+  //   const cartId = cart?.id
     
-    if (!cartId) {
-      toast({
-        title: "Cart Error",
-        description: "Cart ID not found. Please refresh the page.",
-        variant: "destructive",
-      })
-      return
-    }
+  //   if (!cartId) {
+  //     toast({
+  //       title: "Cart Error",
+  //       description: "Cart ID not found. Please refresh the page.",
+  //       variant: "destructive",
+  //     })
+  //     return
+  //   }
     
-    if (total <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Invalid payment amount. Please check your cart.",
-        variant: "destructive",
-      })
-      return
-    }
+  //   if (total <= 0) {
+  //     toast({
+  //       title: "Invalid Amount",
+  //       description: "Invalid payment amount. Please check your cart.",
+  //       variant: "destructive",
+  //     })
+  //     return
+  //   }
     
-    setIsProcessingKhalti(true)
-    try {
-      const transactionId = `${cartId}_${Date.now()}`
+  //   setIsProcessingKhalti(true)
+  //   try {
+  //     const transactionId = `${cartId}_${Date.now()}`
 
-      const response = await fetch("/api/initiate-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          method: "khalti",
-          amount: total.toString(),
-          productName: `Order from Marketplace (${cart.items?.length || 0} items)`,
-          transactionId: transactionId,
-          cartId: cartId, 
-        }),
-      })
+  //     const response = await fetch("/api/initiate-payment", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         method: "khalti",
+  //         amount: total.toString(),
+  //         productName: `Order from Marketplace (${cart.items?.length || 0} items)`,
+  //         transactionId: transactionId,
+  //         cartId: cartId, 
+  //       }),
+  //     })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
-        console.error("Khalti API response error:", errorData)
-        throw new Error(errorData.details || errorData.error || `Payment initiation failed: ${response.statusText}`)
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+  //       console.error("Khalti API response error:", errorData)
+  //       throw new Error(errorData.details || errorData.error || `Payment initiation failed: ${response.statusText}`)
+  //     }
 
-      const data = await response.json()
+  //     const data = await response.json()
       
-      if (!data.khaltiPaymentUrl) {
-        throw new Error("Khalti payment URL not received")
-      }
+  //     if (!data.khaltiPaymentUrl) {
+  //       throw new Error("Khalti payment URL not received")
+  //     }
 
-      window.location.href = data.khaltiPaymentUrl
-    } catch (error) {
-      console.error("Khalti payment error:", error)
-      const errorMessage = error instanceof Error ? error.message : "Failed to initiate Khalti payment. Please try again."
-      toast({
-        title: "Payment Failed",
-        description: errorMessage,
-        variant: "destructive",
-      })
-      setIsProcessingKhalti(false)
-    }
-  }
+  //     window.location.href = data.khaltiPaymentUrl
+  //   } catch (error) {
+  //     console.error("Khalti payment error:", error)
+  //     const errorMessage = error instanceof Error ? error.message : "Failed to initiate Khalti payment. Please try again."
+  //     toast({
+  //       title: "Payment Failed",
+  //       description: errorMessage,
+  //       variant: "destructive",
+  //     })
+  //     setIsProcessingKhalti(false)
+  //   }
+  // }
 
   const paidByGiftcard =
     cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
@@ -319,7 +328,7 @@ const CartPaymentSection = ({
               </button> */}
 
               {/* Khalti Button */}
-              <button
+              {/* <button
                 onClick={handleKhaltiPayment}
                 disabled={isProcessing}
                 className={`w-full bg-white p-4 flex items-center justify-between rounded-lg border-2 border-gray-200 transition-all ${
@@ -347,7 +356,7 @@ const CartPaymentSection = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 )}
-              </button>
+              </button> */}
             </div>
           </div>
         </>
