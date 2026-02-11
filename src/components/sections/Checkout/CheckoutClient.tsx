@@ -26,10 +26,16 @@ export function CheckoutClient({
   const [cart, setCart] = useState(initialCart)
   const [shippingMethods, setShippingMethods] = useState(initialShippingMethods)
   const [paymentMethods, setPaymentMethods] = useState(initialPaymentMethods)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
+    initialCart.payment_collection?.payment_sessions[0]?.provider_id || ""
+  )
   const [isLoadingAfterAddress, setIsLoadingAfterAddress] = useState(false)
   const [isLoadingAfterShipping, setIsLoadingAfterShipping] = useState(false)
   const [isEnrichingData, setIsEnrichingData] = useState(false)
   const { isOpen, product, closeModal } = useProductModalStore()
+
+  const paymentMethod = cart.payment_collection?.payment_sessions[0]?.providerId
+  console.log('cart ', initialCart)
   
  
   const cartItems = useCartStore(state => state.items)
@@ -128,6 +134,7 @@ export function CheckoutClient({
   }
 
   const showPaymentSection = allVendorsHaveShipping()
+  console.log('isready payment proceed shipping methods, paymentmethods, showpaymentsection ', shippingMethods , paymentMethods , showPaymentSection )
 
   return (
     <div className="min-h-screen pb-8 overflow-x-hidden">
@@ -177,6 +184,8 @@ export function CheckoutClient({
         
         {showPaymentSection && cart && paymentMethods && !isLoadingAfterShipping && (
           <CartPaymentSection
+          setSelectedPaymentMethod={setSelectedPaymentMethod}
+          selectedPaymentMethod={selectedPaymentMethod}
             cart={cart}
             availablePaymentMethods={paymentMethods}
             onPaymentUpdate={handlePaymentUpdate}
@@ -184,7 +193,7 @@ export function CheckoutClient({
         )}
       </main>
       
-      <RememberUserInfo isReady={!!(shippingMethods && paymentMethods && showPaymentSection)} />
+      <RememberUserInfo cart={cart} isReady={!!( paymentMethods && showPaymentSection)} selectedPaymentMethod={selectedPaymentMethod}/>
 
       {isOpen && product && (
         <AddVariantSheet

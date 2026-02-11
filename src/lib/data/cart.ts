@@ -305,6 +305,7 @@ export async function initiatePaymentSession(
     context?: Record<string, unknown>
   }
 ) {
+  console.log('initiating payment session with cart:', cart, data)
   const headers = {
     ...(await getAuthHeaders()),
   }

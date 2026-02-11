@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { retrieveCart } from "@/lib/data/cart"
+import { initiatePaymentSession, retrieveCart } from "@/lib/data/cart"
 import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 import { convertToLocale } from "@/lib/helpers/money"
 import { MapPin, Truck, CreditCard, ShoppingBag } from "lucide-react"
@@ -38,31 +38,60 @@ function OrderSummaryPage() {
   const handleConfirmOrder = async () => {
     setIsPlacingOrder(true)
     try {
-      const res = await placeOrder()
-      if (res?.status === 401) {
-        setShowAuthInvalidModal(true)
-        setIsPlacingOrder(false)
+      // Always re-initiate payment session to get a fresh pidx
+      // This handles cases where the previous payment was cancelled or expired
+      const response = await initiatePaymentSession(cart, {
+        provider_id: "pp_khalti_khalti",
+      })
+
+      // Get the fresh Khalti payment URL from the response
+      const paymentUrl = (response?.payment_collection?.payment_sessions?.[0]?.data as any)?.payment_url
+
+      if (!paymentUrl) {
+        // setErrorMessage("Failed to initialize payment. Please try again.")
+        // setSubmitting(false)
+        console.log("Failed to get payment URL from session initiation response:", response)
         return
       }
-      if (res?.success) {
-        // Clear cart
-        localStorage.removeItem("cart_id")
-        localStorage.removeItem("global-cart")
-        useCartStore.getState().reset()
 
-        // Navigate to order confirmation
-        router.push(`/order/${res.orderId}/confirmed`)
-      } else {
-        const { cartToast } = await import("@/lib/cart-toast")
-        cartToast.showErrorToast("Failed to place order. Please try again.")
-        setIsPlacingOrder(false)
+      // Store cart ID in localStorage for retrieval after redirect
+      if (typeof window !== "undefined") {
+        localStorage.setItem("khalti_cart_id", cart.id)
       }
-    } catch (error) {
-      console.error("Failed to place order:", error)
-      const { cartToast } = await import("@/lib/cart-toast")
-      cartToast.showErrorToast("Failed to place order. Please try again.")
-      setIsPlacingOrder(false)
+
+      // Redirect to Khalti payment page
+      window.location.href = paymentUrl
+    } catch (err: any) {
+      console.log('Error initiating payment session:', err)
+      // setErrorMessage(err.message || "An error occurred")
+      // setSubmitting(false)
     }
+    // try {
+    //   const res = await placeOrder()
+    //   if (res?.status === 401) {
+    //     setShowAuthInvalidModal(true)
+    //     setIsPlacingOrder(false)
+    //     return
+    //   }
+    //   if (res?.success) {
+    //     // Clear cart
+    //     localStorage.removeItem("cart_id")
+    //     localStorage.removeItem("global-cart")
+    //     useCartStore.getState().reset()
+
+    //     // Navigate to order confirmation
+    //     router.push(`/order/${res.orderId}/confirmed`)
+    //   } else {
+    //     const { cartToast } = await import("@/lib/cart-toast")
+    //     cartToast.showErrorToast("Failed to place order. Please try again.")
+    //     setIsPlacingOrder(false)
+    //   }
+    // } catch (error) {
+    //   console.error("Failed to place order:", error)
+    //   const { cartToast } = await import("@/lib/cart-toast")
+    //   cartToast.showErrorToast("Failed to place order. Please try again.")
+    //   setIsPlacingOrder(false)
+    // }
   }
 
   if (loading) {
