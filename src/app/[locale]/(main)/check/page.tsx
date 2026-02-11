@@ -1,5 +1,3 @@
-import { Suspense } from "react"
-import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 import { retrieveCartWithTimeout } from "@/lib/data/cart"
 import { listCartShippingMethods } from "@/lib/data/fulfillment"
 import { listCartPaymentMethods } from "@/lib/data/payment"
@@ -43,6 +41,7 @@ export default async function CheckoutPage() {
     cart.shipping_address.first_name && 
     cart.shipping_address.address_1
 
+    // console.log('cart ', cart)
   let shippingMethods = null
   let paymentMethods = null
 
@@ -55,12 +54,11 @@ export default async function CheckoutPage() {
   }
 
   return (
-    <Suspense fallback={<CheckoutSkeleton />}>
       <CheckoutClient
         initialCart={cart}
         initialShippingMethods={shippingMethods}
         initialPaymentMethods={paymentMethods}
+        shippingAddress={cart.shipping_address}
       />
-    </Suspense>
   )
 }
