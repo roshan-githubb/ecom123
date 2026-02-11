@@ -1,5 +1,6 @@
 import React from "react"
-import { Cash, CreditCard } from "@medusajs/icons"
+import {   CashSolid, CreditCard } from "@medusajs/icons"
+import { Wallet } from "lucide-react";
 
 
 export const paymentInfoMap: Record<
@@ -26,9 +27,13 @@ export const paymentInfoMap: Record<
     title: "PayPal",
     icon: <CreditCard />,
   },
-  pp_system_default: {
+  pp_cod_cod: {
     title: "Cash on delivery",
-    icon: <Cash />,
+    icon: <CashSolid className="w-5 h-5" />,
+  },
+  pp_khalti_khalti: {
+    title: "Khalti",
+    icon: <Wallet className="w-5 h-5" />,
   },
 
 }
@@ -42,6 +47,9 @@ export const isPaypal = (providerId?: string) => {
 }
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
+}
+export const isCod = (providerId?: string) => {
+  return providerId?.startsWith("pp_cod")
 }
 
 

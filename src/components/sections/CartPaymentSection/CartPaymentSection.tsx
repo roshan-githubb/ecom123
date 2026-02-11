@@ -1,6 +1,7 @@
 "use client"
 import { RadioGroup } from "@headlessui/react"
 import {
+  isCod,
   isStripe as isStripeFunc,
   paymentInfoMap,
 } from "../../../lib/constants"
@@ -8,6 +9,7 @@ import { SetStateAction, useState } from "react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
+import { Text } from "@medusajs/ui"
 
 type StoreCardPaymentMethod = any & {
   service_zone?: {
@@ -23,12 +25,14 @@ const CartPaymentSection = ({
   cart,
   availablePaymentMethods,
   onPaymentUpdate,
+  isMultiSeller,
 }: {
-  selectedPaymentMethod: string,
-  setSelectedPaymentMethod:(value: SetStateAction<string>) => void,
+  selectedPaymentMethod: string
+  setSelectedPaymentMethod: (value: SetStateAction<string>) => void
   cart: any
   availablePaymentMethods: StoreCardPaymentMethod[] | null
   onPaymentUpdate?: () => void
+  isMultiSeller?: boolean
 }) => {
   // const activeSession = cart.payment_collection?.payment_sessions?.find(
   //   (paymentSession: any) => paymentSession.status === "pending"
@@ -37,7 +41,9 @@ const CartPaymentSection = ({
   // const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
   //   activeSession?.provider_id ?? ""
   // )
-  const [loadingPaymentMethod, setLoadingPaymentMethod] = useState<string | null>(null)
+  const [loadingPaymentMethod, setLoadingPaymentMethod] = useState<
+    string | null
+  >(null)
   const [isProcessingEsewa, setIsProcessingEsewa] = useState(false)
   const [isProcessingKhalti, setIsProcessingKhalti] = useState(false)
   const { toast } = useToast()
@@ -67,9 +73,9 @@ const CartPaymentSection = ({
 
   // const handleEsewaPayment = async () => {
   //   if (isProcessingEsewa || isProcessingKhalti) return
-    
+
   //   const total = cart?.total || 0
-    
+
   //   if (total <= 0) {
   //     toast({
   //       title: "Invalid Amount",
@@ -78,11 +84,11 @@ const CartPaymentSection = ({
   //     })
   //     return
   //   }
-    
+
   //   setIsProcessingEsewa(true)
   //   try {
   //     const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-      
+
   //     // toast({
   //     //   title: "Processing Payment",
   //     //   description: "Initiating eSewa payment...",
@@ -106,7 +112,7 @@ const CartPaymentSection = ({
   //     }
 
   //     const paymentData = await response.json()
-      
+
   //     toast({
   //       title: "Redirecting to eSewa",
   //       description: "Please complete your payment on eSewa...",
@@ -154,10 +160,10 @@ const CartPaymentSection = ({
 
   // const handleKhaltiPayment = async () => {
   //   if (isProcessingEsewa || isProcessingKhalti) return
-    
+
   //   const total = cart?.total || 0
   //   const cartId = cart?.id
-    
+
   //   if (!cartId) {
   //     toast({
   //       title: "Cart Error",
@@ -166,7 +172,7 @@ const CartPaymentSection = ({
   //     })
   //     return
   //   }
-    
+
   //   if (total <= 0) {
   //     toast({
   //       title: "Invalid Amount",
@@ -175,7 +181,7 @@ const CartPaymentSection = ({
   //     })
   //     return
   //   }
-    
+
   //   setIsProcessingKhalti(true)
   //   try {
   //     const transactionId = `${cartId}_${Date.now()}`
@@ -190,7 +196,7 @@ const CartPaymentSection = ({
   //         amount: total.toString(),
   //         productName: `Order from Marketplace (${cart.items?.length || 0} items)`,
   //         transactionId: transactionId,
-  //         cartId: cartId, 
+  //         cartId: cartId,
   //       }),
   //     })
 
@@ -201,7 +207,7 @@ const CartPaymentSection = ({
   //     }
 
   //     const data = await response.json()
-      
+
   //     if (!data.khaltiPaymentUrl) {
   //       throw new Error("Khalti payment URL not received")
   //     }
@@ -230,136 +236,108 @@ const CartPaymentSection = ({
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-myBlue border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-sm font-medium text-gray-700">Updating payment method...</p>
+            <p className="text-sm font-medium text-gray-700">
+              Updating payment method...
+            </p>
           </div>
         </div>
       )}
 
       <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
-        <svg className="w-5 h-5 text-myBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        <svg
+          className="w-5 h-5 text-myBlue"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
         </svg>
         Payment Method
       </h2>
 
       {!paidByGiftcard && availablePaymentMethods?.length ? (
-        <>
-          <RadioGroup
-            value={selectedPaymentMethod}
-            onChange={setPaymentMethod}
-            className="space-y-2 mb-4"
-          >
-            {availablePaymentMethods.map((method) => {
-              return (
-                <RadioGroup.Option
-                  key={method.id}
-                  value={method.id}
-                  disabled={loadingPaymentMethod !== null || isProcessing}
-                  className={({ checked }) =>
-                    `relative flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${checked
-                      ? "border-myBlue bg-blue-50"
-                      : "border-gray-200 bg-white hover:border-gray-300"
-                    } ${loadingPaymentMethod !== null || isProcessing ? "cursor-not-allowed opacity-50" : ""}`
-                  }
-                >
-                  {({ checked }) => (
-                    <>
-                      <div className="flex-shrink-0">
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${checked
-                            ? "border-myBlue bg-myBlue"
-                            : "border-gray-300 bg-white"
-                            }`}
-                        >
-                          {checked && (
-                            <div className="w-2 h-2 rounded-full bg-white" />
-                          )}
-                        </div>
-                      </div>
+        <RadioGroup
+  value={selectedPaymentMethod}
+  onChange={setPaymentMethod}
+  className="space-y-3 mb-4"
+>
+  {availablePaymentMethods.map((method) => {
+    const isCodDisabled = isCod(method.id) && isMultiSeller
+    const isDisabled =
+      loadingPaymentMethod !== null || isProcessing || isCodDisabled
 
-                      <div className="flex-1 flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-900">
-                          {paymentInfoMap[method.id]?.title || method.id}
-                        </span>
-                        {paymentInfoMap[method.id]?.icon && (
-                          <span className="text-gray-500">
-                            {paymentInfoMap[method.id]?.icon}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </RadioGroup.Option>
-              )
-            })}
-          </RadioGroup>
-
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="space-y-2">
-              {/* eSewa Button */}
-              {/* <button
-                onClick={handleEsewaPayment}
-                disabled={isProcessing}
-                className={`w-full bg-white p-4 flex items-center justify-between rounded-lg border-2 border-gray-200 transition-all ${
-                  isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-500 hover:bg-green-50 active:scale-95'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/images/icons/esewa.png"
-                    alt="eSewa logo"
-                    width={24}
-                    height={24}
-                  />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900">
-                      {isProcessingEsewa ? 'Processing...' : 'Pay with eSewa'}
-                    </p>
-                    <p className="text-xs text-gray-500">Digital Wallet</p>
+    return (
+      <RadioGroup.Option
+        key={method.id}
+        value={method.id}
+        disabled={isDisabled}
+        className={({ checked }) =>
+          [
+            "relative rounded-lg border-2 transition-all",
+            "p-4 flex flex-col gap-2",
+            isDisabled
+              ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+              : checked
+              ? "border-myBlue bg-blue-50 cursor-pointer"
+              : "border-gray-200 bg-white hover:border-gray-300 cursor-pointer",
+          ].join(" ")
+        }
+      >
+        {({ checked }) => (
+          <>
+            {/* Top row */}
+            <div className="flex items-center gap-3">
+              {/* Radio indicator (hidden when disabled) */}
+              {!isDisabled && (
+                <div className="flex-shrink-0">
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      checked
+                        ? "border-myBlue bg-myBlue"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {checked && (
+                      <div className="w-2 h-2 rounded-full bg-white" />
+                    )}
                   </div>
                 </div>
-                {isProcessingEsewa ? (
-                  <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                ) : (
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
-              </button> */}
+              )}
 
-              {/* Khalti Button */}
-              {/* <button
-                onClick={handleKhaltiPayment}
-                disabled={isProcessing}
-                className={`w-full bg-white p-4 flex items-center justify-between rounded-lg border-2 border-gray-200 transition-all ${
-                  isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:border-purple-500 hover:bg-purple-50 active:scale-95'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/images/icons/khalti.png"
-                    alt="Khalti logo"
-                    width={24}
-                    height={24}
-                  />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900">
-                      {isProcessingKhalti ? 'Processing...' : 'Pay with Khalti'}
-                    </p>
-                    <p className="text-xs text-gray-500">Mobile Wallet</p>
-                  </div>
-                </div>
-                {isProcessingKhalti ? (
-                  <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                ) : (
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+              {/* Label + icon */}
+              <div className="flex-1 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-900">
+                  {paymentInfoMap[method.id]?.title || method.id}
+                </span>
+
+                {paymentInfoMap[method.id]?.icon && (
+                  <span className="text-gray-500">
+                    {paymentInfoMap[method.id]?.icon}
+                  </span>
                 )}
-              </button> */}
+              </div>
             </div>
-          </div>
-        </>
+
+            {/* Disabled reason – full width, below */}
+            {isCodDisabled && (
+              <div className="pl-0">
+                <p className="text-xs text-gray-500">
+                  Not available for orders from multiple sellers
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </RadioGroup.Option>
+    )
+  })}
+</RadioGroup>
+
       ) : paidByGiftcard ? (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm text-green-800">Paid by gift card</p>

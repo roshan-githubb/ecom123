@@ -457,7 +457,7 @@ export const RememberUserInfo = ({
   )
 
   const handlePlaceOrderClick = async () => {
-    console.log("proceed")
+    // console.log("proceed")
     setSubmitting(true)
     try {
       
@@ -465,7 +465,7 @@ export const RememberUserInfo = ({
         activeSession?.provider_id === selectedPaymentMethod
 
       if (!checkActiveSession) {
-        console.log('activesession false', cart)
+        // console.log('activesession false', cart)
         await initiatePaymentSession(cart, {
           provider_id: selectedPaymentMethod,
         })
@@ -475,7 +475,7 @@ export const RememberUserInfo = ({
         console.log("Active payment session already exists for selected method.")
       }
       router.push("/order-summary")
-      console.log('proceed after session initiation')
+      // console.log('proceed after session initiation')
 
       // if (!shouldInputCard) {
       //   return router.push(
@@ -662,17 +662,17 @@ export const RememberUserInfo = ({
         <Button
           variant="primary"
           onClick={handlePlaceOrderClick}
-          disabled={isCheckingAddress || !isReady || !selectedPaymentMethod}
+          disabled={isCheckingAddress || !isReady || !selectedPaymentMethod || submitting}
           className={`flex items-center justify-center gap-2 ${
-            isCheckingAddress || !isReady || !selectedPaymentMethod
+            isCheckingAddress || !isReady || !selectedPaymentMethod ||submitting
               ? "bg-gray-400 cursor-not-allowed opacity-50"
               : "bg-myBlue hover:opacity-90"
           }`}
         >
-          {isCheckingAddress ? (
+          {isCheckingAddress || submitting ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Checking...
+              Processing...
             </>
           ) : (
             "Proceed"

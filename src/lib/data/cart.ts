@@ -16,7 +16,6 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { parseVariantIdsFromError } from "@/lib/helpers/parse-variant-error"
-import { NextResponse } from "next/server"
 
 
 export async function retrieveCart(cartId?: string) {

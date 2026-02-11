@@ -86,6 +86,11 @@ export function CheckoutClient({
     enrichCartData()
   }, []) // Only run once on mount
 
+   const uniqueSellers = new Set(
+    cart.items?.map((item: any) => item.product?.seller?.id).filter(Boolean)
+  )
+  const isMultiSeller = uniqueSellers.size > 1
+
   const handleAddressUpdate = async () => {
     setIsLoadingAfterAddress(true)
     try {
@@ -120,6 +125,7 @@ export function CheckoutClient({
   const handlePaymentUpdate = () => {
     window.dispatchEvent(new CustomEvent('paymentUpdated'))
   }
+
 
   const allVendorsHaveShipping = () => {
     if (!cart?.items || !cart?.shipping_methods) return false
@@ -189,6 +195,7 @@ export function CheckoutClient({
             cart={cart}
             availablePaymentMethods={paymentMethods}
             onPaymentUpdate={handlePaymentUpdate}
+            isMultiSeller={isMultiSeller}
           />
         )}
       </main>
