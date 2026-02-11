@@ -17,8 +17,9 @@ function OrderSummaryPage() {
   const [loading, setLoading] = useState(true)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [showAuthInvalidModal, setShowAuthInvalidModal] = useState(false)
-
+  
   const router = useRouter()
+
 
   useEffect(() => {
     async function loadCart() {
@@ -35,71 +36,102 @@ function OrderSummaryPage() {
     loadCart()
   }, [router])
 
-  const handleConfirmOrder = async () => {
-    setIsPlacingOrder(true)
+  useEffect(() => {
+    if (!loading) {
+      if (!cart || !cart.items || cart.items.length === 0) {
+        router.push("/check")
+      }
+    }
+  }, [cart, loading, router])
+
+  
+  useEffect(() => {
+    async function loadCart() {
+      try {
+        const cartData = await retrieveCart()
+        setCart(cartData)
+      } catch (error) {
+        console.error("Failed to load cart:", error)
+        router.push("/check")
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCart()
+  }, [router])
+
+  const getPaymentProvider = () => cart?.payment_collection?.payment_sessions[0]?.provider_id
+
+  const initializeKhaltiPayment = async (): Promise<string | null> => {
+    const response = await initiatePaymentSession(cart, {
+      provider_id: "pp_khalti_khalti",
+    })
+    return (response?.payment_collection?.payment_sessions?.[0]?.data as any)?.payment_url || null
+  }
+
+  const handleKhaltiPayment = async () => {
     try {
-      // Always re-initiate payment session to get a fresh pidx
-      // This handles cases where the previous payment was cancelled or expired
-      const response = await initiatePaymentSession(cart, {
-        provider_id: "pp_khalti_khalti",
-      })
-
-      // Get the fresh Khalti payment URL from the response
-      const paymentUrl = (response?.payment_collection?.payment_sessions?.[0]?.data as any)?.payment_url
-
+      const paymentUrl = await initializeKhaltiPayment()
       if (!paymentUrl) {
-        // setErrorMessage("Failed to initialize payment. Please try again.")
-        // setSubmitting(false)
-        console.log("Failed to get payment URL from session initiation response:", response)
+        console.error("Failed to get Khalti payment URL")
+        throw new Error("Payment initialization failed")
+      }
+      localStorage.setItem("khalti_cart_id", cart.id)
+      window.location.href = paymentUrl
+    } catch (error: any) {
+      console.error("Khalti payment error:", error)
+      const { cartToast } = await import("@/lib/cart-toast")
+      cartToast.showErrorToast(error.message || "Failed to initialize payment")
+      setIsPlacingOrder(false)
+    }
+  }
+
+  const clearCartData = () => {
+    localStorage.removeItem("cart_id")
+    localStorage.removeItem("global-cart")
+    useCartStore.getState().reset()
+  }
+
+  const handleRegularPayment = async () => {
+    try {
+      const res = await placeOrder()
+
+      if (res?.status === 401) {
+        setShowAuthInvalidModal(true)
         return
       }
 
-      // Store cart ID in localStorage for retrieval after redirect
-      if (typeof window !== "undefined") {
-        localStorage.setItem("khalti_cart_id", cart.id)
+      if (res?.success) {
+        clearCartData()
+        router.push(`/order/${res.orderId}/confirmed`)
+      } else {
+        throw new Error("Order placement failed")
       }
-
-      // Redirect to Khalti payment page
-      window.location.href = paymentUrl
-    } catch (err: any) {
-      console.log('Error initiating payment session:', err)
-      // setErrorMessage(err.message || "An error occurred")
-      // setSubmitting(false)
+    } catch (error: any) {
+      console.error("Order placement error:", error)
+      const { cartToast } = await import("@/lib/cart-toast")
+      cartToast.showErrorToast(error.message || "Failed to place order. Please try again.")
+      setIsPlacingOrder(false)
     }
-    // try {
-    //   const res = await placeOrder()
-    //   if (res?.status === 401) {
-    //     setShowAuthInvalidModal(true)
-    //     setIsPlacingOrder(false)
-    //     return
-    //   }
-    //   if (res?.success) {
-    //     // Clear cart
-    //     localStorage.removeItem("cart_id")
-    //     localStorage.removeItem("global-cart")
-    //     useCartStore.getState().reset()
+  }
 
-    //     // Navigate to order confirmation
-    //     router.push(`/order/${res.orderId}/confirmed`)
-    //   } else {
-    //     const { cartToast } = await import("@/lib/cart-toast")
-    //     cartToast.showErrorToast("Failed to place order. Please try again.")
-    //     setIsPlacingOrder(false)
-    //   }
-    // } catch (error) {
-    //   console.error("Failed to place order:", error)
-    //   const { cartToast } = await import("@/lib/cart-toast")
-    //   cartToast.showErrorToast("Failed to place order. Please try again.")
-    //   setIsPlacingOrder(false)
-    // }
+  const handleConfirmOrder = async () => {
+    setIsPlacingOrder(true)
+    const paymentProvider = getPaymentProvider()
+
+    if (paymentProvider === "pp_khalti_khalti") {
+      await handleKhaltiPayment()
+    } else {
+      await handleRegularPayment()
+    }
   }
 
   if (loading) {
     return <CheckoutSkeleton />
   }
 
+
   if (!cart || !cart.items || cart.items.length === 0) {
-    router.push("/check")
     return null
   }
 
