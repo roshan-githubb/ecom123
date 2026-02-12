@@ -69,7 +69,7 @@ export function OrdersPageClient({ orders }: OrdersPageClientProps) {
             <ParcelAccordion
               key={order.id}
               orderId={order.id}
-              orderDisplayId={`#${order.display_id}`}
+              // orderDisplayId={`#${order.display_id}`}
               createdAt={order.created_at}
               total={order.total}
               items={order.items || []}

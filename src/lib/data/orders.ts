@@ -116,7 +116,8 @@ export const listOrders = async (
         HttpTypes.StoreOrder & {
           seller: { id: string; name: string; reviews?: any[] }
         }
-      >
+      >,
+      count: number
     }>(`/store/orders`, {
       method: "GET",
       query: {
@@ -129,7 +130,10 @@ export const listOrders = async (
       headers,
       cache: "no-store", 
     })
-    .then(({ orders }) => orders)
+    .then(( orders ) => {
+      // console.log("fetched orders ", orders)
+      return orders
+    } )
     .catch((err) => medusaError(err))
 }
 

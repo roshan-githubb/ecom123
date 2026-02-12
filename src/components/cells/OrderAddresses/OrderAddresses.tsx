@@ -8,59 +8,60 @@ export const OrderAddresses = async ({ singleOrder }: { singleOrder: any }) => {
 
   if (!user) return null
 
+  const shipping = singleOrder.shipping_address
+  const billing = singleOrder.billing_address
+
   return (
-    <Card className="px-4 grid sm:grid-cols-2 gap-4">
-      <div className="flex flex-col ">
-        <h4 className="label-md text-primary">Shipping address</h4>
-        <p className="label-md text-secondary">
-          {`${singleOrder.shipping_address.first_name} ${singleOrder.shipping_address.last_name}`}
-        </p>
-        <p className="label-md text-secondary">
-          {`${singleOrder.shipping_address.address_1}, ${
-            singleOrder.shipping_address.postal_code
-          } ${singleOrder.shipping_address.city}${
-            singleOrder.shipping_address.province
-              ? `, ${singleOrder.shipping_address.province}`
-              : ""
-          }${
-            region
-              ? `, ${region.name}`
-              : `, ${singleOrder.shipping_address.country_code?.toUpperCase()}`
-          }`}
-        </p>
-        <p className="label-md text-secondary">
-          {`${user.email}, ${singleOrder.shipping_address.phone || user.phone}`}
-        </p>
+    <Card className="space-y-5 px-4 py-4">
+      {/* SHIPPING */}
+      <div className="space-y-1.5">
+        <h4 className="text-xs font-semibold text-secondary uppercase tracking-wide">
+          Shipping address
+        </h4>
+
+        <div className="text-xs text-muted-foreground leading-relaxed">
+          <p className="font-medium text-secondary">
+            {shipping.first_name} {shipping.last_name}
+          </p>
+
+          <p>
+            {shipping.address_1}, {shipping.city}
+            {shipping.province ? `, ${shipping.province}` : ""}
+          </p>
+
+          <p>
+            {region?.name ||
+              shipping.country_code?.toUpperCase()}
+          </p>
+
+          <p>
+            {shipping.phone || user.phone}
+          </p>
+        </div>
       </div>
-      <div className="my-4"></div>
-      <div>
-        <h4 className="label-md text-primary">Billing address</h4>
-        {singleOrder.billing_address.id === singleOrder.shipping_address.id ? (
-          <p className="label-md text-secondary">Same as shipping address</p>
+
+      {/* BILLING */}
+      <div className="space-y-1.5">
+        <h4 className="text-xs font-semibold text-secondary uppercase tracking-wide">
+          Billing address
+        </h4>
+
+        {billing?.id === shipping?.id ? (
+          <p className="text-xs text-muted-foreground">
+            Same as shipping address
+          </p>
         ) : (
-          <>
-            <p className="label-md text-secondary">
-              {`${singleOrder.billing_address.first_name} ${singleOrder.billing_address.last_name}`}
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            <p className="font-medium text-secondary">
+              {billing.first_name} {billing.last_name}
             </p>
-            <p className="label-md text-secondary">
-              {`${singleOrder.billing_address.address_1}, ${
-                singleOrder.billing_address.postal_code
-              } ${singleOrder.billing_address.city}${
-                singleOrder.billing_address.province
-                  ? `, ${singleOrder.billing_address.province}`
-                  : ""
-              }${
-                region
-                  ? `, ${region.name}`
-                  : `, ${singleOrder.billing_address.country_code?.toUpperCase()}`
-              }`}
+            <p>
+              {billing.address_1}, {billing.city}
             </p>
-            <p className="label-md text-secondary">
-              {`${user.email}, ${
-                singleOrder.billing_address.phone || user.phone
-              }`}
+            <p>
+              {billing.phone || user.phone}
             </p>
-          </>
+          </div>
         )}
       </div>
     </Card>
