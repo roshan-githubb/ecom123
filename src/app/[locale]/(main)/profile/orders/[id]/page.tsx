@@ -10,10 +10,11 @@ import { SellerProps } from "@/types/seller"
 import { HttpTypes } from "@medusajs/types"
 import { OrderProductListItem } from "@/components/cells"
 import { OrderAddresses } from "@/components/cells"
-import { getOrderDisplayStatus, getOrderStatusColor } from "@/lib/helpers/order-status"
+import {
+  getOrderDisplayStatus,
+  getOrderStatusColor,
+} from "@/lib/helpers/order-status"
 import { cn } from "@/lib/utils"
-
-
 
 export default async function OrderDetailPage({
   params,
@@ -21,7 +22,7 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  console.log('id ', id)
+  console.log("id ", id)
 
   const user = await retrieveCustomer()
 
@@ -38,57 +39,41 @@ export default async function OrderDetailPage({
     order.fulfillment_status
   )
 
-  console.log('order detail ', user, order)
+  console.log("order detail ", user, order)
 
   return (
     <main className="container">
-      <h1 className="heading-md uppercase">Order #{order.display_id}</h1>
+      {/* <h1 className="heading-md uppercase">Order #{order.display_id}</h1> */}
       <div className="w-full max-w-full">
-        {seller && <div className="flex items-center gap-2">
-          <div className="flex items-center justify-between text-secondary border border-primary py-4 px-4 rounded-sm w-full">
-            <Avatar src={seller?.photo} size="large" />
-            <h2 className="heading-sm uppercase  text-primary">
-              {seller?.name}
-            </h2>
+        {/* {seller && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between text-secondary border border-primary py-4 px-4 rounded-sm w-full">
+              <Avatar src={seller?.photo} size="large" />
+              <h2 className="heading-sm uppercase  text-primary">
+                {seller?.name}
+              </h2>
+            </div>
           </div>
-          <div className="flex justify-end">
-            {/* <Chat
-                  user={user}
-                  seller={seller}
-                  order_id={order.id}
-                  subject={`Order #${order.display_id}: ${
-                    order.items?.[0]?.product_title
-                  } ${
-                    order.items?.length && order.items.length > 1
-                      ? `+${order.items.length - 1}`
-                      : ""
-                  }`}
-                /> */}
-          </div>
-        </div>}
+        )} */}
         <div className="my-4"></div>
-        <div className="flex items-center justify-between text-secondary border border-primary bg-component-secondary py-6 px-4 rounded-sm w-full ">
-          <div className="flex items-center gap-3">
-            <h2 className="heading-sm uppercase text-secondary">
-              Status:
-            </h2>
-            <span
-              className={cn(
-                "px-3 py-1 text-sm rounded-full font-medium border",
-                getOrderStatusColor(displayStatus)
-              )}
-            >
-              {displayStatus}
-            </span>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-base font-semibold text-secondary">
+              {order.seller?.name}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Placed on {format(order.created_at!, "MMM dd, yyyy")}
+            </p>
           </div>
-          <div className="flex justify-end">
-            <h2 className="label-md text-secondary">
-              Order date:{" "}
-              <span className="text-primary">
-                {format(order.created_at || "", "yyyy-MM-dd")}
-              </span>
-            </h2>
-          </div>
+
+          <span
+            className={cn(
+              "px-3 py-1 text-xs rounded-full font-medium border h-fit",
+              getOrderStatusColor(displayStatus)
+            )}
+          >
+            {displayStatus}
+          </span>
         </div>
 
         <div className="my-4"></div>

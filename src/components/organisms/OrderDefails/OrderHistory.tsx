@@ -23,7 +23,7 @@ const [recentOrders, setRecentOrders] = React.useState<any[]>([])
       }
 
       const orders = await listOrders()
-      setRecentOrders(orders)
+      setRecentOrders(orders.orders || [])
       setLoading(false)
     }
 
