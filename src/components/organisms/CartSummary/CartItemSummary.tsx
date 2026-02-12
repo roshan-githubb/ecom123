@@ -440,21 +440,7 @@ export const RememberUserInfo = ({
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
   )
-  console.log("RememberUserInfo render", {
-    isReady,
-    cart,
-    hasAddress,
-    hasPaymentMethod,
-    hasShippingMethod,
-    selectedPaymentMethod
-  })
-
-  console.log(
-    "RememberUserInfo render",
-    isCheckingAddress,
-    isReady,
-    hasPaymentMethod
-  )
+ 
 
   const handlePlaceOrderClick = async () => {
     // console.log("proceed")
@@ -663,7 +649,7 @@ export const RememberUserInfo = ({
           variant="primary"
           onClick={handlePlaceOrderClick}
           disabled={isCheckingAddress || !isReady || !selectedPaymentMethod || submitting}
-          className={`flex items-center justify-center gap-2 ${
+          className={`flex items-center justify-center  ${
             isCheckingAddress || !isReady || !selectedPaymentMethod ||submitting
               ? "bg-gray-400 cursor-not-allowed opacity-50"
               : "bg-myBlue hover:opacity-90"

@@ -33,7 +33,7 @@ export const HomeProductCard = ({
   productIndex = 0,
   ratingSummary,
 }: HomeProductCardProps) => {
-  console.log("HomeProductCard product: ", api_product );
+  // console.log("HomeProductCard product: ", api_product );
 
   const [showModal, setShowModal] = useState(false)
   const [showSelectVariantModal, setShowSelectVariantModal] =

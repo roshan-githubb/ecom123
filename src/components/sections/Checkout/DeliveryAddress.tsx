@@ -1,73 +1,80 @@
-'use client'
-import { CheckoutSkeleton, DeliveryAddressSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
+"use client"
+import {
+  CheckoutSkeleton,
+  DeliveryAddressSkeleton,
+} from "@/components/organisms/CartSkeleton/CartSkeleton"
 import { useAddressStore } from "@/store/addressStore"
 import { MapPin, ChevronRight } from "lucide-react"
 import { AddressForm } from "@/app/[locale]/(checkout)/shippinginfo/addressform/page"
-import { useCartStore } from '@/store/useCartStore'
-import React, { useEffect, useState } from 'react'
+import { useCartStore } from "@/store/useCartStore"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-const DeliveryAddress = ({ onAddressUpdate: parentOnAddressUpdate }: { onAddressUpdate?: () => void }) => {
+const DeliveryAddress = ({
+  onAddressUpdate: parentOnAddressUpdate,
+  shippingAddress,
+}: {
+  onAddressUpdate?: () => void
+  shippingAddress?: any
+}) => {
   const [loading, setLoading] = useState(true)
   const [hasAddress, setHasAddress] = useState(false)
   const [addressCheckTrigger, setAddressCheckTrigger] = useState(0)
-  const {
-    cartId,
-    fetchCart,
-  } = useCartStore()
+  const { cartId, fetchCart } = useCartStore()
 
-
-  useEffect(() => {
-    async function checkAddress() {
-      if (!cartId) {
-        setHasAddress(false)
-        setLoading(false)
-        return
-      }
-
-      try {
-        const { retrieveCart } = await import("@/lib/data/cart")
-        const cartData = await retrieveCart(cartId)
-        const shippingAddr = cartData?.shipping_address
-
-        const isValid = shippingAddr && shippingAddr.first_name && shippingAddr.address_1
-        setHasAddress(!!isValid)
-        setLoading(false)
-      } catch (err) {
-        setHasAddress(false)
-      }
+  //  address checking logic and fetch cart with latest data after trigger
+  const checkShippingAddress = async (id: string) => {
+    if (!id) {
+      setHasAddress(false)
+      setLoading(false)
+      return
     }
 
-    checkAddress()
-  }, [cartId, addressCheckTrigger])
+    try {
+      const { retrieveCart } = await import("@/lib/data/cart")
+      const cartData = await retrieveCart(id)
+      const shippingAddr = cartData?.shipping_address
+
+      const isValid =
+        shippingAddr && shippingAddr.first_name && shippingAddr.address_1
+      setHasAddress(!!isValid)
+      setLoading(false)
+    } catch (err) {
+      setHasAddress(false)
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    checkShippingAddress(cartId)
+  }, [addressCheckTrigger])
 
   const handleAddressUpdate = () => {
-
     setAddressCheckTrigger((prev) => prev + 1)
 
     parentOnAddressUpdate?.()
   }
 
-  if (loading) return <CheckoutSkeleton />
+  if (loading) return <DeliveryAddressSkeleton />
   if (!cartId) return null
 
-  return (
-    <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
-  )
+  return <UserDetailsSection onAddressUpdate={handleAddressUpdate} />
 }
 
 export default DeliveryAddress
 
-const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddressUpdate }) => {
+const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({
+  onAddressUpdate,
+}) => {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const { cartId } = useCartStore()
-  const [customerDefaultAddress, setCustomerDefaultAddress] = useState<any>(null)
+  const [customerDefaultAddress, setCustomerDefaultAddress] =
+    useState<any>(null)
   const [guestAddress, setGuestAddress] = useState<any>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [customerEmail, setCustomerEmail] = useState<string>('')
-
+  const [customerEmail, setCustomerEmail] = useState<string>("")
 
   useEffect(() => {
     async function loadCustomerAddress() {
@@ -84,11 +91,13 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
 
           if (customer) {
             setIsLoggedIn(true)
-            setCustomerEmail(customer.email || '')
+            setCustomerEmail(customer.email || "")
 
             if (customer.addresses && customer.addresses.length > 0) {
-              const defaultAddr = customer.addresses.find((addr: any) => addr.is_default_shipping)
-                || customer.addresses[0]
+              const defaultAddr =
+                customer.addresses.find(
+                  (addr: any) => addr.is_default_shipping
+                ) || customer.addresses[0]
 
               setCustomerDefaultAddress(defaultAddr)
 
@@ -96,9 +105,10 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                 const { retrieveCart } = await import("@/lib/data/cart")
                 const cartData = await retrieveCart(cartId)
                 const existingAddress = cartData?.shipping_address
-                
-                const needsAddressUpdate = !existingAddress || 
-                  !existingAddress.first_name || 
+
+                const needsAddressUpdate =
+                  !existingAddress ||
+                  !existingAddress.first_name ||
                   !existingAddress.address_1
 
                 if (needsAddressUpdate) {
@@ -127,15 +137,18 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                       country_code: defaultAddr.country_code || "np",
                       phone: defaultAddr.phone || "",
                       company: defaultAddr.company || "",
-                    }
+                    },
                   }
 
-                  const { setAddressesWithCartId } = await import("@/lib/data/cart")
+                  const { setAddressesWithCartId } =
+                    await import("@/lib/data/cart")
                   await setAddressesWithCartId(cartId, addressData)
-                  
+
                   onAddressUpdate?.()
                 } else {
-                  const cartMatchesDefault = existingAddress && defaultAddr &&
+                  const cartMatchesDefault =
+                    existingAddress &&
+                    defaultAddr &&
                     existingAddress.first_name === defaultAddr.first_name &&
                     existingAddress.last_name === defaultAddr.last_name &&
                     existingAddress.address_1 === defaultAddr.address_1 &&
@@ -147,7 +160,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                     setCustomerDefaultAddress(null)
                     setGuestAddress(existingAddress)
                   }
-                  
+
                   onAddressUpdate?.()
                 }
               }
@@ -162,13 +175,17 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
           setIsLoggedIn(false)
           setCustomerDefaultAddress(null)
         }
-        
+
         if (!isLoggedIn && cartId) {
           const { retrieveCart } = await import("@/lib/data/cart")
           const cartData = await retrieveCart(cartId)
           const shippingAddr = cartData?.shipping_address
-          
-          if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+
+          if (
+            shippingAddr &&
+            shippingAddr.first_name &&
+            shippingAddr.address_1
+          ) {
             setGuestAddress(shippingAddr)
           }
         }
@@ -188,14 +205,13 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
   const handleFormClose = async () => {
     setShowForm(false)
     onAddressUpdate?.()
-    
+
     if (cartId) {
       try {
         const { retrieveCart } = await import("@/lib/data/cart")
         const cartData = await retrieveCart(cartId)
         const shippingAddr = cartData?.shipping_address
-        
-        
+
         if (isLoggedIn) {
           try {
             const res = await fetch("/api/customer/me", {
@@ -208,12 +224,19 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
               const data = await res.json()
               const customer = data?.customer
 
-              if (customer && customer.addresses && customer.addresses.length > 0) {
-                const defaultAddr = customer.addresses.find((addr: any) => addr.is_default_shipping)
-                  || customer.addresses[0]
-                
-                
-                const cartMatchesDefault = shippingAddr && defaultAddr &&
+              if (
+                customer &&
+                customer.addresses &&
+                customer.addresses.length > 0
+              ) {
+                const defaultAddr =
+                  customer.addresses.find(
+                    (addr: any) => addr.is_default_shipping
+                  ) || customer.addresses[0]
+
+                const cartMatchesDefault =
+                  shippingAddr &&
+                  defaultAddr &&
                   shippingAddr.first_name === defaultAddr.first_name &&
                   shippingAddr.last_name === defaultAddr.last_name &&
                   shippingAddr.address_1 === defaultAddr.address_1 &&
@@ -221,33 +244,48 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                   shippingAddr.province === defaultAddr.province &&
                   shippingAddr.phone === defaultAddr.phone
 
-
                 if (cartMatchesDefault) {
                   setCustomerDefaultAddress(defaultAddr)
                   setGuestAddress(null)
                 } else {
                   setCustomerDefaultAddress(null)
-                  if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+                  if (
+                    shippingAddr &&
+                    shippingAddr.first_name &&
+                    shippingAddr.address_1
+                  ) {
                     setGuestAddress(shippingAddr)
                   }
                 }
-                
-                setCustomerEmail(customer.email || '')
+
+                setCustomerEmail(customer.email || "")
               } else {
                 setCustomerDefaultAddress(null)
-                if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+                if (
+                  shippingAddr &&
+                  shippingAddr.first_name &&
+                  shippingAddr.address_1
+                ) {
                   setGuestAddress(shippingAddr)
                 }
               }
             }
           } catch (err) {
             console.error("Failed to reload customer address:", err)
-            if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+            if (
+              shippingAddr &&
+              shippingAddr.first_name &&
+              shippingAddr.address_1
+            ) {
               setGuestAddress(shippingAddr)
             }
           }
         } else {
-          if (shippingAddr && shippingAddr.first_name && shippingAddr.address_1) {
+          if (
+            shippingAddr &&
+            shippingAddr.first_name &&
+            shippingAddr.address_1
+          ) {
             setGuestAddress(shippingAddr)
           }
         }
@@ -257,24 +295,22 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
     }
   }
 
-
-
   if (!cartId) return null
-  if (loading) return <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4"><CheckoutSkeleton /></div>
+  if (loading) return <DeliveryAddressSkeleton />
 
   const convertToAddressFormat = (addr: any, customerEmail?: string) => {
     if (!addr) return undefined
     return {
-      name: `${addr.first_name || ''} ${addr.last_name || ''}`.trim(),
-      email: customerEmail || addr.email || '',
-      phone: addr.phone || '',
-      province: addr.province || '',
-      district: addr.city || '',
-      line1: addr.address_1 || '',
-      line2: addr.address_2 || '',
-      postalCode: addr.postal_code || '',
-      countryCode: addr.country_code || 'np',
-      label: addr.address_name || 'Home',
+      name: `${addr.first_name || ""} ${addr.last_name || ""}`.trim(),
+      email: customerEmail || addr.email || "",
+      phone: addr.phone || "",
+      province: addr.province || "",
+      district: addr.city || "",
+      line1: addr.address_1 || "",
+      line2: addr.address_2 || "",
+      postalCode: addr.postal_code || "",
+      countryCode: addr.country_code || "np",
+      label: addr.address_name || "Home",
       isDefault: addr.is_default_shipping || false,
     }
   }
@@ -284,7 +320,10 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
       <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
         {showForm ? (
           <AddressForm
-            initialData={convertToAddressFormat(customerDefaultAddress, customerEmail)}
+            initialData={convertToAddressFormat(
+              customerDefaultAddress,
+              customerEmail
+            )}
             index={undefined}
             onClose={handleFormClose}
             isUserLoggedIn={isLoggedIn}
@@ -295,7 +334,7 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 bg-[#e3e8ec] rounded-md flex items-center justify-center relative overflow-hidden">
                   <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,_#000_1px,_transparent_1px)] bg-[length:4px_4px]"></div>
-                  <MapPin className="w-5 h-5 text-[#2b5bf7] fill-[#2b5bf7] relative z-10" />
+                  <MapPin className="w-5 h-5 text-myBlue fill-myBlue relative z-10" />
                 </div>
               </div>
               <div
@@ -306,7 +345,8 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-bold text-sm text-gray-900">
-                        {customerDefaultAddress.first_name} {customerDefaultAddress.last_name}
+                        {customerDefaultAddress.first_name}{" "}
+                        {customerDefaultAddress.last_name}
                       </span>
                       <span className="text-gray-400 text-[13px]">
                         {customerDefaultAddress.phone}
@@ -314,14 +354,17 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                     </div>
                     <div className="leading-snug">
                       {customerDefaultAddress.address_name && (
-                        <span className="inline-block bg-[#2b5bf7] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] mr-1 align-middle">
+                        <span className="inline-block bg-myBlue text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] mr-1 align-middle">
                           {customerDefaultAddress.address_name.toUpperCase()}
                         </span>
                       )}
                       <span className="text-[13px] text-gray-600">
                         {customerDefaultAddress.address_1}
-                        {customerDefaultAddress.address_2 ? `, ${customerDefaultAddress.address_2}` : ""}
-                        , {customerDefaultAddress.city}, {customerDefaultAddress.province}
+                        {customerDefaultAddress.address_2
+                          ? `, ${customerDefaultAddress.address_2}`
+                          : ""}
+                        , {customerDefaultAddress.city},{" "}
+                        {customerDefaultAddress.province}
                       </span>
                     </div>
                   </div>
@@ -329,7 +372,6 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                 </div>
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -372,7 +414,9 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
                     <div className="leading-snug">
                       <span className="text-[13px] text-gray-600">
                         {guestAddress.address_1}
-                        {guestAddress.address_2 ? `, ${guestAddress.address_2}` : ""}
+                        {guestAddress.address_2
+                          ? `, ${guestAddress.address_2}`
+                          : ""}
                         , {guestAddress.city}, {guestAddress.province}
                       </span>
                     </div>
@@ -386,7 +430,6 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
       </div>
     )
   }
-
 
   return (
     <div className="bg-white p-4 rounded-[16px] border border-[#F5F5F6] shadow-[0_4px_4px_rgba(0,0,0,0.25)] mx-4 md:mx-0 mt-4">
@@ -403,8 +446,12 @@ const UserDetailsSection: React.FC<{ onAddressUpdate?: () => void }> = ({ onAddr
             <MapPin className="w-8 h-8 text-gray-400" />
           </div>
           <div className="text-center">
-            <p className="text-gray-700 font-medium mb-1">No delivery address</p>
-            <p className="text-gray-500 text-sm">Please add your delivery address to continue</p>
+            <p className="text-gray-700 font-medium mb-1">
+              No delivery address
+            </p>
+            <p className="text-gray-500 text-sm">
+              Please add your delivery address to continue
+            </p>
           </div>
           <Button
             variant="primary"

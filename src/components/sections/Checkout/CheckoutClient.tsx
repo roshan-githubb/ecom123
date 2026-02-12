@@ -16,12 +16,14 @@ interface CheckoutClientProps {
   initialCart: any
   initialShippingMethods: any
   initialPaymentMethods: any
+  shippingAddress: any
 }
 
 export function CheckoutClient({
   initialCart,
   initialShippingMethods,
   initialPaymentMethods,
+  shippingAddress,
 }: CheckoutClientProps) {
   const [cart, setCart] = useState(initialCart)
   const [shippingMethods, setShippingMethods] = useState(initialShippingMethods)
@@ -140,24 +142,23 @@ export function CheckoutClient({
   }
 
   const showPaymentSection = allVendorsHaveShipping()
-  console.log('isready payment proceed shipping methods, paymentmethods, showpaymentsection ', shippingMethods , paymentMethods , showPaymentSection )
 
   return (
     <div className="min-h-screen pb-8 overflow-x-hidden">
-      {isEnrichingData && (
-        <div className="max-w-md mx-auto mb-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mx-4 md:mx-0">
+      {/* {isEnrichingData && (
+        <div className="max-w-md mb-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mx-4 md:mx-0">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
             <p className="text-xs text-blue-700">Loading checkout details...</p>
           </div>
         </div>
-      )}
+      )} */}
       
       <main className="max-w-md mx-auto relative z-0">
         <OrderSummary />
-        <DeliveryAddress onAddressUpdate={handleAddressUpdate} />
+        <DeliveryAddress onAddressUpdate={handleAddressUpdate} shippingAddress={shippingAddress} />
         
-        {isLoadingAfterAddress && (
+        {/* {isLoadingAfterAddress && (
           <div className="max-w-md mx-auto mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
@@ -166,7 +167,7 @@ export function CheckoutClient({
               </p>
             </div>
           </div>
-        )}
+        )} */}
         
         <div className="my-4"></div>
         {cart && shippingMethods && (
