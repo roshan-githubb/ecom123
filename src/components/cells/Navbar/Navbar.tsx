@@ -310,33 +310,33 @@ export default function Navbar({
   )
 }
 
-const CartButton = ({
-  totalItems,
-  goToCheckoutPage,
-}: {
-  totalItems: number
-  goToCheckoutPage: () => void
-}) => {
-  const { goCheck } = useFlutterBridge()
-  return (
-    <button
-      className="ml-5 mt-1 relative"
-      // onClick={goToCheckoutPage}
-      onClick={(e) => {
-        e.preventDefault()
-        if (isFlutterWebView()) {
-          goCheck()
-        } else {
-          goToCheckoutPage()
-        }
-      }}
-    >
-      <CartIcon size={24} color="white" />
-      {totalItems > 0 && (
-        <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
-          {totalItems}
-        </span>
-      )}
-    </button>
-  )
-}
+// const CartButton = ({
+//   totalItems,
+//   goToCheckoutPage,
+// }: {
+//   totalItems: number
+//   goToCheckoutPage: () => void
+// }) => {
+//   const { goCheck } = useFlutterBridge()
+//   return (
+//     <button
+//       className="ml-5 mt-1 relative"
+//       // onClick={goToCheckoutPage}
+//       onClick={(e) => {
+//         e.preventDefault()
+//         if (isFlutterWebView()) {
+//           goCheck()
+//         } else {
+//           goToCheckoutPage()
+//         }
+//       }}
+//     >
+//       <CartIcon size={24} color="white" />
+//       {totalItems > 0 && (
+//         <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+//           {totalItems}
+//         </span>
+//       )}
+//     </button>
+//   )
+// }

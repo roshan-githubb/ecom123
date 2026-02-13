@@ -5,7 +5,8 @@ export type FlutterTarget =
     | "categories"
     | "offers"
     | "check"
-    | "profile";
+    | "profile"
+    | "exit";
 
 export function sendToFlutter(target: FlutterTarget): void {
 
