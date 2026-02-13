@@ -1,7 +1,9 @@
 import { Footer, Header, StickyCartBar } from "@/components/organisms"
 import { BottomNavbar } from "@/components/molecules"
 import { retrieveCustomer } from "@/lib/data/customer"
+import { checkRegion } from "@/lib/helpers/check-region"
 import { Session } from "@talkjs/react"
+import { redirect } from "next/navigation"
 import { Toaster } from "@/components/ui/toaster"
 
 export default async function RootLayout({
@@ -15,6 +17,11 @@ export default async function RootLayout({
   const { locale } = await params
 
   const user = await retrieveCustomer()
+  const regionCheck = await checkRegion(locale)
+
+  if (!regionCheck) {
+    return redirect("/")
+  }
 
   if (!APP_ID || !user)
     return (
