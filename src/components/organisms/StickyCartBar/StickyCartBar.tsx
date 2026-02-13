@@ -177,7 +177,7 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
 
           <div
             ref={expandedPanelRef}
-            className={`fixed left-0 right-0 bottom-[70px] z-50 pointer-events-auto transition-transform duration-300 ${isExpanded ? "translate-y-0" : "translate-y-[calc(100%+88px)]"
+            className={`fixed left-0 right-0 bottom-[126px] lg:bottom-[70px] z-50 pointer-events-auto transition-transform duration-300 ${isExpanded ? "translate-y-0" : "translate-y-[calc(100%+88px)]"
               }`}
             style={{
               transform: `translateY(${isExpanded ? dragY : 'calc(100% + 88px)'})`,
@@ -297,7 +297,7 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
           </div>
 
           <div
-            className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-8px_24px_rgba(6,23,60,0.06)] transition-transform duration-300 pb-safe ${isAnimatingOut ? "translate-y-full ease-in" : "translate-y-0 ease-out"
+            className={`fixed bottom-14 lg:bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-8px_24px_rgba(6,23,60,0.06)] transition-transform duration-300 pb-safe ${isAnimatingOut ? "translate-y-full ease-in" : "translate-y-0 ease-out"
               } ${className || ""}`}
           >
             <div className="flex items-center justify-between px-4 py-3">

@@ -7,5 +7,6 @@ export function useFlutterBridge() {
         goOffers: () => sendToFlutter("offers"),
         goCheck: () => sendToFlutter("check"),
         goProfile: () => sendToFlutter("profile"),
+        exitWebView: () => sendToFlutter("exit"),
     };
 }
