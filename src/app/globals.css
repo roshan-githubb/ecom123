@@ -172,3 +172,9 @@ button:disabled svg path {
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: 4rem; /* 64px - height of bottom navbar */
+  }
+}

@@ -36,6 +36,7 @@ import { ComingSoon } from "./ComingSoon/ComingSoon"
 import { DefaultAddressForm } from "./DefaultAddressForm/DefaultAddressForm"
 import { SelectVariantModal } from "./SelectVariantModal/SelectVariantModal"
 import { PullToRefresh } from "./PullToRefresh/PullToRefresh"
+import { BottomNavbar } from "./BottomNavbar/BottomNavbar"
 
 export {
   PrimeCategoryNavbar,
@@ -76,4 +77,5 @@ export {
   DefaultAddressForm,
   SelectVariantModal,
   PullToRefresh,
+  BottomNavbar,
 }
