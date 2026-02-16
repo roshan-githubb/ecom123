@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { HomeIcon, CartIcon, ProfileIcon, LogoutIcon } from '@/icons';
 import LocalizedLink from '@/components/molecules/LocalizedLink/LocalizedLink';
-import { useMemo, useCallback, useRef, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useFlutterBridge } from '@/hooks/useFlutterBridge';
 import { useCartStore } from '@/store/useCartStore';
 
@@ -65,14 +65,11 @@ export const BottomNavbar = () => {
   const cartItems = useCartStore((state) => state.items);
   const [isNavigating, setIsNavigating] = useState(false);
   const [clickedItem, setClickedItem] = useState<string | null>(null);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Reset navigation state only when pathname changes (navigation completed)
   useEffect(() => {
     setIsNavigating(false);
     setClickedItem(null);
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-    }
   }, [pathname]);
   
   const cartItemCount = useMemo(() => {
@@ -98,15 +95,6 @@ export const BottomNavbar = () => {
     
     setIsNavigating(true);
     setClickedItem(label);
-
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-    }
-    
-    navigationTimeoutRef.current = setTimeout(() => {
-      setIsNavigating(false);
-      setClickedItem(null);
-    }, 3000);
   }, [isNavigating, isActive]);
 
   const handleExit = useCallback(() => {
