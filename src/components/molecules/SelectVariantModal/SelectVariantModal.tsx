@@ -182,6 +182,48 @@ export function SelectVariantModal({ product: initialProduct, onClose }: SelectV
           </div>
         </div>
 
+        {/* Variants Grid - show first image for each variant */}
+        {product.variants && product.variants.length > 0 && (
+          <div className="pt-2 border-t">
+            <div className="text-sm font-medium text-gray-800 mb-2">Available Variants</div>
+            <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+              {product.variants.map((variant: any) => {
+                const vImg = variant.variant_images?.[0]?.url || product.images?.[0]?.url || "/images/not-available/not-available.png"
+                const isSelected = selectedVariant?.id === variant.id
+                const variantTitle = variant.title || (variant.options?.map((o: any) => o.value).join(" / ")) || "Variant"
+
+                const onVariantClick = () => {
+                  // Build selectedOptions from this variant's options
+                  const newSelected: Record<string, string> = {}
+                  variant.options?.forEach((vo: any) => {
+                    const optionTitle = product.options?.find((opt: any) =>
+                      opt.values?.some((val: any) => val.value === vo.value)
+                    )?.title
+                    if (optionTitle) newSelected[optionTitle] = vo.value
+                  })
+                  setSelectedOptions((prev) => ({ ...prev, ...newSelected }))
+                }
+
+                return (
+                  <button
+                    key={variant.id}
+                    onClick={onVariantClick}
+                    type="button"
+                    className={`flex flex-col items-center p-1 rounded-md transition-shadow text-left ${isSelected ? 'ring-2 ring-blue-500 border border-blue-200' : 'border border-gray-200'}`}
+                  >
+                    <div className="w-full h-16 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
+                      <Image src={vImg} alt={variantTitle} width={64} height={64} className="object-cover w-full h-full" />
+                    </div>
+                    <div className="text-xs text-center mt-1 text-gray-700 truncate w-full">
+                      {variantTitle}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Options Section */}
         {product.options && product.options.length > 0 && (
           <div className="space-y-4 border-t pt-4">
