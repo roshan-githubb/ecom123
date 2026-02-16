@@ -18,7 +18,7 @@ export default async function ItemDetailPage({ params }: { params: Params }) {
   try {
     const response = await publicProductClient.store.product.retrieve(id, {
       region_id: process.env.NEXT_PUBLIC_REGION_ID!,
-      fields: "*seller,*variants.calculated_price,+variants.inventory_quantity",
+      fields: "*seller,*variants.calculated_price,+variants.inventory_quantity,*variants.variant_images",
     })
 
     const product = response.product
