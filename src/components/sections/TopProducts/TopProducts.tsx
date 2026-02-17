@@ -41,7 +41,7 @@ export default async function TopProducts({
         regionId,
         queryParams: {
           limit: 20,
-          fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
+          fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller,*variants.variant_images"
         },
       })
 

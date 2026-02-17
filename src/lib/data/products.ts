@@ -35,7 +35,7 @@ export const listProducts = async ({
       }
 
     
-      const defaultFields = "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
+      const defaultFields = "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller,*variants.variant_images,*variants.variant_images"
       
       const response = await publicProductClient.store.product.list({
         limit,
