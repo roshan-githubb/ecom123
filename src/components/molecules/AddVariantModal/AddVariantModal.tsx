@@ -1764,56 +1764,48 @@ export function AddVariantSheet({
     // Reset drag positions
     activeCardY.set(0)
 
-    // Calculate target scroll position BEFORE changing mode
-    const targetScrollPosition = scrollRef.current
-      ? (() => {
-          const container = scrollRef.current
-          // Calculate based on card width and gap
-          const cardWidth = window.innerWidth * 0.85 // 85vw
-          const gap = 8 // 2 * 0.5rem (gap-2)
-          const paddingLeft = 16 // pl-4
-          return activeIndex * (cardWidth + gap)
-        })()
-      : 0
-
-    // Change mode first
     setViewMode("sheet")
 
-    // Set scroll position immediately after mode change
-    requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollLeft = targetScrollPosition
-      }
-    })
-
-    // Optimized spring animations for native feel
     const springConfig = {
       type: "spring" as const,
-      stiffness: 500,
-      damping: 40,
-      mass: 0.8,
+      stiffness: 400,
+      damping: 32,
+      mass: 0.6,
     }
 
-    // Start animations
     Promise.all([
       animate(y, 0, springConfig),
-      animate(cardWidth, 85, springConfig), // 85vw for main card
+      animate(cardWidth, 85, springConfig),
     ]).then(() => {
-      // Ensure scroll position is correct after animation
-      requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          const container = scrollRef.current
-          const card = container.children[activeIndex] as HTMLElement
-          if (card) {
-            const offset = card.offsetLeft - 16
-            container.scrollLeft = offset
-          }
-        }
-      })
-
       setIsTransitioning(false)
     })
   }
+
+  useLayoutEffect(() => {
+    if (viewMode === "sheet" && isTransitioning && scrollRef.current && activeProducts.length > 1) {
+  
+      const cardWidthVw = 85
+      const cardWidthPx = (window.innerWidth * cardWidthVw) / 100
+      const gap = 8 
+      const paddingLeft = 16 
+      
+
+      const targetScroll = activeIndex * (cardWidthPx + gap) + paddingLeft - (window.innerWidth - cardWidthPx) / 2
+      
+    
+      scrollRef.current.scrollLeft = targetScroll
+      
+ 
+      const springConfig = {
+        type: "spring" as const,
+        stiffness: 400,
+        damping: 32,
+        mass: 0.6,
+      }
+      
+      animate(scrollRef.current, { scrollLeft: targetScroll }, springConfig)
+    }
+  }, [viewMode, isTransitioning, activeIndex, activeProducts.length])
 
   const handleScrollChange = (atTop: boolean) => {
     setIsContentAtTop(atTop)
