@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useLayoutEffect } from "react"
+import { useState, useRef, useEffect, useLayoutEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -61,12 +61,6 @@ interface ProductVariant {
     original_amount: number
     currency_code: string
   }
-  variant_images?: {
-    url: string;
-    is_thumbnail: boolean;
-    id: string;
-    rank: number;
-  }[]
 }
 interface Product {
   id: string
@@ -158,7 +152,9 @@ export function ProductCardInternal({
     // loadWishlist()
   }, [])
 
-  // lightbox photos will be synced later once selected variant / images are resolved
+  useEffect(() => {
+    setLightBoxPhotos(product.images.map((img: any) => img.url))
+  }, [isFullScreen])
 
   // Fetch reviews when product changes
   useEffect(() => {
@@ -373,7 +369,6 @@ export function ProductCardInternal({
   // useEffect(() => {
   //   setLightboxImages(product.images.map((img: any) => img.url))
   // }, [product, isFullScreen])
-  console.log("product card internal  ", product)
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const atTop = e.currentTarget.scrollTop <= 5
@@ -538,7 +533,35 @@ export function ProductCardInternal({
     setTouchStartY(null)
   }
 
+  const images = product.images
+    ?.map((img: any) => img.url)
+    .filter((url: any) => url) || ["/images/not-available/not-available.png"]
 
+  useEffect(() => {
+    if (images.length <= 1) return
+
+    autoPlayRef.current = setInterval(() => {
+      setImgIndex((prev) => (prev + 1) % images.length)
+    }, 3000)
+
+    return () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current)
+      }
+    }
+  }, [images.length])
+
+  const handleManualImageChange = (index: number) => {
+    setImgIndex(index)
+    if (autoPlayRef.current) {
+      clearInterval(autoPlayRef.current)
+    }
+    if (images.length > 1) {
+      autoPlayRef.current = setInterval(() => {
+        setImgIndex((prev) => (prev + 1) % images.length)
+      }, 3000)
+    }
+  }
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {}
@@ -567,51 +590,6 @@ export function ProductCardInternal({
       return selectedOptions[optionTitle] === variantOption.value
     })
   }) || product.variants?.[0]
-
-  // Compute images once and memoize to avoid recreating array every render
-  const images = useMemo(() => {
-    const variantImages = selectedVariant?.variant_images
-      ?.map((vi: any) => vi.url)
-      .filter((url: any) => url) || []
-    const productImages = product.images
-      ?.map((img: any) => img.url)
-      .filter((url: any) => url) || []
-
-    if (variantImages.length > 0) return variantImages
-    if (productImages.length > 0) return productImages
-    return ["/images/not-available/not-available.png"]
-  }, [selectedVariant?.variant_images, product.images])
-
-  useEffect(() => {
-    setLightBoxPhotos(images)
-    setImgIndex(0)
-  }, [images])
-
-  useEffect(() => {
-    if (images.length <= 1) return
-
-    autoPlayRef.current = setInterval(() => {
-      setImgIndex((prev) => (prev + 1) % images.length)
-    }, 3000)
-
-    return () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current)
-      }
-    }
-  }, [images.length])
-
-  const handleManualImageChange = (index: number) => {
-    setImgIndex(index)
-    if (autoPlayRef.current) {
-      clearInterval(autoPlayRef.current)
-    }
-    if (images.length > 1) {
-      autoPlayRef.current = setInterval(() => {
-        setImgIndex((prev) => (prev + 1) % images.length)
-      }, 3000)
-    }
-  }
 
   const colorOption = findColorOption(product.options || [])
   const colors: ColorOption[] = colorOption ? createColorOptions(colorOption.values || []) : []

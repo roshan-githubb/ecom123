@@ -16,22 +16,18 @@ interface PullToRefreshProps {
 export function PullToRefresh({
   children,
   onRefresh,
-  threshold = 80,
+  threshold = 60, 
   disabled = false,
 }: PullToRefreshProps) {
   const router = useRouter()
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
-  
+  const [isPulling, setIsPulling] = useState(false)
   const startY = useRef(0)
-  const isPulling = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
   
   const fetchCart = useCartStore((state) => state.fetchCart)
   const forceRefresh = useInventoryStore((state) => state.forceRefresh)
-
-  const circumference = 2 * Math.PI * 18;
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -40,165 +36,139 @@ export function PullToRefresh({
         await onRefresh()
       } else {
         await Promise.all([
-          router.refresh(),        
-          fetchCart(),             
+          router.refresh(),
+          fetchCart(),
           Promise.resolve(forceRefresh()),
         ])
       }
     } finally {
-
       setTimeout(() => {
         setIsRefreshing(false)
         setPullDistance(0)
-      }, 600)
+      }, 500)
     }
   }
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY
-      setScrollY(currentScroll)
-
-      if (currentScroll > 0 && isRefreshing) {
-        setPullDistance(0)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    
     if (disabled) return
+
     const container = containerRef.current
     if (!container) return
 
     const handleTouchStart = (e: TouchEvent) => {
       if (window.scrollY === 0) {
         startY.current = e.touches[0].clientY
-        isPulling.current = true
+        setIsPulling(true)
       }
     }
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isPulling.current) return
-      const currentY = e.touches[0].clientY
-      const rawDistance = currentY - startY.current
+      if (!isPulling || window.scrollY > 0) return
 
-      if (rawDistance > 0 && window.scrollY === 0) {
-        if (e.cancelable) e.preventDefault()
-        const dampedDistance = Math.pow(rawDistance, 0.75)
-        setPullDistance(Math.min(dampedDistance, threshold * 1.8))
-      } else {
-        isPulling.current = false
+      const currentY = e.touches[0].clientY
+      const distance = currentY - startY.current
+
+      if (distance > 0) {
+       
+        const resistance = 0.5
+        const elasticDistance = distance * resistance
+        setPullDistance(Math.min(elasticDistance, threshold * 1.2))
       }
     }
 
     const handleTouchEnd = () => {
-      if (!isPulling.current) return
       if (pullDistance >= threshold && !isRefreshing) {
         handleRefresh()
       } else {
         setPullDistance(0)
       }
-      isPulling.current = false
+      setIsPulling(false)
     }
 
     container.addEventListener("touchstart", handleTouchStart, { passive: true })
-    container.addEventListener("touchmove", handleTouchMove, { passive: false })
+    container.addEventListener("touchmove", handleTouchMove, { passive: true })
     container.addEventListener("touchend", handleTouchEnd)
 
     return () => {
-      window.removeEventListener("scroll", handleScroll)
       container.removeEventListener("touchstart", handleTouchStart)
       container.removeEventListener("touchmove", handleTouchMove)
       container.removeEventListener("touchend", handleTouchEnd)
     }
-  }, [pullDistance, threshold, isRefreshing, disabled])
+  }, [isPulling, pullDistance, threshold, isRefreshing, disabled])
 
   const progress = Math.min((pullDistance / threshold) * 100, 100)
   const shouldTrigger = pullDistance >= threshold
-  
-  const showIndicator = (pullDistance > 5 || isRefreshing) && scrollY <= 5
 
-  const strokeOffset = isRefreshing 
-    ? circumference * 0.75 
-    : circumference * (1 - progress / 100);
+  
+  const contentStyle = {
+    marginTop: isRefreshing ? threshold : pullDistance,
+    transition: isRefreshing || pullDistance === 0 ? 'margin-top 0.2s' : 'none',
+  }
 
   return (
-    <div 
-      ref={containerRef} 
-      className="relative w-full"
-      style={{ overscrollBehaviorY: 'contain' }} 
-    >
+    <div ref={containerRef} className="relative">
      
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-center pointer-events-none z-50"
+        className="fixed left-0 right-0 flex items-center justify-center transition-all duration-200 z-40 pointer-events-none"
         style={{
-          height: `${threshold}px`,
-          opacity: showIndicator ? 1 : 0,
-          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
-          transform: `translateY(${scrollY > 0 ? -20 : 0}px)`
+          top: '90px', 
+          opacity: pullDistance > 0 ? 1 : 0,
         }}
       >
-        <div 
-          className="relative w-11 h-11 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-100 transition-transform"
-          style={{
-            transform: isRefreshing 
-              ? 'scale(1)' 
-              : `scale(${shouldTrigger ? 1.15 : Math.min(progress/100, 1)})`
-          }}
-        >
-          <div className="relative w-7 h-7 rounded-full overflow-hidden z-10 bg-white">
+        <div className="relative w-12 h-12 flex items-center justify-center">
+        
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-white shadow-lg">
             <Image
-              src="/AppIconW.png"
-              alt="Weetok"
-              fill
+              src="/AppIconW.PNG"
+              alt="App Icon"
+              width={36}
+              height={36}
               className="object-cover"
             />
           </div>
           
           <svg
-            className={`absolute inset-0 w-11 h-11 -rotate-90 ${isRefreshing ? "animate-native-spin" : ""}`}
-            viewBox="0 0 40 40"
+            className="absolute inset-0 w-12 h-12 -rotate-90"
+            viewBox="0 0 48 48"
           >
-            <circle cx="20" cy="20" r="18" fill="none" stroke="#F3F4F6" strokeWidth="2.5" />
             <circle
-              cx="20"
-              cy="20"
-              r="18"
+              cx="24"
+              cy="24"
+              r="22"
               fill="none"
-              stroke={shouldTrigger || isRefreshing ? "#3949AB" : "#9CA3AF"}
-              strokeWidth="2.5"
+              stroke="#E5E7EB"
+              strokeWidth="2"
+            />
+            
+            <circle
+              cx="24"
+              cy="24"
+              r="22"
+              fill="none"
+              stroke="#3949AB"
+              strokeWidth="2"
               strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeOffset}
+              strokeDasharray={`${2 * Math.PI * 22}`}
+              strokeDashoffset={
+                isRefreshing 
+                  ? `${2 * Math.PI * 22 * 0.75}` 
+                  : `${2 * Math.PI * 22 * (1 - progress / 100)}` 
+              }
+              className={`transition-all duration-200 ${
+                isRefreshing ? "animate-spin origin-center" : ""
+              }`}
               style={{
-                transition: isRefreshing ? 'none' : 'stroke-dashoffset 0.1s linear, stroke 0.2s'
+                transformOrigin: "center",
+                animationDuration: isRefreshing ? "0.8s" : undefined,
               }}
             />
           </svg>
         </div>
       </div>
 
-      <div
-        className="transition-transform"
-        style={{
-          transform: `translate3d(0, ${scrollY > 0 ? 0 : (isRefreshing ? threshold : pullDistance)}px, 0)`,
-          transitionDuration: (isPulling.current || scrollY > 0) ? '0ms' : '400ms',
-          transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
-          willChange: 'transform'
-        }}
-      >
+      <div style={contentStyle}>
         {children}
       </div>
-
-      <style jsx global>{`
-        @keyframes native-spin {
-          from { transform: rotate(-90deg); }
-          to { transform: rotate(270deg); }
-        }
-        .animate-native-spin {
-          animation: native-spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-      `}</style>
     </div>
   )
 }

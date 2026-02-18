@@ -1,8 +1,6 @@
 import { Footer, Header, StickyCartBar } from "@/components/organisms"
 import { BottomNavbar, PullToRefresh } from "@/components/molecules"
-import { retrieveCustomer } from "@/lib/data/customer"
 import { checkRegion } from "@/lib/helpers/check-region"
-import { Session } from "@talkjs/react"
 import { redirect } from "next/navigation"
 import { Toaster } from "@/components/ui/toaster"
 
@@ -13,44 +11,25 @@ export default async function RootLayout({
   children: React.ReactNode
   params: Promise<{ locale: string }>
 }>) {
-  const APP_ID = process.env.NEXT_PUBLIC_TALKJS_APP_ID
   const { locale } = await params
 
-  const user = await retrieveCustomer()
   const regionCheck = await checkRegion(locale)
 
   if (!regionCheck) {
     return redirect("/")
   }
 
-  if (!APP_ID || !user)
-    return (
-      <>
-        <Header />
-        <div className="!pt-[68px]"></div>
-        <PullToRefresh>
-          {children}
-        </PullToRefresh>
-        <Footer />
-        <StickyCartBar />
-        <BottomNavbar />
-        <Toaster />
-      </>
-    )
-
   return (
     <>
-      <Session appId={APP_ID} userId={user.id}>
-        <Header />
-        <div className="!pt-[68px]"></div>
-        <PullToRefresh>
-          {children}
-        </PullToRefresh>
-        <Footer />
-        <StickyCartBar />
-        <BottomNavbar />
-        <Toaster />
-      </Session>
+      <Header />
+      <div className="!pt-[68px]"></div>
+      <PullToRefresh>
+        {children}
+      </PullToRefresh>
+      <Footer />
+      <StickyCartBar />
+      <BottomNavbar />
+      <Toaster />
     </>
   )
 }

@@ -5,7 +5,6 @@ import type { Metadata } from "next"
 import { ProductsList, ProductsPagination } from "@/components/organisms"
 import { getTopProducts } from "@/lib/data/top-products"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
-import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import { PRODUCT_LIMIT } from "@/const"
 
 export const revalidate = 60
@@ -63,11 +62,7 @@ async function TrendingProducts({
   })
   const pages = Math.ceil(topProducts?.count / PRODUCT_LIMIT) || 1
 
-  // const trendingProducts = await getTopProducts({ limit: 16, type: "trending" })
   const sortedProducts = sortProductsByInventory(topProducts?.products)
-
-  const productIds = sortedProducts?.map((p: any) => p.id) || []
-  const ratingsMap = await getProductRatingSummaries(productIds)
 
   return (
     <main className="container">
@@ -77,7 +72,6 @@ async function TrendingProducts({
         <ProductsList
           products={sortedProducts}
           locale={"np"}
-          ratingsMap={ratingsMap}
         />
       </Suspense>
       <ProductsPagination pages={pages || 1} />
