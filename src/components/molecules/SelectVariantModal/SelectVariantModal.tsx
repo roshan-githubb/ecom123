@@ -29,6 +29,7 @@ export function SelectVariantModal({
 }: SelectVariantModalProps) {
   const { getAdjustedInventory } = useInventoryStore()
   const [product, setProduct] = useState<any>(null)
+  const [isAdding, setIsAdding] = useState(false)
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({})
@@ -54,8 +55,7 @@ export function SelectVariantModal({
     setSelectedOptions(initial)
   }, [initialProduct])
 
-  const [isAdding, setIsAdding] = useState(false)
-
+console.log('SelectVariantModal product and selectedOptions:', product, initialProduct)
   // Find selected variant based on selected options
   const selectedVariant = useMemo(() => {
     if (!product?.variants) return undefined
@@ -182,7 +182,7 @@ export function SelectVariantModal({
               {/* <h3 className="font-medium text-sm">{product.title}</h3> */}
               <div className=" w-full flex-justify-between">
                 {/* Price Section */}
-                <div className="space-y-2 border-t pt-2">
+                <div className="space-y-2">
                   {discountPercent > 0 && (
                     <div className="bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold w-fit">
                       {discountPercent}% OFF
@@ -236,7 +236,7 @@ export function SelectVariantModal({
               <div className="text-sm font-medium text-gray-800 mb-2">
                 Available Variants
               </div>
-              <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+              <div className="pl-1 grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
                 {product.variants.map((variant: any) => {
                   const vImg =
                     variant.variant_images?.[0]?.url ||
