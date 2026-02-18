@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect, useMemo, useLayoutEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
