@@ -106,7 +106,10 @@ const getProductRatingSummary = async (productId: string) => {
   const res = await fetchQuery(`/store/products/${productId}/rating-summary`, {
     headers,
     method: "GET",
-    next: { revalidate: 3600 },
+    next: { 
+      revalidate: 3600,  
+      tags: [`rating-${productId}`] 
+    },
   })
 
   return res

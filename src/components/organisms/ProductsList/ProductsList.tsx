@@ -1,17 +1,14 @@
 // import { ProductCard } from "@/components/molecules/ProductCard/ProductCard"
 import { HttpTypes } from "@medusajs/types"
 import { SkeletonProductCard } from "../ProductCard/SkeletonProductCard"
-import { SimpleRatingSummary } from "@/types/reviews"
-import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
+import { HomeProductCardWithRatings } from "@/components/molecules/HomeProductCard/HomeProductCardWithRatings"
 
 export const ProductsList = ({
   products,
   locale,
-  ratingsMap = {}
 }: {
   products: HttpTypes.StoreProduct[]
   locale: string
-  ratingsMap?: Record<string, SimpleRatingSummary>
 }) => {
 
   
@@ -26,13 +23,11 @@ export const ProductsList = ({
           return (
           // <SkeletonProductCard key={product.id} />
           
-          <HomeProductCard 
+          <HomeProductCardWithRatings 
             key={product.id} 
             api_product={product} 
-            // locale={locale}
             allProducts={products}
             productIndex={index}
-            ratingSummary={ratingsMap[product.id]}
           />
         )
         })}

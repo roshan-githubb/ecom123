@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
     optimizePackageImports: ['@medusajs/ui', '@medusajs/icons'],
+    staleTimes: {
+      dynamic: 30,     
+      static: 180,      
+    },
   },
   logging: {
     fetches: {
