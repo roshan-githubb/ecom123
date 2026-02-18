@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
-import { RefreshCw } from "lucide-react"
+import { useCartStore } from "@/store/useCartStore"
+import { useInventoryStore } from "@/store/useInventoryStore"
+import Image from "next/image"
 
 interface PullToRefreshProps {
   children: React.ReactNode
@@ -20,9 +22,16 @@ export function PullToRefresh({
   const router = useRouter()
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isPulling, setIsPulling] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
+  
   const startY = useRef(0)
+  const isPulling = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  const fetchCart = useCartStore((state) => state.fetchCart)
+  const forceRefresh = useInventoryStore((state) => state.forceRefresh)
+
+  const circumference = 2 * Math.PI * 18;
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -30,99 +39,166 @@ export function PullToRefresh({
       if (onRefresh) {
         await onRefresh()
       } else {
-        router.refresh()
+        await Promise.all([
+          router.refresh(),        
+          fetchCart(),             
+          Promise.resolve(forceRefresh()),
+        ])
       }
     } finally {
+
       setTimeout(() => {
         setIsRefreshing(false)
         setPullDistance(0)
-      }, 500)
+      }, 600)
     }
   }
 
   useEffect(() => {
-    if (disabled) return
+    const handleScroll = () => {
+      const currentScroll = window.scrollY
+      setScrollY(currentScroll)
 
+      if (currentScroll > 0 && isRefreshing) {
+        setPullDistance(0)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    
+    if (disabled) return
     const container = containerRef.current
     if (!container) return
 
     const handleTouchStart = (e: TouchEvent) => {
       if (window.scrollY === 0) {
         startY.current = e.touches[0].clientY
-        setIsPulling(true)
+        isPulling.current = true
       }
     }
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isPulling || window.scrollY > 0) return
-
+      if (!isPulling.current) return
       const currentY = e.touches[0].clientY
-      const distance = currentY - startY.current
+      const rawDistance = currentY - startY.current
 
-      if (distance > 0) {
-        setPullDistance(Math.min(distance, threshold * 1.5))
+      if (rawDistance > 0 && window.scrollY === 0) {
+        if (e.cancelable) e.preventDefault()
+        const dampedDistance = Math.pow(rawDistance, 0.75)
+        setPullDistance(Math.min(dampedDistance, threshold * 1.8))
+      } else {
+        isPulling.current = false
       }
     }
 
     const handleTouchEnd = () => {
+      if (!isPulling.current) return
       if (pullDistance >= threshold && !isRefreshing) {
         handleRefresh()
       } else {
         setPullDistance(0)
       }
-      setIsPulling(false)
+      isPulling.current = false
     }
 
     container.addEventListener("touchstart", handleTouchStart, { passive: true })
-    container.addEventListener("touchmove", handleTouchMove, { passive: true })
+    container.addEventListener("touchmove", handleTouchMove, { passive: false })
     container.addEventListener("touchend", handleTouchEnd)
 
     return () => {
+      window.removeEventListener("scroll", handleScroll)
       container.removeEventListener("touchstart", handleTouchStart)
       container.removeEventListener("touchmove", handleTouchMove)
       container.removeEventListener("touchend", handleTouchEnd)
     }
-  }, [isPulling, pullDistance, threshold, isRefreshing, disabled])
+  }, [pullDistance, threshold, isRefreshing, disabled])
 
   const progress = Math.min((pullDistance / threshold) * 100, 100)
   const shouldTrigger = pullDistance >= threshold
+  
+  const showIndicator = (pullDistance > 5 || isRefreshing) && scrollY <= 5
+
+  const strokeOffset = isRefreshing 
+    ? circumference * 0.75 
+    : circumference * (1 - progress / 100);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div 
+      ref={containerRef} 
+      className="relative w-full"
+      style={{ overscrollBehaviorY: 'contain' }} 
+    >
+     
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-center transition-all duration-200 overflow-hidden"
+        className="absolute top-0 left-0 right-0 flex items-center justify-center pointer-events-none z-50"
         style={{
-          height: `${Math.min(pullDistance, threshold)}px`,
-          opacity: pullDistance > 0 ? 1 : 0,
+          height: `${threshold}px`,
+          opacity: showIndicator ? 1 : 0,
+          transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
+          transform: `translateY(${scrollY > 0 ? -20 : 0}px)`
         }}
       >
-        <div className="flex flex-col items-center gap-1">
-          <RefreshCw
-            className={`w-5 h-5 text-myBlue transition-transform ${
-              isRefreshing || shouldTrigger ? "animate-spin" : ""
-            }`}
-            style={{
-              transform: `rotate(${progress * 3.6}deg)`,
-            }}
-          />
-          <span className="text-xs text-muted-foreground">
-            {isRefreshing
-              ? "Refreshing..."
-              : shouldTrigger
-              ? "Release to refresh"
-              : "Pull to refresh"}
-          </span>
+        <div 
+          className="relative w-11 h-11 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-100 transition-transform"
+          style={{
+            transform: isRefreshing 
+              ? 'scale(1)' 
+              : `scale(${shouldTrigger ? 1.15 : Math.min(progress/100, 1)})`
+          }}
+        >
+          <div className="relative w-7 h-7 rounded-full overflow-hidden z-10 bg-white">
+            <Image
+              src="/appIconW.png"
+              alt="Weetok"
+              fill
+              className="object-cover"
+            />
+          </div>
+          
+          <svg
+            className={`absolute inset-0 w-11 h-11 -rotate-90 ${isRefreshing ? "animate-native-spin" : ""}`}
+            viewBox="0 0 40 40"
+          >
+            <circle cx="20" cy="20" r="18" fill="none" stroke="#F3F4F6" strokeWidth="2.5" />
+            <circle
+              cx="20"
+              cy="20"
+              r="18"
+              fill="none"
+              stroke={shouldTrigger || isRefreshing ? "#3949AB" : "#9CA3AF"}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeOffset}
+              style={{
+                transition: isRefreshing ? 'none' : 'stroke-dashoffset 0.1s linear, stroke 0.2s'
+              }}
+            />
+          </svg>
         </div>
       </div>
 
       <div
-        className="transition-transform duration-200"
+        className="transition-transform"
         style={{
-          transform: `translateY(${isRefreshing ? threshold : pullDistance}px)`,
+          transform: `translate3d(0, ${scrollY > 0 ? 0 : (isRefreshing ? threshold : pullDistance)}px, 0)`,
+          transitionDuration: (isPulling.current || scrollY > 0) ? '0ms' : '400ms',
+          transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
+          willChange: 'transform'
         }}
       >
         {children}
       </div>
+
+      <style jsx global>{`
+        @keyframes native-spin {
+          from { transform: rotate(-90deg); }
+          to { transform: rotate(270deg); }
+        }
+        .animate-native-spin {
+          animation: native-spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}</style>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { Footer, Header, StickyCartBar } from "@/components/organisms"
-import { BottomNavbar } from "@/components/molecules"
+import { BottomNavbar, PullToRefresh } from "@/components/molecules"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { checkRegion } from "@/lib/helpers/check-region"
 import { Session } from "@talkjs/react"
@@ -28,7 +28,9 @@ export default async function RootLayout({
       <>
         <Header />
         <div className="!pt-[68px]"></div>
-        {children}
+        <PullToRefresh>
+          {children}
+        </PullToRefresh>
         <Footer />
         <StickyCartBar />
         <BottomNavbar />
@@ -41,7 +43,9 @@ export default async function RootLayout({
       <Session appId={APP_ID} userId={user.id}>
         <Header />
         <div className="!pt-[68px]"></div>
-        {children}
+        <PullToRefresh>
+          {children}
+        </PullToRefresh>
         <Footer />
         <StickyCartBar />
         <BottomNavbar />
