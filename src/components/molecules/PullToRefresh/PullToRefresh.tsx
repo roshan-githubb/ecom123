@@ -148,7 +148,7 @@ export function PullToRefresh({
         >
           <div className="relative w-7 h-7 rounded-full overflow-hidden z-10 bg-white">
             <Image
-              src="/appIconW.png"
+              src="/AppIconW.png"
               alt="Weetok"
               fill
               className="object-cover"
