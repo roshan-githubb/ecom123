@@ -10,8 +10,9 @@ import { MobileNavbar } from "../MobileNavbar/MobileNavbar"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { cn } from "@/lib/utils"
 import { useFlutterBridge } from "@/hooks/useFlutterBridge"
-import { isFlutterWebView } from "@/lib/env/isFlutterWebView"
+// import { isFlutterWebView } from "@/lib/env/isFlutterWebView"
 import { usePreviousPath } from "@/hooks/usePreviousPaths"
+import { useCallback, useState } from "react"
 
 export default function Navbar({
   categories,
@@ -22,10 +23,13 @@ export default function Navbar({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { exitWebView } = useFlutterBridge()
+  const [isExiting, setIsExiting] = useState(false)
+  const isHomePage = pathname === "/np"
   const showCart = ["/recommended", "/products"].some((path) =>
     pathname?.includes(path)
   )
-  const showBackArrow = pathname !== "/np"
+  const showBackArrow = !isHomePage
   const hiddenPaths = [
     "/np/check",
     "/np/payment",
@@ -71,6 +75,21 @@ export default function Navbar({
     router.back()
   }
 
+  const handleLogoClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault()
+      if (isExiting) return
+
+      setIsExiting(true)
+      exitWebView()
+
+      setTimeout(() => {
+        setIsExiting(false)
+      }, 500)
+    },
+    [exitWebView, isExiting]
+  )
+
   const totalItems = useCartStore((state) =>
     state.items.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
   )
@@ -81,11 +100,16 @@ export default function Navbar({
 
   return (
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
-      {showBackArrow && (
+      <div className="relative mt-2 mr-2 h-8 w-[60px]">
         <button
-          onClick={handleBack
-          }
-          className="mt-2 mr-2 flex items-center justify-center rounded active:scale-95 active:bg-white/10 transition-transform duration-150 p-1"
+          onClick={handleBack}
+          className={cn(
+            "absolute inset-0 flex items-center justify-start rounded p-1 active:scale-95 active:bg-white/10 transition-all duration-300",
+            showBackArrow
+              ? "opacity-100 translate-x-0 pointer-events-auto"
+              : "opacity-0 -translate-x-2 pointer-events-none"
+          )}
+          aria-label="Go back"
         >
           <Image
             src="/images/icons/basil_arrow-up-solid.png"
@@ -94,10 +118,28 @@ export default function Navbar({
             height={24}
           />
         </button>
-      )}
-      {!showBackArrow && (
-        <MobileNavbar parentCategories={[]} childrenCategories={categories?.slice(0,7)} />
-      )}
+
+        <LocalizedClientLink
+          href="/"
+          onClick={handleLogoClick}
+          className={cn(
+            "absolute inset-0 flex items-center justify-start transition-all duration-300",
+            isHomePage
+              ? "opacity-100 translate-x-0 pointer-events-auto"
+              : "opacity-0 translate-x-2 pointer-events-none"
+          )}
+          aria-label="WeeTok home"
+        >
+          <Image
+            src="/images/icons/weetok-logo.png"
+            alt="WeeTok"
+            width={42}
+            height={42}
+            // className="h-auto w-[110px]"
+            priority
+          />
+        </LocalizedClientLink>
+      </div>
 
       <div className="mr-2 lg:mr-0"></div>
 
@@ -275,33 +317,16 @@ export default function Navbar({
             )}
           </div>
         </>
-        {/* Right: search + profile*/}
+        {/* Right: search + menu */}
         <div className="flex w-full justify-end lg:ml-auto items-center space-x-2">
           {showSearchbar && <NavbarSearch />}
 
-          <LocalizedClientLink
-            href="/profile"
-            className="flex items-center justify-center w-8 h-8 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-200 ml-auto"
-            title="Profile"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-white"
-            >
-              <path
-                d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
-                fill="currentColor"
-              />
-              <path
-                d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z"
-                fill="currentColor"
-              />
-            </svg>
-          </LocalizedClientLink>
+          <div className="ml-auto">
+            <MobileNavbar
+              parentCategories={parentCategories}
+              childrenCategories={categories?.slice(0, 7)}
+            />
+          </div>
 
           {/* <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} /> */}
         </div>
