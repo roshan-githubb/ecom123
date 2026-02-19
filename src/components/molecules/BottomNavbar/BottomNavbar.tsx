@@ -51,12 +51,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: ProfileIcon,
     label: 'Profile',
   },
-  {
-    href: '#',
-    icon: LogoutIcon,
-    label: 'Exit',
-    isExternal: true,
-  },
+  // {
+  //   href: '#',
+  //   icon: LogoutIcon,
+  //   label: 'Exit',
+  //   isExternal: true,
+  // },
 ];
 
 export const BottomNavbar = () => {
