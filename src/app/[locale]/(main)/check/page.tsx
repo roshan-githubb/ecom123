@@ -1,12 +1,61 @@
-import { retrieveCartWithTimeout } from "@/lib/data/cart"
+"use client"
+
+import { useEffect, useState, Suspense } from "react"
+import { useCartStore } from "@/store/useCartStore"
+import { retrieveCart } from "@/lib/data/cart"
 import { listCartShippingMethods } from "@/lib/data/fulfillment"
 import { listCartPaymentMethods } from "@/lib/data/payment"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { CheckoutClient } from "@/components/sections/Checkout/CheckoutClient"
+import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 
-export default async function CheckoutPage() {
- 
-  const cart = await retrieveCartWithTimeout(3000)
+function CheckoutContent() {
+  const [cart, setCart] = useState<any>(null)
+  const [shippingMethods, setShippingMethods] = useState<any>(null)
+  const [paymentMethods, setPaymentMethods] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const fetchCartStore = useCartStore((state) => state.fetchCart)
+
+  useEffect(() => {
+    const loadCheckoutData = async () => {
+      try {
+        await fetchCartStore()
+        const freshCart = await retrieveCart()
+        
+        if (!freshCart || !freshCart.items || freshCart.items.length === 0) {
+          setCart(null)
+          setIsLoading(false)
+          return
+        }
+
+        setCart(freshCart)
+
+        const hasAddress = freshCart.shipping_address && 
+          freshCart.shipping_address.first_name && 
+          freshCart.shipping_address.address_1
+
+        if (hasAddress) {
+          const [shipping, payment] = await Promise.all([
+            listCartShippingMethods(freshCart.id || ''),
+            listCartPaymentMethods(freshCart.region?.id ?? "")
+          ])
+          setShippingMethods(shipping)
+          setPaymentMethods(payment)
+        }
+      } catch (error) {
+        console.error('Failed to load checkout data:', error)
+        setCart(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadCheckoutData()
+  }, [fetchCartStore])
+
+  if (isLoading) {
+    return <CheckoutSkeleton />
+  }
 
   // Show empty cart message if cart is empty
   if (!cart || !cart.items || cart.items.length === 0) {
@@ -37,28 +86,20 @@ export default async function CheckoutPage() {
     )
   }
 
-  const hasAddress = cart.shipping_address && 
-    cart.shipping_address.first_name && 
-    cart.shipping_address.address_1
-
-    // console.log('cart ', cart)
-  let shippingMethods = null
-  let paymentMethods = null
-
-  if (hasAddress) {
-    
-    [shippingMethods, paymentMethods] = await Promise.all([
-      listCartShippingMethods(cart.id || ''),
-      listCartPaymentMethods(cart.region?.id ?? "")
-    ])
-  }
-
   return (
-      <CheckoutClient
-        initialCart={cart}
-        initialShippingMethods={shippingMethods}
-        initialPaymentMethods={paymentMethods}
-        shippingAddress={cart.shipping_address}
-      />
+    <CheckoutClient
+      initialCart={cart}
+      initialShippingMethods={shippingMethods}
+      initialPaymentMethods={paymentMethods}
+      shippingAddress={cart.shipping_address}
+    />
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<CheckoutSkeleton />}>
+      <CheckoutContent />
+    </Suspense>
   )
 }
