@@ -1,14 +1,12 @@
 import { ProductListingSkeleton } from "@/components/organisms/ProductListingSkeleton/ProductListingSkeleton"
 import { Suspense } from "react"
-import { ProductCard } from "@/components/molecules/ProductCard/ProductCard"
+import { ProductCardWithRatings } from "@/components/molecules/ProductCard/ProductCardWithRatings"
 import { getRegion } from "@/lib/data/regions"
 import { listProducts } from "@/lib/data/products"
 import { headers } from "next/headers"
 import isBot from "@/lib/helpers/isBot"
 import type { Metadata } from "next"
 import { HttpTypes } from "@medusajs/types"
-import { fetchProductRatingSummary } from "@/lib/api/reviews"
-import { RatingSummary } from "@/types/reviews"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 
 
@@ -50,7 +48,6 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
     const bot = isBot(ua)
     const currency_code = (await getRegion(locale))?.currency_code?.toUpperCase() || "USD"
 
-    // Fetch top 8 recommended products
     const {
         response: { products: recommendedProducts },
     } = await listProducts({
@@ -58,12 +55,6 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
         queryParams: { limit: 30, order: "created_at" },
     })
 
-    const ratingsMap: Record<string, RatingSummary> = await Promise.all(
-        recommendedProducts.map(async (product: any) => {
-            const summary = await fetchProductRatingSummary(product.id)
-            return [product.id, summary] as const
-        })
-    ).then(Object.fromEntries)
     const sortedProducts = sortProductsByInventory(recommendedProducts)
 
     return (
@@ -73,11 +64,10 @@ async function AllCategories({ params }: { params: Promise<{ locale: string }> }
                 <Suspense fallback={<ProductListingSkeleton />}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                         {sortedProducts.map((product: HttpTypes.StoreProduct, index: number) => (
-                            <ProductCard
+                            <ProductCardWithRatings
                                 key={product.id}
                                 api_product={product}
                                 locale={locale}
-                                ratingSummary={ratingsMap[product.id]}
                                 allProducts={sortedProducts}
                                 productIndex={index}
                             />

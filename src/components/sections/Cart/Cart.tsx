@@ -7,9 +7,30 @@ import { retrieveCart } from "@/lib/data/cart"
 import CartPromotionCode from "../CartReview/CartPromotionCode"
 import { EmptyCart } from "@/components/organisms/CartItems/EmptyCart"
 import type { StoreCart, StoreCartPromotion, StorePromotion } from "@medusajs/types"
+import { useEffect, useState } from "react"
+import { useCartStore } from "@/store/useCartStore"
 
-export const Cart = async () => {
-  const cart = await retrieveCart()
+export const Cart = () => {
+  const [cart, setCart] = useState<StoreCart | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const fetchCartStore = useCartStore(state => state.fetchCart)
+
+  useEffect(() => {
+    async function loadCart() {
+      setIsLoading(true)
+      try {
+        await fetchCartStore()
+        const cartData = await retrieveCart()
+        setCart(cartData)
+      } catch (error) {
+        console.error("Failed to load cart:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadCart()
+  }, [fetchCartStore])
 
   // Map StoreCartPromotion to StorePromotion for TypeScript
   const mappedCart: (StoreCart & { promotions?: StorePromotion[] }) | null = cart
@@ -25,6 +46,10 @@ export const Cart = async () => {
         })),
       }
     : null
+
+  if (isLoading) {
+    return <div className="col-span-12 text-center py-8">Loading cart...</div>
+  }
 
   if (!mappedCart || !mappedCart.items?.length) {
     return <CartEmpty />

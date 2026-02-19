@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
-import { RefreshCw } from "lucide-react"
+import { useCartStore } from "@/store/useCartStore"
+import { useInventoryStore } from "@/store/useInventoryStore"
+import Image from "next/image"
 
 interface PullToRefreshProps {
   children: React.ReactNode
@@ -14,7 +16,7 @@ interface PullToRefreshProps {
 export function PullToRefresh({
   children,
   onRefresh,
-  threshold = 80,
+  threshold = 60, 
   disabled = false,
 }: PullToRefreshProps) {
   const router = useRouter()
@@ -23,6 +25,9 @@ export function PullToRefresh({
   const [isPulling, setIsPulling] = useState(false)
   const startY = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  const fetchCart = useCartStore((state) => state.fetchCart)
+  const forceRefresh = useInventoryStore((state) => state.forceRefresh)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -30,7 +35,11 @@ export function PullToRefresh({
       if (onRefresh) {
         await onRefresh()
       } else {
-        router.refresh()
+        await Promise.all([
+          router.refresh(),
+          fetchCart(),
+          Promise.resolve(forceRefresh()),
+        ])
       }
     } finally {
       setTimeout(() => {
@@ -60,7 +69,10 @@ export function PullToRefresh({
       const distance = currentY - startY.current
 
       if (distance > 0) {
-        setPullDistance(Math.min(distance, threshold * 1.5))
+       
+        const resistance = 0.5
+        const elasticDistance = distance * resistance
+        setPullDistance(Math.min(elasticDistance, threshold * 1.2))
       }
     }
 
@@ -87,40 +99,74 @@ export function PullToRefresh({
   const progress = Math.min((pullDistance / threshold) * 100, 100)
   const shouldTrigger = pullDistance >= threshold
 
+  
+  const contentStyle = {
+    marginTop: isRefreshing ? threshold : pullDistance,
+    transition: isRefreshing || pullDistance === 0 ? 'margin-top 0.2s' : 'none',
+  }
+
   return (
     <div ref={containerRef} className="relative">
+     
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-center transition-all duration-200 overflow-hidden"
+        className="fixed left-0 right-0 flex items-center justify-center transition-all duration-200 z-40 pointer-events-none"
         style={{
-          height: `${Math.min(pullDistance, threshold)}px`,
+          top: '90px', 
           opacity: pullDistance > 0 ? 1 : 0,
         }}
       >
-        <div className="flex flex-col items-center gap-1">
-          <RefreshCw
-            className={`w-5 h-5 text-myBlue transition-transform ${
-              isRefreshing || shouldTrigger ? "animate-spin" : ""
-            }`}
-            style={{
-              transform: `rotate(${progress * 3.6}deg)`,
-            }}
-          />
-          <span className="text-xs text-muted-foreground">
-            {isRefreshing
-              ? "Refreshing..."
-              : shouldTrigger
-              ? "Release to refresh"
-              : "Pull to refresh"}
-          </span>
+        <div className="relative w-12 h-12 flex items-center justify-center">
+        
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-white shadow-lg">
+            <Image
+              src="/AppIconW.PNG"
+              alt="App Icon"
+              width={36}
+              height={36}
+              className="object-cover"
+            />
+          </div>
+          
+          <svg
+            className="absolute inset-0 w-12 h-12 -rotate-90"
+            viewBox="0 0 48 48"
+          >
+            <circle
+              cx="24"
+              cy="24"
+              r="22"
+              fill="none"
+              stroke="#E5E7EB"
+              strokeWidth="2"
+            />
+            
+            <circle
+              cx="24"
+              cy="24"
+              r="22"
+              fill="none"
+              stroke="#3949AB"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 22}`}
+              strokeDashoffset={
+                isRefreshing 
+                  ? `${2 * Math.PI * 22 * 0.75}` 
+                  : `${2 * Math.PI * 22 * (1 - progress / 100)}` 
+              }
+              className={`transition-all duration-200 ${
+                isRefreshing ? "animate-spin origin-center" : ""
+              }`}
+              style={{
+                transformOrigin: "center",
+                animationDuration: isRefreshing ? "0.8s" : undefined,
+              }}
+            />
+          </svg>
         </div>
       </div>
 
-      <div
-        className="transition-transform duration-200"
-        style={{
-          transform: `translateY(${isRefreshing ? threshold : pullDistance}px)`,
-        }}
-      >
+      <div style={contentStyle}>
         {children}
       </div>
     </div>

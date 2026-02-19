@@ -1,7 +1,6 @@
 import { SectionHeader } from "@/components/atoms/SectionHeader/SectionHeader"
 import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
 import { getTopProducts } from "@/lib/data/top-products"
-import { listProducts } from "@/lib/data/products"
 import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import { safeDataFetch } from "@/lib/utils/safe-data"
 import React from "react"
@@ -19,6 +18,7 @@ export default async function TopProducts({
 }) {
   const result = await safeDataFetch(
     async () => {
+
       const topProductsResult = await getTopProducts({
         limit: 20,
         region_id: regionId,
@@ -32,24 +32,7 @@ export default async function TopProducts({
         return { products: [] }
       }
 
-      const topProductIds = topProductsResult.products.map((p: any) => p.id)
-
-      const {
-        response: { products: fullProducts },
-      } = await listProducts({
-        countryCode: "np",
-        regionId,
-        queryParams: {
-          limit: 20,
-          fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller,*variants.variant_images"
-        },
-      })
-
-      const enrichedTopProducts = topProductIds
-        .map((id: string) => fullProducts.find((p: any) => p.id === id))
-        .filter(Boolean)
-
-      return { products: enrichedTopProducts }
+      return { products: topProductsResult.products }
     },
     { products: [] },
     "TopProducts"
