@@ -54,6 +54,11 @@ export const SearchResultProductCard = ({
     return (product.variants?.length || 0) > 1
   }, [product.variants])
 
+  console.log(
+    "Rendering SearchResultProductCard for product:",
+    product,
+    hasMultipleVariants
+  )
   const title = product.title
   const description = product.description
 

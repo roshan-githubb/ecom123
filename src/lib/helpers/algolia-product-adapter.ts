@@ -21,7 +21,7 @@ export function adaptAlgoliaProductToBackendFormat(algoliaProduct: any) {
     Object.keys(variant).forEach((key) => {
       // Skip non-option fields
       if (
-        !["id", "title", "prices", "stocked_quantity", "in_stock"].includes(key)
+        !["id", "title", "prices", "stocked_quantity", "in_stock", "images", "variant_images"].includes(key)
       ) {
         if (!optionMap.has(key)) {
           optionMap.set(key, new Set())
@@ -60,11 +60,46 @@ export function adaptAlgoliaProductToBackendFormat(algoliaProduct: any) {
       }
     })
 
+    // Handle variant images - normalize to array of {url, is_thumbnail, id, rank}
+    let normalizedVariantImages: any[] = []
+    if (Array.isArray(variant.images)) {
+      normalizedVariantImages = variant.images.map((img: any) => {
+        // If already has the full structure, keep it
+        if (img.url && (img.is_thumbnail !== undefined || img.rank !== undefined)) {
+          return img
+        }
+        // If it's just a URL string, wrap it
+        if (typeof img === 'string') {
+          return { url: img, is_thumbnail: false, rank: 0 }
+        }
+        // If it's an object with just url, add missing fields
+        if (img.url) {
+          return { url: img.url, is_thumbnail: img.is_thumbnail ?? false, rank: img.rank ?? 0 }
+        }
+        return null
+      }).filter(Boolean) || []
+    }
+    if (Array.isArray(variant.variant_images)) {
+      normalizedVariantImages = variant.variant_images.map((img: any) => {
+        if (img.url && (img.is_thumbnail !== undefined || img.rank !== undefined)) {
+          return img
+        }
+        if (typeof img === 'string') {
+          return { url: img, is_thumbnail: false, rank: 0 }
+        }
+        if (img.url) {
+          return { url: img.url, is_thumbnail: img.is_thumbnail ?? false, rank: img.rank ?? 0 }
+        }
+        return null
+      }).filter(Boolean) || []
+    }
+
     return {
       id: variant.id,
       title: variant.title,
       inventory_quantity: variant.stocked_quantity || 0,
       options: variantOptions,
+      variant_images: normalizedVariantImages,
       calculated_price: {
         calculated_amount: calculatedAmount,
         original_amount: calculatedAmount, // Algolia doesn't have original price, so use same
