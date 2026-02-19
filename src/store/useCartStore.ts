@@ -10,6 +10,7 @@ import {
   getLocalCartId
 } from "@/services/cart";
 import { useInventoryStore } from "./useInventoryStore";
+import { logAddToCart } from "@/lib/firebase/analytics";
 
 // Import retrieveCart from data layer (uses proper GET requests)
 let retrieveCartPromise: Promise<any> | null = null;
@@ -178,6 +179,15 @@ export const useCartStore = create<CartState>()(
         if (data?.cart) {
           set(mapCart(data.cart));
           useInventoryStore.getState().decreaseInventory(variantId, quantity);
+          
+          const addedItem = data.cart.items?.find((item: any) => item.variant_id === variantId);
+          if (addedItem) {
+            logAddToCart(
+              addedItem.product_id || variantId,
+              addedItem.product_title || addedItem.title || 'Unknown Product',
+              addedItem.unit_price || 0
+            );
+          }
         }
       },
 

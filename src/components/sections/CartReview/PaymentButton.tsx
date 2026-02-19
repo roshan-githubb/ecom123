@@ -8,6 +8,7 @@ import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/atoms"
 import { toast } from "@/lib/helpers/toast"
+import { logPurchase } from "@/lib/firebase/analytics"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -135,6 +136,21 @@ const StripePaymentButton = ({
       if (!res.ok) {
         setErrorMessage(res.error?.message)
       } else {
+        if (cart && res.order) {
+          const items = cart.items?.map((item: any) => ({
+            item_id: item.product_id || item.variant_id,
+            item_name: item.product_title || item.title,
+            price: item.unit_price || 0,
+            quantity: item.quantity || 1,
+          })) || []
+          
+          logPurchase(
+            res.order.id || 'unknown',
+            cart.total || 0,
+            items
+          )
+        }
+        
         const { useCartStore } = await import("@/store/useCartStore");
         useCartStore.getState().clearLocal();
       }
@@ -262,6 +278,21 @@ const ManualTestPaymentButton = ({
       if (!res.ok) {
         setErrorMessage(res.error?.message)
       } else {
+        if (res.order) {
+          const items = res.order.items?.map((item: any) => ({
+            item_id: item.product_id || item.variant_id,
+            item_name: item.product_title || item.title,
+            price: item.unit_price || 0,
+            quantity: item.quantity || 1,
+          })) || []
+          
+          logPurchase(
+            res.order.id || 'unknown',
+            res.order.total || 0,
+            items
+          )
+        }
+        
         // Clear cart state only after successful order placement
         const { useCartStore } = await import("@/store/useCartStore");
         useCartStore.getState().clearLocal();

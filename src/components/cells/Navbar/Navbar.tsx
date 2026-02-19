@@ -100,11 +100,11 @@ export default function Navbar({
 
   return (
     <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
-      <div className="relative mt-2 mr-2 h-8 w-[60px]">
+      <div className="relative mr-3 h-10 w-10 flex items-center">
         <button
           onClick={handleBack}
           className={cn(
-            "absolute inset-0 flex items-center justify-start rounded p-1 active:scale-95 active:bg-white/10 transition-all duration-300",
+            "absolute inset-0 flex items-center justify-center rounded p-1 active:scale-95 active:bg-white/10 transition-all duration-300",
             showBackArrow
               ? "opacity-100 translate-x-0 pointer-events-auto"
               : "opacity-0 -translate-x-2 pointer-events-none"
@@ -123,7 +123,7 @@ export default function Navbar({
           href="/"
           onClick={handleLogoClick}
           className={cn(
-            "absolute inset-0 flex items-center justify-start transition-all duration-300",
+            "absolute inset-0 flex items-center justify-center transition-all duration-300",
             isHomePage
               ? "opacity-100 translate-x-0 pointer-events-auto"
               : "opacity-0 translate-x-2 pointer-events-none"
@@ -133,9 +133,9 @@ export default function Navbar({
           <Image
             src="/images/icons/weetok-logo.png"
             alt="WeeTok"
-            width={42}
-            height={42}
-            // className="h-auto w-[110px]"
+            width={40}
+            height={40}
+            className="object-contain"
             priority
           />
         </LocalizedClientLink>

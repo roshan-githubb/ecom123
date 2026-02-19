@@ -7,6 +7,7 @@ import { cartToast } from "@/lib/cart-toast"
 import { Toaster } from "react-hot-toast"
 import { ProductCardInternal } from "@/components/molecules/AddVariantModal/AddVariantModal"
 import { useInventoryStore } from "@/store/useInventoryStore"
+import { logViewProduct } from "@/lib/firebase/analytics"
 // import { FaRegBookmark } from "react-icons/fa"
 interface ProductOptionValue {
   id: string
@@ -110,6 +111,13 @@ export default function ProductDetailClient({
         return selectedOptions[optionTitle] === variantOption.value
       })
     }) || product.variants?.[0]
+
+  useEffect(() => {
+    if (product && selectedVariant) {
+      const price = selectedVariant?.calculated_price?.calculated_amount ?? 0
+      logViewProduct(product.id, product.title, price)
+    }
+  }, [product, selectedVariant])
 
   const colorOption = product.options?.find(
     (opt) => opt.title.toLowerCase() === "color"

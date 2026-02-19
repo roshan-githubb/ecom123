@@ -108,22 +108,24 @@ export default async function TopProducts({
     return 0 // Keep original order for products with same stock status
   })
 
+  // Filter out products with price = 0 before rendering
+  const validProducts = sortedProducts.filter((r: any) => {
+    const currentPrice = r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+    return currentPrice > 0
+  })
+
   return (
     <div>
       <SectionHeader title={title} actionLabel="See All" link={link} />
       <div className="my-2"></div>
       <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-        {sortedProducts.map((r: any, index: number) => {
+        {validProducts.map((r: any, index: number) => {
           try {
-            const currentPrice =
-              r?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
-            if (currentPrice === 0) return null
-
             return (
               <div key={r.id || index} className="w-[180px] flex-shrink-0">
                 <HomeProductCard
                   api_product={r}
-                  allProducts={topProducts.products || []}
+                  allProducts={validProducts}
                   productIndex={index}
                   ratingSummary={ratingsMap[r.id] || null}
                 />
