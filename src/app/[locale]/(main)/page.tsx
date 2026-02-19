@@ -1,7 +1,7 @@
 import { SectionHeader } from "@/components/atoms/SectionHeader/SectionHeader"
 import { ItemCategoryCard } from "@/components/cells/CategoryCard/CategoryCard"
 import CarouselBanner from "@/components/molecules/BannerCarousel/BannerCarousel"
-import { HomeProductCard } from "@/components/molecules/HomeProductCard/HomeProductCard"
+import { HomeProductCardWithRatings } from "@/components/molecules/HomeProductCard/HomeProductCardWithRatings"
 import { HorizontalScroller } from "@/components/molecules/HorizontalScroller/HorizontalScrollbar"
 import {
   TopCategoriesSkeleton,
@@ -19,7 +19,6 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { getBanners } from "@/lib/get-banners"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
-import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import PopularProductsRows from "@/components/sections/PopularProductsRow/PopularProductsRow"
 
 interface CategoryItemMetadata {
@@ -120,27 +119,18 @@ async function VideoSection() {
 }
 
 async function RecommendedSection({ locale, regionId }: { locale: string; regionId?: string }) {
-  // Fetch products and ratings in PARALLEL to avoid waterfall
-  const [productsResult, ratingsResult] = await Promise.all([
-    listProducts({
-      countryCode: locale,
-      regionId,
-      queryParams: { 
-        limit: 8, 
-        order: "created_at",
-        fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
-      },
-    }),
-    // We'll get ratings after we have product IDs, so this is a placeholder
-    Promise.resolve(null)
-  ]);
+  const productsResult = await listProducts({
+    countryCode: locale,
+    regionId,
+    queryParams: { 
+      limit: 8, 
+      order: "created_at",
+      fields: "*variants.calculated_price,+variants.inventory_quantity,*categories,*seller"
+    },
+  });
 
   const { response: { products: jsonLdProducts } } = productsResult;
   const sortedProducts = sortProductsByInventory(jsonLdProducts);
-  const productIds = sortedProducts?.map((p: any) => p.id) || [];
-  
-  // Now fetch ratings for the products we have
-  const ratingSummaryMap = await getProductRatingSummaries(productIds);
 
   return (
     <>
@@ -153,11 +143,10 @@ async function RecommendedSection({ locale, regionId }: { locale: string; region
       <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
         {sortedProducts.map((r, index) => (
           <div key={r.id} className="w-[180px] flex-shrink-0">
-            <HomeProductCard
+            <HomeProductCardWithRatings
               api_product={r}
               allProducts={sortedProducts}
               productIndex={index}
-              ratingSummary={ratingSummaryMap[r.id]}
             />
           </div>
         ))}
@@ -182,8 +171,6 @@ async function BestDealsSection({
   })
 
   const sortedProducts = sortProductsByInventory(jsonLdProducts)
-  const productIds = sortedProducts?.map((p: any) => p.id) || []
-  const ratingSummaryMap = await getProductRatingSummaries(productIds)
 
   return (
     <>
@@ -191,11 +178,10 @@ async function BestDealsSection({
       <HorizontalScroller className="no-scrollbar !mt-1">
         {sortedProducts.map((r, index) => (
           <div key={r.id} className="w-[180px] flex-shrink-0">
-            <HomeProductCard
+            <HomeProductCardWithRatings
               api_product={r}
               allProducts={sortedProducts}
               productIndex={index}
-              ratingSummary={ratingSummaryMap[r.id]}
             />
           </div>
         ))}

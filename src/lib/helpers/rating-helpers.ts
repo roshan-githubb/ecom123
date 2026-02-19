@@ -1,6 +1,14 @@
 import { getProductReviews, getProductRatingSummary } from "@/lib/data/reviews"
 import { SimpleRatingSummary, Review } from "@/types/reviews"
 
+const ratingsCache = new Map<string, { data: SimpleRatingSummary; timestamp: number }>()
+const CACHE_TTL = 60000 // 1 minute cache
+
+const pendingRequests = new Map<string, Promise<SimpleRatingSummary>>()
+
+const USE_BATCH_ENDPOINT = false
+const BATCH_ENDPOINT = '/store/products/ratings/batch'
+
 function calculateRatingSummary(reviews: Review[]): SimpleRatingSummary {
   if (!reviews || reviews.length === 0) {
     return {
@@ -20,66 +28,120 @@ function calculateRatingSummary(reviews: Review[]): SimpleRatingSummary {
   }
 }
 
-// export async function getProductRatingSummaries(productIds: string[]): Promise<Record<string, SimpleRatingSummary>> {
-//   const ratingsMap: Record<string, SimpleRatingSummary> = {}
-  
-//   productIds.forEach(productId => {
-//     ratingsMap[productId] = getDefaultRatingSummary()
-//   })
-  
-//   const promises = productIds.map(async (productId) => {
-//     try {
-//       const response = await getProductRatingSummary(productId)
-//       const ratingSummaryResponse = response?.data || response
-      
-//       if (ratingSummaryResponse && typeof ratingSummaryResponse === 'object') {
-//         const ratingSummary: SimpleRatingSummary = {
-//           average_rating: ratingSummaryResponse.average_rating || 0,
-//           total_reviews: ratingSummaryResponse.total_reviews || 0,
-//           last_month_sales: ratingSummaryResponse.last_month_sales || 0
-//         }
-//         ratingsMap[productId] = ratingSummary
-//       }
-      
-//       return { productId, ratingSummary: ratingsMap[productId] }
-//     } catch (error) {
-//       return { productId, ratingSummary: ratingsMap[productId] }
-//     }
-//   })
-  
-//   await Promise.all(promises)
-  
-//   return ratingsMap
-// }
+
+async function fetchRatingsBatch(productIds: string[]): Promise<Record<string, SimpleRatingSummary>> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}${BATCH_ENDPOINT}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-publishable-api-key': process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || '',
+        },
+        body: JSON.stringify({ product_ids: productIds }),
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Batch endpoint failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data.ratings || {}
+  } catch (error) {
+    console.warn('Batch ratings endpoint failed, falling back to individual requests:', error)
+    return {}
+  }
+}
 
 export async function getProductRatingSummaries(
   productIds: string[]
 ): Promise<Record<string, SimpleRatingSummary>> {
 
   const ratingsMap: Record<string, SimpleRatingSummary> = {}
+  const now = Date.now()
 
-  // Initialize defaults
+  const uncachedIds: string[] = []
+  
   for (const productId of productIds) {
-    ratingsMap[productId] = getDefaultRatingSummary()
+    const cached = ratingsCache.get(productId)
+    
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+
+      ratingsMap[productId] = cached.data
+    } else {
+     
+      uncachedIds.push(productId)
+      ratingsMap[productId] = getDefaultRatingSummary()
+    }
   }
 
+  if (uncachedIds.length === 0) {
+    return ratingsMap
+  }
+
+  if (USE_BATCH_ENDPOINT && uncachedIds.length > 5) {
+    console.log(`[Ratings] Using batch endpoint for ${uncachedIds.length} products`)
+    
+    const batchResults = await fetchRatingsBatch(uncachedIds)
+    
+    if (Object.keys(batchResults).length > 0) {
+      for (const [productId, rating] of Object.entries(batchResults)) {
+        ratingsMap[productId] = rating
+        ratingsCache.set(productId, {
+          data: rating,
+          timestamp: Date.now()
+        })
+      }
+      return ratingsMap
+    }
+    
+    console.warn('[Ratings] Batch endpoint failed, falling back to individual requests')
+  }
+
+  console.log(`[Ratings] Fetching ${uncachedIds.length} ratings in parallel`)
+  
   const results = await Promise.allSettled(
-    productIds.map(async (productId) => {
-      const response = await getProductRatingSummary(productId)
-      const data = response?.data ?? response
+    uncachedIds.map(async (productId) => {
+      let request = pendingRequests.get(productId)
+      
+      if (!request) {
+        request = (async () => {
+          try {
+            const response = await getProductRatingSummary(productId)
+            const data = response?.data ?? response
+
+            const ratingSummary: SimpleRatingSummary = {
+              average_rating: data?.average_rating ?? 0,
+              total_reviews: data?.total_reviews ?? 0,
+              last_month_sales: data?.last_month_sales ?? 0
+            }
+
+            ratingsCache.set(productId, {
+              data: ratingSummary,
+              timestamp: Date.now()
+            })
+
+            return ratingSummary
+          } finally {
+            pendingRequests.delete(productId)
+          }
+        })()
+        
+        pendingRequests.set(productId, request)
+      }
+
+      const ratingSummary = await request
 
       return {
         productId,
-        ratingSummary: {
-          average_rating: data?.average_rating ?? 0,
-          total_reviews: data?.total_reviews ?? 0,
-          last_month_sales: data?.last_month_sales ?? 0
-        }
+        ratingSummary
       }
     })
   )
 
-  // Apply only successful ones
   for (const result of results) {
     if (result.status === "fulfilled") {
       ratingsMap[result.value.productId] = result.value.ratingSummary
