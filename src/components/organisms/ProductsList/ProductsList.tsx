@@ -10,27 +10,24 @@ export const ProductsList = ({
   products: HttpTypes.StoreProduct[]
   locale: string
 }) => {
+  const validProducts = products.filter(product => {
+    const price = product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+    return price !== 0
+  })
 
-  
   return (
     <>
       <div
         className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
       >
-        {products.map((product, index) => {
-           const price = product?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
-            if(price == 0) return null;
-          return (
-          // <SkeletonProductCard key={product.id} />
-          
+        {validProducts.map((product, index) => (
           <HomeProductCardWithRatings 
             key={product.id} 
             api_product={product} 
-            allProducts={products}
+            allProducts={validProducts}
             productIndex={index}
           />
-        )
-        })}
+        ))}
       </div>
     </>
   )

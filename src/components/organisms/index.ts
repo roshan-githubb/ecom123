@@ -27,6 +27,8 @@ import { CartEmpty } from "./CartEmpty/CartEmpty"
 import StickyCartBar from "./StickyCartBar/StickyCartBar"
 import { ProfileOverview } from "./ProfileOverview/ProfileOverview"
 import { DefaultAddressSection } from "./DefaultAddressSection/DefaultAddressSection"
+import { HomePageWrapper } from "./HomePageWrapper/HomePageWrapper"
+import { PageTransitionWrapper } from "./PageTransitionWrapper/PageTransitionWrapper"
 
 
 export {
@@ -59,4 +61,6 @@ export {
   StickyCartBar,
   ProfileOverview,
   DefaultAddressSection,
+  HomePageWrapper,
+  PageTransitionWrapper,
 }
