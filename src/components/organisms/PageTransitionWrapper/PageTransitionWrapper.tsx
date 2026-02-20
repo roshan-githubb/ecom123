@@ -20,7 +20,6 @@ export const PageTransitionWrapper = ({
   useEffect(() => {
     if (swipeProgress > 0) {
       const translateX = swipeProgress * 100
-      console.log('🔄 Swipe Progress:', swipeProgress, 'Animating:', isAnimating, 'TranslateX:', `${translateX}%`)
     }
   }, [swipeProgress, isAnimating])
 
