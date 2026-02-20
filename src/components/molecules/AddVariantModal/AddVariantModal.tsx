@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -1841,7 +1842,9 @@ export function AddVariantSheet({
     }, 150)
   }
 
-  return (
+  if (typeof window === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm will-change-opacity"
@@ -1967,7 +1970,8 @@ export function AddVariantSheet({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
 

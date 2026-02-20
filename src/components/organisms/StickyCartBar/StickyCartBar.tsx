@@ -7,7 +7,7 @@ import { convertToLocale } from "@/lib/helpers/money"
 import Image from "next/image"
 import StickyCartBarSkeleton from "../StickyCartBarSkeleton/StickyCartBarSkeleton"
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock"
-import Link from "next/link"
+import LocalizedLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 
 const shouldHideStickyBar = (pathname: string) => {
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "")
@@ -238,15 +238,15 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/${locale}/products/${item.productId}`}
+                          <LocalizedLink
+                            href={`/products/${item.productId}`}
                             onClick={() => setIsExpanded(false)}
                             className="block"
                           >
                             <h4 className="text-[13px] font-medium line-clamp-1 leading-tight mb-0.5 hover:text-blue-600 transition-colors">
                               {item.title}
                             </h4>
-                          </Link>
+                          </LocalizedLink>
                           <p className="text-xs text-gray-500">
                             {item.quantity} {item.quantity === 1 ? "Item" : "Items"}
                           </p>
@@ -358,12 +358,12 @@ export default function StickyCartBar({ className }: StickyCartBarProps) {
                 </div>
               </button>
 
-              <Link
-                href={`/${locale}/check`}
+              <LocalizedLink
+                href="/check"
                 className="bg-myBlue text-white px-4 py-3 rounded-xl font-normal text-sm hover:opacity-90 transition-colors"
               >
                 View Cart
-              </Link>
+              </LocalizedLink>
             </div>
           </div>
         </>

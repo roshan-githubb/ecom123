@@ -3,6 +3,7 @@ import { BottomNavbar, PullToRefresh } from "@/components/molecules"
 import { checkRegion } from "@/lib/helpers/check-region"
 import { redirect } from "next/navigation"
 import { Toaster } from "@/components/ui/toaster"
+import { HomePageWrapper } from "@/components/organisms/HomePageWrapper/HomePageWrapper"
 
 export default async function RootLayout({
   children,
@@ -21,12 +22,14 @@ export default async function RootLayout({
 
   return (
     <>
-      <Header />
-      <div className="!pt-[68px]"></div>
-      <PullToRefresh>
-        {children}
-      </PullToRefresh>
-      <Footer />
+      <HomePageWrapper>
+        <Header />
+        <div className="!pt-[68px]"></div>
+        <PullToRefresh>
+          {children}
+        </PullToRefresh>
+        <Footer />
+      </HomePageWrapper>
       <StickyCartBar />
       <BottomNavbar />
       <Toaster />
