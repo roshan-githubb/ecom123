@@ -8,6 +8,7 @@ import { retrieveCart } from "@/lib/data/cart"
 import { Providers } from "./providers"
 import Script from "next/script"
 import ScrollToTop from "@/components/utils/ScrollToTop"
+import { FirebaseProvider } from "@/components/providers"
 
 // Existing Funnel_Display font (optional, still available)
 const funnelDisplay = Funnel_Display({
@@ -137,7 +138,9 @@ export default async function RootLayout({
           strategy="beforeInteractive"
         />
         <ScrollToTop />
-        <Providers cart={null}>{children}</Providers>
+        <FirebaseProvider>
+          <Providers cart={null}>{children}</Providers>
+        </FirebaseProvider>
         <Toaster position="top-right" />
         <HotToaster position="top-right" />
       </body>

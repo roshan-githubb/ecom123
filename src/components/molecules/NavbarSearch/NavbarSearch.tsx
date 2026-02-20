@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react"
 import { InstantSearchNext } from 'react-instantsearch-nextjs'
 import { client } from '@/lib/client'
 import { useHits, useSearchBox } from "react-instantsearch"
+import { logSearch } from "@/lib/firebase/analytics"
 
 function SearchWithSuggestions({ search, setSearch, onSubmit }: { search: string, setSearch: (s: string) => void, onSubmit: (query: string) => void }) {
   const { refine } = useSearchBox()
@@ -79,6 +80,10 @@ export function NavbarSearch() {
   const [search, setSearch] = useState(searchParams.get("query") || "")
 
   const submitHandler = (query: string) => {
+   
+    if (query) {
+      logSearch(query)
+    }
     router.push(query ? `/products?query=${query}` : `/products`)
   }
 
