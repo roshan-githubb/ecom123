@@ -36,14 +36,18 @@ export const logAddToCart = (productId: string, productName: string, price: numb
     return
   }
   
-  console.log('Logging add_to_cart:', productName, price)
   firebaseLogEvent(analytics, 'add_to_cart', addAppContext({
     currency: 'NPR',
     value: price,
+    item_id: productId,
+    item_name: productName,
+    price: price,
+    quantity: 1,
     items: [{
       item_id: productId,
       item_name: productName,
       price: price,
+      quantity: 1,
     }]
   }))
 }
@@ -54,11 +58,17 @@ export const logPurchase = (orderId: string, total: number, items: any[]) => {
     return
   }
   
-  console.log('Logging purchase:', orderId, total)
+  
+  const firstItem = items[0] || {}
+  
   firebaseLogEvent(analytics as Analytics, 'purchase', addAppContext({
     transaction_id: orderId,
     value: total,
     currency: 'NPR',
+    item_id: firstItem.item_id,
+    item_name: firstItem.item_name,
+    price: firstItem.price,
+    quantity: firstItem.quantity,
     items: items,
   }) as any)
 }
@@ -69,10 +79,12 @@ export const logViewProduct = (productId: string, productName: string, price: nu
     return
   }
   
-  console.log('Logging view_item:', productName, price)
   firebaseLogEvent(analytics, 'view_item', addAppContext({
     currency: 'NPR',
     value: price,
+    item_id: productId,
+    item_name: productName,
+    price: price,
     items: [{
       item_id: productId,
       item_name: productName,
