@@ -31,8 +31,6 @@ export const ProductListing = async ({
   
   if (!region) throw new Error("Region not found")
 
-    console.log('region ', region)
-
   const { response } = await listProducts({
     pageParam: currentPage || 1,
     queryParams: {
@@ -44,7 +42,6 @@ export const ProductListing = async ({
     },
     regionId: region.id,
   })
-  // console.log('list products response ', response)
 
   const sortedProducts = sortProductsByInventory(response?.products)
 

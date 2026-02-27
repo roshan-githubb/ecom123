@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ReactNode, useEffect } from "react"
+import { ReactNode } from "react"
 
 interface PageTransitionWrapperProps {
   children: ReactNode
@@ -16,13 +16,6 @@ export const PageTransitionWrapper = ({
   isAnimating,
   isHomePage 
 }: PageTransitionWrapperProps) => {
-  // Debug logging
-  useEffect(() => {
-    if (swipeProgress > 0) {
-      const translateX = swipeProgress * 100
-    }
-  }, [swipeProgress, isAnimating])
-
   // Don't apply slide animation on homepage
   if (isHomePage) {
     return <>{children}</>
