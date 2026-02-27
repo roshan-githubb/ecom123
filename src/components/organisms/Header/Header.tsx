@@ -14,8 +14,6 @@ export const Header = async () => {
     parentCategories: HttpTypes.StoreProductCategory[]
   }
 
-  console.log("categories and parentcategories ", categories, parentCategories)
-
   return (
     <header className="fixed w-full z-50">
       

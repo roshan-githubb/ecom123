@@ -44,7 +44,7 @@ export const listProducts = async ({
         fields: defaultFields,
         ...queryParams,
       })
-      console.log('listProducts response ', response)
+      
       const products = safeAccess(response, 'products', [], 'listProducts')
       const count = safeAccess(response, 'count', 0, 'listProducts')
 
@@ -54,7 +54,10 @@ export const listProducts = async ({
       )
 
       return {
-        response: { products: validProducts, count: response.count },
+        response: { 
+          products: validProducts, 
+          count: validProducts.length
+        },
         nextPage: count > offset + limit ? pageParam + 1 : null,
       }
     },
@@ -113,8 +116,6 @@ export const listProductsWithSort = async ({
       filtered = filtered.filter((p: any) =>
         p.variants?.some((v: any) => v.calculated_price != null)
       )
-
-      console.log(`Seller ${seller_id} products found:`, filtered.length, "out of", products.length, "total products");
 
       const sorted = sortProducts(filtered, sortBy)
       const start = (page - 1) * limit

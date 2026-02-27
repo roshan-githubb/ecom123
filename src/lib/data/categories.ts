@@ -26,7 +26,6 @@ export const listCategories = async ({
     })
     .then(({ product_categories }) => product_categories)
     .catch((error) => {
-      console.log("categories fetch error ", error)
       return []
     })
 

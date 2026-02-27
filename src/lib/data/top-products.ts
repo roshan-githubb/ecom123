@@ -53,13 +53,11 @@ export async function getTopProducts({
       }
 
       const data = await res.json()
-      console.log('get top products and type', data, type, from)
       return data || { products: [] }
     },
     { products: [] },
     'getTopProducts'
   )
-  // console.log( " result ", result)
 
   return result.data || { products: [] }
 }
