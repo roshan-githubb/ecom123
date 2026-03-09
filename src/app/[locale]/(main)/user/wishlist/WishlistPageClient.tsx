@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Heart, Trash2 } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useWishlistStore } from "@/store/useWishlistStore"
 import { cartToast } from "@/lib/cart-toast"
@@ -53,12 +54,12 @@ export default function WishlistPageClient({
         <p className="text-gray-500 mb-6">
           Start adding products you love to your wishlist
         </p>
-        <a
+        <Link
           href="/"
           className="px-6 py-3 bg-myBlue text-white rounded-lg hover:bg-[#2e2e7a] transition-colors"
         >
           Continue Shopping
-        </a>
+        </Link>
       </div>
     )
   }
