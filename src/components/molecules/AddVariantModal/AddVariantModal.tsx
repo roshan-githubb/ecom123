@@ -27,6 +27,7 @@ import { useParams } from "next/navigation"
 import { StoreIcon } from "lucide-react"
 import SimilarProducts from "../SimilarProducts/SimilarProduct"
 import { StarRating } from "@/components/atoms"
+import { HeartIcon, HeartFilledIcon } from "@/icons"
 import {
   findColorOption,
   findSizeOption,
@@ -85,6 +86,7 @@ interface AddVariantSheetProps {
   products?: any[]
   currentProductIndex?: number
   onProductChange?: (index: number) => void
+  onWishlistRemove?: (productId: string) => Promise<void>
 }
 
 export function ProductCardInternal({
@@ -98,6 +100,7 @@ export function ProductCardInternal({
   onToggleMode,
   locale,
   lightboxImages,
+  onWishlistRemove,
 }: {
   product: any
   onClose?: () => void
@@ -109,6 +112,7 @@ export function ProductCardInternal({
   onToggleMode?: () => void
   locale?: string
   lightboxImages: string[]
+  onWishlistRemove?: (productId: string) => Promise<void>
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [imgIndex, setImgIndex] = useState(0)
@@ -139,9 +143,9 @@ export function ProductCardInternal({
 
   const { getAdjustedInventory } = useInventoryStore()
 
-  // Wishlist functionality - disabled since backend APIs are not implemented
-  // const { isInWishlist, toggleWishlist, loadWishlist } = useWishlistStore()
-  // const [isWishlistLoading, setIsWishlistLoading] = useState(false)
+  // Wishlist functionality
+  const { isInWishlist, toggleWishlist, loadWishlist } = useWishlistStore()
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false)
 
   // Sync inventory with cart state
   useInventorySync()
@@ -149,13 +153,18 @@ export function ProductCardInternal({
   // Handle hydration
   useEffect(() => {
     setIsHydrated(true)
-    // Disabled wishlist loading since backend APIs are not implemented
-    // loadWishlist()
-  }, [])
+    loadWishlist()
+  }, [loadWishlist])
 
   useEffect(() => {
-    setLightBoxPhotos(product.images.map((img: any) => img.url))
-  }, [isFullScreen])
+    if (product?.images && Array.isArray(product.images)) {
+      setLightBoxPhotos(product.images.map((img: any) => img.url))
+    } else if (product?.thumbnail) {
+      setLightBoxPhotos([product.thumbnail])
+    } else {
+      setLightBoxPhotos([])
+    }
+  }, [isFullScreen, product])
 
   // Fetch reviews when product changes
   useEffect(() => {
@@ -534,9 +543,11 @@ export function ProductCardInternal({
     setTouchStartY(null)
   }
 
-  const images = product.images
-    ?.map((img: any) => img.url)
-    .filter((url: any) => url) || ["/images/not-available/not-available.png"]
+  const images = product?.images && Array.isArray(product.images)
+    ? product.images.map((img: any) => img.url).filter((url: any) => url)
+    : product?.thumbnail
+      ? [product.thumbnail]
+      : ["/images/not-available/not-available.png"]
 
   useEffect(() => {
     if (images.length <= 1) return
@@ -566,8 +577,8 @@ export function ProductCardInternal({
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {}
-    product.options?.forEach((option: any) => {
-      if (option.values && option.values.length > 0) {
+    product?.options?.forEach((option: any) => {
+      if (option?.values && Array.isArray(option.values) && option.values.length > 0) {
         initial[option.title] = option.values[0].value
       }
     })
@@ -667,7 +678,25 @@ export function ProductCardInternal({
   const handleWishlistToggle = async () => {
     if (!product?.id) return
 
-    cartToast.showErrorToast("Wishlist feature coming soon!")
+    setIsWishlistLoading(true)
+    try {
+      await toggleWishlist(product.id)
+      const isNowInWishlist = isInWishlist(product.id)
+      
+      if (isNowInWishlist) {
+        cartToast.showSuccessToast("Added to wishlist")
+      } else {
+        cartToast.showSuccessToast("Removed from wishlist")
+        if (onWishlistRemove) {
+          await onWishlistRemove(product.id)
+        }
+      }
+    } catch (error) {
+      console.error("Wishlist toggle error:", error)
+      cartToast.showErrorToast("Failed to update wishlist")
+    } finally {
+      setIsWishlistLoading(false)
+    }
   }
 
   const handleToggleMode = () => {
@@ -698,13 +727,24 @@ export function ProductCardInternal({
           </h1>
         </div>
 
-        {false && (
+        {true && (
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={handleWishlistToggle}
-              className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-gray-100 flex-shrink-0 transition-colors"
+              disabled={isWishlistLoading}
+              className={`w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 transition-colors ${
+                isInWishlist(product?.id || '')
+                  ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+              }`}
             >
-              <FaRegBookmark size={14} />
+              {isWishlistLoading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : isInWishlist(product?.id || '') ? (
+                <HeartFilledIcon size={16} />
+              ) : (
+                <HeartIcon size={16} />
+              )}
             </button>
             <button className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 flex-shrink-0">
               <IoShareOutline size={18} />
@@ -952,7 +992,7 @@ export function ProductCardInternal({
 
 </>)}
 
-        { product?.options.length > 0 && 
+        { product?.options && product.options.length > 0 && 
       <>
         <div className="px-4 py-4 space-y-4">
           {product.options?.map((option: any) => {
@@ -1634,6 +1674,7 @@ export function AddVariantSheet({
   currentProductIndex = 0,
   onClose,
   ratingSummary,
+  onWishlistRemove,
 }: AddVariantSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -1962,6 +2003,7 @@ export function AddVariantSheet({
                     lightboxImages={prod.images.map((img: any) => img.url)}
                     ratingSummary={ratingSummary}
                     onToggleMode={isFullscreen ? goToSheet : goToFullscreen}
+                    onWishlistRemove={onWishlistRemove}
                   />
                 </motion.div>
               )

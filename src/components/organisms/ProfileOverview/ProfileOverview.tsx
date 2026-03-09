@@ -61,14 +61,13 @@ export const ProfileOverview = ({ customer, recentOrders = [] }: ProfileOverview
       icon: Package,
       color: "bg-blue-50 text-blue-600"
     },
- 
-    // {
-    //   title: "Wishlist",
-    //   description: "Manage saved items",
-    //   href: "/coming-soon-wishlist", 
-    //   icon: Heart,
-    //   color: "bg-red-50 text-red-600"
-    // }
+    {
+      title: "Wishlist",
+      description: "Manage saved items",
+      href: "/user/wishlist", 
+      icon: Heart,
+      color: "bg-red-50 text-red-600"
+    }
   ]
 
 

@@ -220,13 +220,6 @@ const ProductCard = ({ product, ratingSummary, allProducts, productIndex }: { pr
                     </div>
                 )}
 
-                <button
-                    className="absolute top-2 right-2 z-10 rounded-full p-1"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <HeartIcon />
-                </button>
-
                 <div className="w-full h-full relative p-3 overflow-hidden rounded-xl">
                     <Image
                         src={image}

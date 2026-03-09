@@ -1,10 +1,9 @@
 "use client"
 
 import { PropsWithChildren } from 'react'
+import { useWishlistInit } from '@/hooks/useWishlistInit'
 
 export function WishlistProvider({ children }: PropsWithChildren) {
-  // Disabled wishlist initialization since the backend APIs are not implemented
-  // and this is integrated with Weetok Flutter app
-  // useWishlistInit()
+  useWishlistInit()
   return <>{children}</>
 }
