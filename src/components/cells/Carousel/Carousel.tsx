@@ -1,11 +1,10 @@
 "use client"
 
-import useEmblaCarousel from "embla-carousel-react"
+import useEmblaCarousel, { UseEmblaCarouselType } from "embla-carousel-react"
 
 import { Indicator } from "@/components/atoms"
 import { ArrowLeftIcon, ArrowRightIcon } from "@/icons"
 import { useCallback, useEffect, useState } from "react"
-import { EmblaCarouselType } from "embla-carousel"
 import tailwindConfig from "../../../../tailwind.config"
 
 export const CustomCarousel = ({
@@ -26,7 +25,8 @@ export const CustomCarousel = ({
 
   const maxStep = items.length
 
-  const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
+  const onSelect = useCallback((emblaApi: UseEmblaCarouselType[1]) => {
+    if (!emblaApi) return
     setSelectedIndex(emblaApi.selectedScrollSnap())
   }, [])
 

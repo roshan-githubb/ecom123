@@ -54,8 +54,6 @@ export function SelectVariantModal({
     })
     setSelectedOptions(initial)
   }, [initialProduct])
-
-console.log('SelectVariantModal product and selectedOptions:', product, initialProduct)
   // Find selected variant based on selected options
   const selectedVariant = useMemo(() => {
     if (!product?.variants) return undefined
@@ -163,6 +161,11 @@ console.log('SelectVariantModal product and selectedOptions:', product, initialP
 
   return (
     <Modal heading={product?.title} onClose={onClose} maxWidth="md">
+      {!product ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="w-8 h-8 border-4 border-myBlue border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
       <div className="flex flex-col h-[calc(80vh-160px)] max-h-[calc(80vh-160px)]">
         {/* Scrollable Content Area */}
         <div className="space-y-4 overflow-y-auto flex-1 pr-2 mb-4">
@@ -379,6 +382,7 @@ console.log('SelectVariantModal product and selectedOptions:', product, initialP
           </Button>
         </div>
       </div>
+      )}
     </Modal>
   )
 }

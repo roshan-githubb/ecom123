@@ -436,6 +436,7 @@ export const RememberUserInfo = ({
   const router = useRouter()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showPaymentErrorModal, setShowPaymentErrorModal] = useState(false)
   const { cartId, fetchCart, totalPayable } = useCartStore()
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
@@ -473,7 +474,7 @@ export const RememberUserInfo = ({
       // }
     } catch (err: any) {
       console.log("Failed to initiate payment session:", err)
-      toast.error("Failed to initiate payment session" )
+      setShowPaymentErrorModal(true)
     } finally {
       setSubmitting(false)
     }
@@ -665,6 +666,44 @@ export const RememberUserInfo = ({
           )}
         </Button>
       </div>
+
+      {/* Payment Error Modal */}
+      {showPaymentErrorModal && (
+        <Modal heading="" onClose={() => setShowPaymentErrorModal(false)} showCloseButton={false}>
+          {/* Error Icon */}
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+            <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <h2 className="text-center text-xl font-semibold text-gray-900 mb-3">
+            Payment Initiation Failed
+          </h2>
+
+          <p className="text-center text-sm text-gray-600 leading-relaxed mb-6">
+            We couldn&apos;t initiate the payment session. This may be due to a temporary issue with the payment provider. Please try again or select a different payment method.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setShowPaymentErrorModal(false)}
+              className="w-full rounded-lg bg-myBlue hover:opacity-90 text-white h-10 font-medium text-sm transition-all duration-200"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => {
+                setShowPaymentErrorModal(false)
+                router.push('/check')
+              }}
+              className="w-full rounded-lg border border-gray-300 h-10 font-medium text-sm text-gray-700 hover:bg-gray-50 transition-all duration-200"
+            >
+              Go Back
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }

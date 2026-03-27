@@ -344,6 +344,7 @@ function OrderSummaryPage() {
       <AuthErrorModal
         open={showAuthInvalidModal}
         onOpenChange={setShowAuthInvalidModal}
+        isPlaceOrderError={true}
       />
     </div>
   )

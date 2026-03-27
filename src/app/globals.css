@@ -2,6 +2,7 @@
 
 @import "colors.css";
 @import "photoswipe/dist/photoswipe.css";
+@import "desktop-enhancements.css";
 
 
 @tailwind base;
@@ -41,7 +42,7 @@
 /* ======================================================================== */
 
 .container {
-  @apply w-full max-w-full px-4 md:px-6 lg:px-8 py-4 lg:py-8;
+  @apply w-full max-w-full px-4 md:px-6 lg:px-12 xl:px-16 py-4 lg:py-6;
 }
 
 /* ======================================================================== */

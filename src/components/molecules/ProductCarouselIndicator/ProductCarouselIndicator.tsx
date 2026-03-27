@@ -1,18 +1,17 @@
 "use client"
 import Image from "next/image"
 import { HttpTypes } from "@medusajs/types"
-import { EmblaCarouselType } from "embla-carousel"
+import useEmblaCarousel, { UseEmblaCarouselType } from "embla-carousel-react"
 import { useCallback, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Indicator } from "@/components/atoms"
-import useEmblaCarousel from "embla-carousel-react"
 
 export const ProductCarouselIndicator = ({
   slides = [],
   embla: parentEmbla,
 }: {
   slides: HttpTypes.StoreProduct["images"]
-  embla?: EmblaCarouselType
+  embla?: UseEmblaCarouselType[1]
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
@@ -33,7 +32,8 @@ export const ProductCarouselIndicator = ({
     [parentEmbla, emblaApi]
   )
 
-  const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
+  const onSelect = useCallback((emblaApi: UseEmblaCarouselType[1]) => {
+    if (!emblaApi) return
     setSelectedIndex(emblaApi.selectedScrollSnap())
   }, [])
 

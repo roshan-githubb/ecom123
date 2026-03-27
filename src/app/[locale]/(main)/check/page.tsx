@@ -9,6 +9,13 @@ import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedL
 import { CheckoutClient } from "@/components/sections/Checkout/CheckoutClient"
 import { CheckoutSkeleton } from "@/components/organisms/CartSkeleton/CartSkeleton"
 
+/**
+ * Checkout page component
+ * 
+ * IMPORTANT: This page fetches cart data from the server using the cart ID stored in localStorage.
+ * The cart ID is managed client-side (localStorage) while cart data is fetched from the server.
+ * This ensures the checkout page always has the latest cart data from the backend.
+ */
 function CheckoutContent() {
   const [cart, setCart] = useState<any>(null)
   const [shippingMethods, setShippingMethods] = useState<any>(null)
@@ -19,8 +26,20 @@ function CheckoutContent() {
   useEffect(() => {
     const loadCheckoutData = async () => {
       try {
+        // First fetch cart from store to ensure it's synced
         await fetchCartStore()
-        const freshCart = await retrieveCart()
+        
+        // Get cart ID from localStorage (client-side)
+        const cartId = typeof window !== 'undefined' ? localStorage.getItem('cart_id') : null
+        
+        if (!cartId) {
+          setCart(null)
+          setIsLoading(false)
+          return
+        }
+        
+        // Fetch fresh cart data from server with the cart ID
+        const freshCart = await retrieveCart(cartId)
         
         if (!freshCart || !freshCart.items || freshCart.items.length === 0) {
           setCart(null)

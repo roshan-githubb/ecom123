@@ -99,12 +99,12 @@ export default function Navbar({
   }
 
   return (
-    <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
-      <div className="relative mr-3 h-10 w-10 flex items-center">
+    <div className="flex items-center bg-myBlue px-4 md:px-8 lg:px-12 py-2 lg:py-3 border-b w-full relative shadow-md">
+      <div className="relative mr-3 h-8 w-8 lg:h-10 lg:w-10 flex items-center">
         <button
           onClick={handleBack}
           className={cn(
-            "absolute inset-0 flex items-center justify-center rounded p-1 active:scale-95 active:bg-white/10 transition-all duration-300",
+            "absolute inset-0 flex items-center justify-center rounded p-1 active:scale-95 hover:bg-white/10 active:bg-white/20 transition-all duration-300",
             showBackArrow
               ? "opacity-100 translate-x-0 pointer-events-auto"
               : "opacity-0 -translate-x-2 pointer-events-none"
@@ -114,8 +114,9 @@ export default function Navbar({
           <Image
             src="/images/icons/basil_arrow-up-solid.png"
             alt="Back"
-            width={24}
-            height={24}
+            width={20}
+            height={20}
+            className="lg:w-6 lg:h-6"
           />
         </button>
 
@@ -123,7 +124,7 @@ export default function Navbar({
           href="/"
           onClick={handleLogoClick}
           className={cn(
-            "absolute inset-0 flex items-center justify-center transition-all duration-300",
+            "absolute inset-0 flex items-center justify-center transition-all duration-300 hover:scale-110",
             isHomePage
               ? "opacity-100 translate-x-0 pointer-events-auto"
               : "opacity-0 translate-x-2 pointer-events-none"
@@ -133,28 +134,28 @@ export default function Navbar({
           <Image
             src="/images/icons/weetok-logo.png"
             alt="WeeTok"
-            width={40}
-            height={40}
-            className="object-contain"
+            width={32}
+            height={32}
+            className="object-contain lg:w-10 lg:h-10"
             priority
           />
         </LocalizedClientLink>
       </div>
 
-      <div className="mr-2 lg:mr-0"></div>
+      <div className="mr-2 lg:mr-4"></div>
 
-      <div className="flex items-center w-full">
+      <div className="flex items-center w-full gap-2 lg:gap-4">
         {showSearchbar && !showBackArrow && (
-          <div className="hidden lg:flex mt-2">
-            <ul className="flex space-x-6">
+          <div className="hidden lg:flex">
+            <ul className="flex space-x-3 xl:space-x-5">
               <LocalizedClientLink
                 key="home"
                 href="/"
                 className={cn(
-                  "label-md min-w-[24px] capitalize",
+                  "text-sm font-medium min-w-[24px] capitalize transition-all duration-200 hover:text-white relative py-1",
                   pathname === "/np"
-                    ? "text-white font-semibold"
-                    : "text-gray-300 hover:text-gray-300"
+                    ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-white"
+                    : "text-gray-200 hover:text-white"
                 )}
               >
                 Home
@@ -163,13 +164,16 @@ export default function Navbar({
                 key="products"
                 href="/products"
                 className={cn(
-                  "label-md min-w-[24px] capitalize text-gray-300 hover:text-gray-300"
+                  "text-sm font-medium min-w-[24px] capitalize transition-all duration-200 hover:text-white relative py-1",
+                  pathname.includes("/products")
+                    ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-white"
+                    : "text-gray-200 hover:text-white"
                 )}
               >
                 Products
               </LocalizedClientLink>
 
-              {categories.slice(0,8).map((category) => {
+              {categories.slice(0,6).map((category) => {
                 const categoryHref = `/categories/${category?.handle}`
 
                 return (
@@ -177,10 +181,10 @@ export default function Navbar({
                     key={category.handle}
                     href={categoryHref}
                     className={cn(
-                      "label-md min-w-[24px] capitalize",
+                      "text-sm font-medium min-w-[24px] capitalize transition-all duration-200 hover:text-white relative whitespace-nowrap py-1",
                       pathname === `/np${categoryHref}`
-                        ? "text-white  font-semibold"
-                        : "text-gray-300 hover:text-gray-300"
+                        ? "text-white font-semibold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-white"
+                        : "text-gray-200 hover:text-white"
                     )}
                   >
                     {category?.name}

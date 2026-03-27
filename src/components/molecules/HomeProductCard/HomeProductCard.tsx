@@ -178,15 +178,16 @@ export const HomeProductCard = ({
   return (
     <div
       className={cn(
-        "w-full bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
+        "w-full bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm group transition-all duration-300",
+        !showSelectVariantModal && "hover:shadow-lg lg:hover:-translate-y-1",
         className
       )}
     >
       <motion.div
         onClick={handleOpenModal}
         whileTap={{ scale: 0.95, opacity: 0.8 }}
-        whileHover={{ scale: 1.02 }}
-        className="w-full h-[45%] relative cursor-pointer"
+        whileHover={!showSelectVariantModal ? { scale: 1.02 } : {}}
+        className="w-full h-[45%] relative cursor-pointer overflow-hidden"
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         <Image
@@ -194,7 +195,7 @@ export const HomeProductCard = ({
           alt={title}
           width={300}
           height={300}
-          className="w-full h-full object-cover rounded-t-xl"
+          className="w-full h-full object-cover rounded-t-xl transition-transform duration-300 group-hover:scale-110"
         />
         {hasOfferSticker && (
           <Image
@@ -211,7 +212,7 @@ export const HomeProductCard = ({
         <div className="flex flex-col">
           <p
             onClick={handleOpenModal}
-            className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
+            className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline transition-colors duration-200 hover:text-myBlue"
             style={{ color: "#32425A" }}
           >
             {title}
@@ -251,7 +252,7 @@ export const HomeProductCard = ({
         <button
           onClick={handleAddToCart}
           disabled={isAddingToCart}
-          className={`flex items-center justify-center text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
+          className={`flex items-center justify-center text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md
             ${
               isAddingToCart || totalInventory <= 0
                 ? "bg-gray-400 cursor-not-allowed"
