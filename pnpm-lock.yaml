@@ -83,6 +83,9 @@ importers:
       i18next-browser-languagedetector:
         specifier: ^8.1.0
         version: 8.2.1
+      instantsearch.js:
+        specifier: ^4.92.1
+        version: 4.92.1(algoliasearch@5.50.0)
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.5
