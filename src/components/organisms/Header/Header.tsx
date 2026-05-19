@@ -1,23 +1,17 @@
 import { HttpTypes } from "@medusajs/types"
 
 import { Navbar } from "@/components/cells"
-import { listCategories } from "@/lib/data/categories"
-import { PARENT_CATEGORIES } from "@/const"
+import { listHierarchicalCategories } from "@/lib/data/categories"
 
 
 export const Header = async () => {
 
-  const { categories, parentCategories } = (await listCategories({
-    headingCategories: PARENT_CATEGORIES,
-  })) as {
-    categories: HttpTypes.StoreProductCategory[]
-    parentCategories: HttpTypes.StoreProductCategory[]
-  }
+  const hierarchicalCategories = await listHierarchicalCategories()
 
   return (
     <header className="fixed w-full z-50">
       
-      <Navbar categories={categories} parentCategories={parentCategories} />
+      <Navbar hierarchicalCategories={hierarchicalCategories} />
     </header>
   )
 }

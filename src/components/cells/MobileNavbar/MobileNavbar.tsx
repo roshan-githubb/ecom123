@@ -1,19 +1,14 @@
 'use client';
 
 import { HttpTypes } from '@medusajs/types';
-import {
-  CategoryNavbar,
-  // HeaderCategoryNavbar,
-} from '@/components/molecules';
+import { HierarchicalCategoryMenu } from '@/components/molecules/HierarchicalCategoryMenu';
 import { CloseIcon, HamburgerMenuIcon } from '@/icons';
 import { useState, useEffect } from 'react';
 
 export const MobileNavbar = ({
-  childrenCategories,
-  parentCategories,
+  hierarchicalCategories,
 }: {
-  childrenCategories: HttpTypes.StoreProductCategory[];
-  parentCategories: HttpTypes.StoreProductCategory[];
+  hierarchicalCategories: HttpTypes.StoreProductCategory[];
 }) => {
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -49,23 +44,17 @@ export const MobileNavbar = ({
         <HamburgerMenuIcon color='white' />
       </div>
       {openMenu && (
-        <div className='fixed w-full h-full bg-primary p-2 top-0 left-0 z-20 overflow-y-auto'>
+        <div className='fixed w-full h-full bg-white p-2 top-0 left-0 z-20 overflow-y-auto'>
           <div className='flex justify-end mr-4'>
             <div onClick={() => closeMenuHandler()}>
-              <CloseIcon size={20} />
+              <CloseIcon size={20} color="black" />
             </div>
           </div>
-          <div className='border mt-4 rounded-sm'>
-            {/* <HeaderCategoryNavbar
+          <div className='mt-4'>
+            <HierarchicalCategoryMenu
+              categories={hierarchicalCategories}
               onClose={closeMenuHandler}
-              categories={parentCategories}
-            /> */}
-            <div className='border-t pt-2'>
-              <CategoryNavbar
-                onClose={closeMenuHandler}
-                categories={childrenCategories}
-              />
-            </div>
+            />
           </div>
         </div>
       )}

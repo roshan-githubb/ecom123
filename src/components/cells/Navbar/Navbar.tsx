@@ -15,11 +15,9 @@ import { usePreviousPath } from "@/hooks/usePreviousPaths"
 import { useCallback, useState } from "react"
 
 export default function Navbar({
-  categories,
-  parentCategories,
+  hierarchicalCategories,
 }: {
-  categories: HttpTypes.StoreProductCategory[]
-  parentCategories: HttpTypes.StoreProductCategory[]
+  hierarchicalCategories: HttpTypes.StoreProductCategory[]
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -169,7 +167,7 @@ export default function Navbar({
                 Products
               </LocalizedClientLink>
 
-              {categories.slice(0,8).map((category) => {
+              {hierarchicalCategories.slice(0,8).map((category) => {
                 const categoryHref = `/categories/${category?.handle}`
 
                 return (
@@ -323,8 +321,7 @@ export default function Navbar({
 
           <div className="ml-auto">
             <MobileNavbar
-              parentCategories={parentCategories}
-              childrenCategories={categories?.slice(0, 7)}
+              hierarchicalCategories={hierarchicalCategories}
             />
           </div>
 
