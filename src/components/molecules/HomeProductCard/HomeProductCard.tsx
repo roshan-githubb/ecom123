@@ -178,7 +178,7 @@ export const HomeProductCard = ({
   return (
     <div
       className={cn(
-        "w-full bg-[#F7F7FF] rounded-lg h-[100%] max-h-[350px] overflow-hidden shadow-sm",
+        "w-full bg-[#F7F7FF] rounded-lg h-full flex flex-col shadow-sm",
         className
       )}
     >
@@ -186,7 +186,7 @@ export const HomeProductCard = ({
         onClick={handleOpenModal}
         whileTap={{ scale: 0.95, opacity: 0.8 }}
         whileHover={{ scale: 1.02 }}
-        className="w-full h-[45%] relative cursor-pointer"
+        className="w-full aspect-square relative cursor-pointer flex-shrink-0"
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         <Image
@@ -194,7 +194,7 @@ export const HomeProductCard = ({
           alt={title}
           width={300}
           height={300}
-          className="w-full h-full object-cover rounded-t-xl"
+          className="w-full h-full object-contain rounded-t-xl bg-white"
         />
         {hasOfferSticker && (
           <Image
@@ -207,7 +207,7 @@ export const HomeProductCard = ({
         )}
       </motion.div>
 
-      <div className="p-3 flex flex-col justify-between h-[55%]">
+      <div className="p-3 flex flex-col justify-between flex-1">
         <div className="flex flex-col">
           <p
             onClick={handleOpenModal}
