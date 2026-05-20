@@ -31,14 +31,14 @@ export const ItemCategoryCard = ({
     >
       <Card
         className={cn(
-          "border-none shadow-none flex flex-col items-center gap-2 p-0 bg-transparent cursor-pointer",
+          "border-none shadow-none flex flex-col items-center gap-2 p-0 bg-transparent cursor-pointer transition-transform active:scale-95",
           className
         )}
         {...props}
       >
         <div
           className={cn(
-            "relative overflow-hidden mx-auto bg-gray-100 flex items-center justify-center",
+            "relative overflow-hidden mx-auto bg-gray-100 flex items-center justify-center transition-opacity active:opacity-70",
             shape === "circle" ? "rounded-full" : "rounded-xl"
           )}
           style={{ width: height ?? 80, height: height ?? 80 }}
