@@ -36,28 +36,74 @@ export interface CategoryItem {
   metadata: CategoryItemMetadata
 }
 
-const topSectionProducts = [
-  {
-    name: "Products",
-    image: "/images/home-top-card/shopping-aisle.webp",
-    link: "/products",
-  },
-  {
-    name: "Trending",
-    image: "/images/home-top-card/20-percent-off.png",
-    link: "/trending-products",
-  },
-  {
-    name: "Popular",
-    image: "/images/home-top-card/add-cart.png",
-    link: "/popular-products",
-  },
-  {
-    name: "BestSelling",
-    image: "/images/home-top-card/buy-any-three.png",
-    link: "/bestselling-products",
-  },
-]
+
+async function TopCollectionsSection({ locale }: { locale: string }) {
+  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/collections`
+
+  const headers = {
+    "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
+    "Content-Type": "application/json",
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      next: { revalidate: 3600 }, // Cache for 1 hour
+      headers,
+    })
+
+    if (!res.ok) {
+      console.error("Failed to fetch collections")
+      return null
+    }
+
+    const data = await res.json()
+    const collections = data.collections || []
+
+    if (collections.length === 0) {
+      return null
+    }
+
+    const displayCollections = collections.slice(0, 8)
+    const hasMore = collections.length > 8
+
+    return (
+      <div>
+        {hasMore && (
+          <SectionHeader
+            title="Collections"
+            actionLabel="See All"
+            link="/collections"
+            locale={locale}
+          />
+        )}
+        <HorizontalScroller>
+          {displayCollections.map((collection: any) => {
+            const thumbnailUrl = 
+              collection?.metadata?.thumbnail || 
+              "/product-placeholder.png"
+
+            return (
+              <div key={collection.id} className="flex-shrink-0">
+                <ItemCategoryCard
+                  imageUrl={thumbnailUrl}
+                  label={collection.title}
+                  shape="rounded"
+                  height={80}
+                  width={80}
+                  link={`/collections/${collection.handle}`}
+                />
+              </div>
+            )
+          })}
+        </HorizontalScroller>
+      </div>
+    )
+  } catch (error) {
+    console.error("Error fetching collections:", error)
+    return null
+  }
+}
 
 // Async components for each section
 async function CategoriesSection() {
@@ -209,22 +255,9 @@ export default async function HomePage({
   try {
     return (
       <div className="space-y-6 px-4 lg:px-8 py-4 pt-7">
-        {/* Top horizontal category scroller */}
+        {/* Top horizontal collections scroller - Dynamic from admin panel */}
         <Suspense fallback={<TopCategoriesSkeleton />}>
-          <HorizontalScroller>
-            {topSectionProducts.map((c: any) => (
-              <div key={c.name} className="flex-shrink-0">
-                <ItemCategoryCard
-                  imageUrl={c?.image || "/product-placeholder.png"}
-                  label={c.name}
-                  shape="rounded"
-                  height={80}
-                  width={80}
-                  link={c?.link ?? "/coming-soon"}
-                />
-              </div>
-            ))}
-          </HorizontalScroller>
+          <TopCollectionsSection locale={locale} />
         </Suspense>
 
         {/* Large banner carousel */}
