@@ -107,49 +107,45 @@ async function TopCollectionsSection({ locale }: { locale: string }) {
 
 // Async components for each section
 async function CategoriesSection() {
-  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/product-categories`
+  // Use the same function as hamburger menu to ensure consistency
+  const { listHierarchicalCategories } = await import("@/lib/data/categories")
+  const parentCategories = await listHierarchicalCategories()
 
-  const headers = {
-    "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
-    "Content-Type": "application/json",
-  }
-
-  const res = await fetch(url, {
-    method: "GET",
-    next: { revalidate: 3600 }, // Cache for 1 hour
-    headers,
-  })
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch categories")
-  }
-
-  const data = await res.json()
+  const displayCategories = parentCategories.slice(0, 7)
+  const hasMore = parentCategories.length > 7
 
   return (
     <div className="grid grid-cols-4 gap-4">
-      {data.product_categories.slice(0, 8).map((c: CategoryItem) => (
-        <div key={c.id} className="flex-shrink-0">
+      {displayCategories.map((c) => {
+        const thumbnailUrl = typeof c?.metadata?.thumbnail_url === 'string' 
+          ? c.metadata.thumbnail_url 
+          : "/product-placeholder.png"
+        
+        return (
+          <div key={c.id} className="flex-shrink-0">
+            <ItemCategoryCard
+              imageUrl={thumbnailUrl}
+              label={c.name}
+              shape="circle"
+              height={70}
+              width={70}
+              link={`/categories/${c?.handle}`}
+            />
+          </div>
+        )
+      })}
+      {hasMore && (
+        <div className="flex-shrink-0">
           <ItemCategoryCard
-            imageUrl={c?.metadata?.thumbnail_url || "/product-placeholder.png"}
-            label={c.name}
+            imageUrl="/product-placeholder.png"
+            label="More"
             shape="circle"
             height={70}
             width={70}
-            link={`/categories/${c?.handle}`}
+            link="/categories"
           />
         </div>
-      ))}
-      {/* <div className="flex-shrink-0">
-        <ItemCategoryCard
-          imageUrl={"/shopping-aisle.webp"}
-          label={"Other"}
-          shape="circle"
-          height={70}
-          width={70}
-          link={`/categories`}
-        />
-      </div> */}
+      )}
     </div>
   )
 }
