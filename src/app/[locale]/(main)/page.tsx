@@ -20,6 +20,7 @@ import { Suspense } from "react"
 import { getBanners } from "@/lib/get-banners"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 import PopularProductsRows from "@/components/sections/PopularProductsRow/PopularProductsRow"
+import Link from "next/link"
 
 interface CategoryItemMetadata {
   thumbnail_url: string
@@ -193,7 +194,7 @@ async function RecommendedSection({ locale, regionId }: { locale: string; region
           </div>
         ))}
         {sortedProducts.length > 8 && (
-          <a
+          <Link
             href="/recommended"
             className="w-[140px] flex-shrink-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-myBlue hover:shadow-md transition-all active:scale-95"
             style={{ aspectRatio: '1/1.3' }}
@@ -212,7 +213,7 @@ async function RecommendedSection({ locale, regionId }: { locale: string; region
               />
             </svg>
             <p className="text-sm font-semibold text-gray-700">See More</p>
-          </a>
+          </Link>
         )}
       </div>
     </>
@@ -250,7 +251,7 @@ async function BestDealsSection({
           </div>
         ))}
         {sortedProducts.length > 8 && (
-          <a
+          <Link
             href="/products"
             className="w-[140px] flex-shrink-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-myBlue hover:shadow-md transition-all active:scale-95"
             style={{ aspectRatio: '1/1.3' }}
@@ -269,7 +270,7 @@ async function BestDealsSection({
               />
             </svg>
             <p className="text-sm font-semibold text-gray-700">See More</p>
-          </a>
+          </Link>
         )}
       </HorizontalScroller>
     </>

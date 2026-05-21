@@ -5,6 +5,7 @@ import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import { safeDataFetch } from "@/lib/utils/safe-data"
 import React from "react"
 import { getTopProducts } from "@/lib/data/top-products"
+import Link from "next/link"
 
 interface PopularItemsProps {
   locale?: string
@@ -91,7 +92,7 @@ export default async function PopularProductsRows({type, link, title}:{type?: st
           }
         })}
         {sortedProducts.length >= 8 && (
-          <a
+          <Link
             href={link}
             className="w-[140px] flex-shrink-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-myBlue hover:shadow-md transition-all active:scale-95"
             style={{ aspectRatio: '1/1.3' }}
@@ -110,7 +111,7 @@ export default async function PopularProductsRows({type, link, title}:{type?: st
               />
             </svg>
             <p className="text-sm font-semibold text-gray-700">See More</p>
-          </a>
+          </Link>
         )}
       </div>
     </div>
