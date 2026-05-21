@@ -20,6 +20,7 @@ import { Suspense } from "react"
 import { getBanners } from "@/lib/get-banners"
 import { sortProductsByInventory } from "@/lib/sortProducts/sortProducts"
 import PopularProductsRows from "@/components/sections/PopularProductsRow/PopularProductsRow"
+import Link from "next/link"
 
 interface CategoryItemMetadata {
   thumbnail_url: string
@@ -183,8 +184,8 @@ async function RecommendedSection({ locale, regionId }: { locale: string; region
         locale={locale}
       />
       <div className="overflow-x-scroll gap-x-2 mt-2 flex no-scrollbar">
-        {sortedProducts.map((r, index) => (
-          <div key={r.id} className="w-[180px] flex-shrink-0">
+        {sortedProducts.slice(0, 8).map((r, index) => (
+          <div key={r.id} className="w-[140px] flex-shrink-0">
             <HomeProductCardWithRatings
               api_product={r}
               allProducts={sortedProducts}
@@ -192,6 +193,28 @@ async function RecommendedSection({ locale, regionId }: { locale: string; region
             />
           </div>
         ))}
+        {sortedProducts.length > 8 && (
+          <Link
+            href="/recommended"
+            className="w-[140px] flex-shrink-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-myBlue hover:shadow-md transition-all active:scale-95"
+            style={{ aspectRatio: '1/1.3' }}
+          >
+            <svg
+              className="w-12 h-12 text-myBlue mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <p className="text-sm font-semibold text-gray-700">See More</p>
+          </Link>
+        )}
       </div>
     </>
   )
@@ -218,8 +241,8 @@ async function BestDealsSection({
     <>
       <SectionHeader title="Best Deals" actionLabel="See All" locale={locale} />
       <HorizontalScroller className="no-scrollbar !mt-1">
-        {sortedProducts.map((r, index) => (
-          <div key={r.id} className="w-[180px] flex-shrink-0">
+        {sortedProducts.slice(0, 8).map((r, index) => (
+          <div key={r.id} className="w-[140px] flex-shrink-0">
             <HomeProductCardWithRatings
               api_product={r}
               allProducts={sortedProducts}
@@ -227,6 +250,28 @@ async function BestDealsSection({
             />
           </div>
         ))}
+        {sortedProducts.length > 8 && (
+          <Link
+            href="/products"
+            className="w-[140px] flex-shrink-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-myBlue hover:shadow-md transition-all active:scale-95"
+            style={{ aspectRatio: '1/1.3' }}
+          >
+            <svg
+              className="w-12 h-12 text-myBlue mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <p className="text-sm font-semibold text-gray-700">See More</p>
+          </Link>
+        )}
       </HorizontalScroller>
     </>
   )

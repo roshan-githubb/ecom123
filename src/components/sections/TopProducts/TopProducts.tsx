@@ -4,6 +4,7 @@ import { getTopProducts } from "@/lib/data/top-products"
 import { getProductRatingSummaries } from "@/lib/helpers/rating-helpers"
 import { safeDataFetch } from "@/lib/utils/safe-data"
 import React from "react"
+import Link from "next/link"
 
 export default async function TopProducts({
   regionId,
@@ -119,10 +120,10 @@ export default async function TopProducts({
       <SectionHeader title={title} actionLabel="See All" link={link} />
       <div className="my-2"></div>
       <div className="overflow-x-scroll gap-x-2 flex no-scrollbar">
-        {validProducts.map((r: any, index: number) => {
+        {validProducts.slice(0, 8).map((r: any, index: number) => {
           try {
             return (
-              <div key={r.id || index} className="w-[180px] flex-shrink-0">
+              <div key={r.id || index} className="w-[140px] flex-shrink-0">
                 <HomeProductCard
                   api_product={r}
                   allProducts={validProducts}
@@ -136,6 +137,28 @@ export default async function TopProducts({
             return null
           }
         })}
+        {validProducts.length > 8 && (
+          <Link
+            href={link}
+            className="w-[140px] flex-shrink-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-myBlue hover:shadow-md transition-all active:scale-95"
+            style={{ aspectRatio: '1/1.3' }}
+          >
+            <svg
+              className="w-12 h-12 text-myBlue mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <p className="text-sm font-semibold text-gray-700">See More</p>
+          </Link>
+        )}
       </div>
     </div>
   )

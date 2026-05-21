@@ -62,6 +62,7 @@ export const HomeProductCard = ({
   // --- Extract fields from the Medusa product ---
   const title = api_product.title
   const description = api_product.description
+  const sellerName = (api_product as any)?.seller?.name || null
 
   const imageUrl =
     api_product.images?.[0]?.url || "/images/not-available/not-available.png"
@@ -178,94 +179,96 @@ export const HomeProductCard = ({
   return (
     <div
       className={cn(
-        "w-full bg-[#F7F7FF] rounded-lg h-full flex flex-col shadow-sm",
+        "w-full bg-white rounded-lg border border-gray-100 flex flex-col shadow-sm overflow-hidden",
         className
       )}
+      style={{ minHeight: '260px', maxHeight: '260px' }}
     >
       <motion.div
         onClick={handleOpenModal}
         whileTap={{ scale: 0.95, opacity: 0.8 }}
         whileHover={{ scale: 1.02 }}
-        className="w-full aspect-square relative cursor-pointer flex-shrink-0"
+        className="w-full relative cursor-pointer flex-shrink-0 bg-gray-50"
+        style={{ height: '140px' }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         <Image
           src={imageUrl}
           alt={title}
-          width={300}
-          height={300}
-          className="w-full h-full object-contain rounded-t-xl bg-white"
+          fill
+          sizes="180px"
+          className="object-cover"
         />
         {hasOfferSticker && (
           <Image
             src={"/images/products/offer-sticker.png"}
             alt={"sticker image"}
-            width={300}
-            height={300}
-            className="w-[40px] h-[40px] absolute top-4 left-4 z-20"
+            width={32}
+            height={32}
+            className="w-[32px] h-[32px] absolute top-2 left-2 z-20"
           />
+        )}
+        {stockInfo.showWarning && totalInventory > 0 && (
+          <div
+            className="absolute top-2 right-2 text-[8px] font-semibold px-2 py-1 rounded-md z-20"
+            style={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              color: stockInfo.textColor,
+              border: `1px solid ${stockInfo.textColor}`
+            }}
+          >
+            Only {totalInventory} left
+          </div>
         )}
       </motion.div>
 
-      <div className="p-3 flex flex-col justify-between flex-1">
-        <div className="flex flex-col">
+      <div className="p-2 flex flex-col flex-1" style={{ height: '120px' }}>
+        <div className="flex-1 flex flex-col">
           <p
             onClick={handleOpenModal}
-            className="text-[12px] font-medium min-h-[22px] line-clamp-2 cursor-pointer hover:underline"
+            className="text-[11px] font-medium line-clamp-2 cursor-pointer hover:underline leading-tight"
             style={{ color: "#32425A" }}
           >
             {title}
           </p>
 
-          <div className="flex items-center gap-x-2 mt-1">
-            <span className="text-[12px] font-semibold text-myBlue">
-              Rs. {currentPrice}
-            </span>
-          </div>
-
-          {ratingSummary && ratingSummary.total_reviews > 0 && (
-            <div className="flex items-center gap-1 mt-2">
-              <StarRating rate={ratingSummary.average_rating} starSize={12} />
-              <span className="text-[9px] text-gray-500">
+          {/* Priority: Show ratings if available, otherwise show seller name */}
+          {ratingSummary && ratingSummary.total_reviews > 0 ? (
+            <div className="flex items-center gap-1 mt-1">
+              <StarRating rate={ratingSummary.average_rating} starSize={10} />
+              <span className="text-[8px] text-gray-500">
                 ({ratingSummary.total_reviews})
               </span>
             </div>
-          )}
+          ) : sellerName ? (
+            <p className="text-[9px] text-gray-500 truncate mt-1">
+              by {sellerName}
+            </p>
+          ) : null}
 
-          <p
-            className="text-[9px] max-h-[32px] leading-snug mt-2 line-clamp-2"
-            style={{ color: "#768397" }}
-          >
-            {description}
-          </p>
+          <div className="flex items-center gap-x-1.5 mt-1">
+            <span className="text-[13px] font-bold text-gray-900">
+              ₹{currentPrice}
+            </span>
+          </div>
         </div>
-        {stockInfo.showWarning && (
-          <p
-            className="text-[9px] font-medium mt-1"
-            style={{ color: stockInfo.textColor }}
-          >
-            {stockInfo.message}
-          </p>
-        )}
 
         <button
           onClick={handleAddToCart}
           disabled={isAddingToCart}
-          className={`flex items-center justify-center text-[12px] text-white py-2 px-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed
+          className={`flex items-center justify-center text-[11px] text-white py-1.5 px-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed mt-auto
             ${
               isAddingToCart || totalInventory <= 0
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-myBlue hover:bg-[#2e2e7a] active:bg-[#252566]"
             } text-[#FFFFFF]`}
         >
-          <CartIcon size={16} color="white" className="mr-2" />
-
-          {/* <Image src="/images/icons/cart.png" alt="Home Product Card logo" className="w-4 h-4 mr-2" height={14} width={14} /> */}
+          <CartIcon size={14} color="white" className="mr-1.5" />
           {isAddingToCart
             ? "Adding..."
             : totalInventory <= 0
               ? "Out of Stock"
-              : "Add to Cart"}
+              : "Add"}
         </button>
 
         {showModal && (
