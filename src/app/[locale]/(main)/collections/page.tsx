@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 export const revalidate = 3600
 
 async function getAllCollections() {
-  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/collections`
+  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/collections?fields=*metadata`
 
   const headers = {
     "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
