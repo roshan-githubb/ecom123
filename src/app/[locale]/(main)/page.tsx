@@ -39,7 +39,7 @@ export interface CategoryItem {
 
 
 async function TopCollectionsSection({ locale }: { locale: string }) {
-  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/collections`
+  const url = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/collections?fields=*metadata`
 
   const headers = {
     "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!,
@@ -49,7 +49,7 @@ async function TopCollectionsSection({ locale }: { locale: string }) {
   try {
     const res = await fetch(url, {
       method: "GET",
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 300 }, // Cache for 5 minutes
       headers,
     })
 
