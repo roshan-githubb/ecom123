@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Heart } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 

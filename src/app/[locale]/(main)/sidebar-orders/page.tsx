@@ -36,7 +36,7 @@ export default function ComingSoonOrders() {
           Track all your purchases in one place
         </p>
         <p className="text-base text-gray-500 mb-8">
-          This feature will be available very soon. You'll be able to view and track all your orders here!
+          This feature will be available very soon. You&apos;ll be able to view and track all your orders here!
         </p>
 
         {/* Illustration */}
