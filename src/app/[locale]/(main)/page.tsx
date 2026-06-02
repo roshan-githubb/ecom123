@@ -61,6 +61,19 @@ async function TopCollectionsSection({ locale }: { locale: string }) {
     const data = await res.json()
     const collections = data.collections || []
 
+    // 🔍 Console log to check collections data from API
+    console.log('📚 COLLECTIONS API RESPONSE:', {
+      totalCollections: collections.length,
+      collections: collections.map((col: any) => ({
+        id: col.id,
+        title: col.title,
+        handle: col.handle,
+        metadata: col.metadata,
+        thumbnail: col.metadata?.thumbnail,
+        hasThumbnail: !!col.metadata?.thumbnail
+      }))
+    })
+
     if (collections.length === 0) {
       return null
     }
@@ -83,6 +96,14 @@ async function TopCollectionsSection({ locale }: { locale: string }) {
             const thumbnailUrl = 
               collection?.metadata?.thumbnail || 
               "/product-placeholder.png"
+
+            // 🔍 Console log for each collection thumbnail
+            console.log(`🎨 Collection "${collection.title}":`, {
+              hasMetadata: !!collection.metadata,
+              thumbnail: collection.metadata?.thumbnail,
+              finalUrl: thumbnailUrl,
+              usingPlaceholder: thumbnailUrl === "/product-placeholder.png"
+            })
 
             return (
               <div key={collection.id} className="flex-shrink-0">
@@ -112,6 +133,20 @@ async function CategoriesSection() {
   const { listHierarchicalCategories } = await import("@/lib/data/categories")
   const parentCategories = await listHierarchicalCategories()
 
+  // 🔍 Console log to check category data from API
+  console.log('📦 CATEGORIES API RESPONSE:', {
+    totalCategories: parentCategories.length,
+    categories: parentCategories.map(c => ({
+      id: c.id,
+      name: c.name,
+      handle: c.handle,
+      metadata: c.metadata,
+      thumbnail_url: c.metadata?.thumbnail_url,
+      thumbnail_url_type: typeof c.metadata?.thumbnail_url,
+      hasThumbnail: !!c.metadata?.thumbnail_url
+    }))
+  })
+
   const displayCategories = parentCategories.slice(0, 7)
   const hasMore = parentCategories.length > 7
 
@@ -121,6 +156,17 @@ async function CategoriesSection() {
         const thumbnailUrl = typeof c?.metadata?.thumbnail_url === 'string' 
           ? c.metadata.thumbnail_url 
           : "/product-placeholder.png"
+        
+        // 🔍 Console log for each category thumbnail
+        console.log(`🖼️  Category "${c.name}":`, {
+          hasMetadata: !!c.metadata,
+          thumbnail_url: c.metadata?.thumbnail_url,
+          thumbnail_url_type: typeof c.metadata?.thumbnail_url,
+          thumbnail_url_length: c.metadata?.thumbnail_url?.length,
+          metadata_keys: c.metadata ? Object.keys(c.metadata) : [],
+          finalUrl: thumbnailUrl,
+          usingPlaceholder: thumbnailUrl === "/product-placeholder.png"
+        })
         
         return (
           <div key={c.id} className="flex-shrink-0">
