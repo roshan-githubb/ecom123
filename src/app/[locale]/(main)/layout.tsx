@@ -1,4 +1,4 @@
-import { Footer, Header, StickyCartBar } from "@/components/organisms"
+import { Footer, Header, StickyCartBar, DesktopSidebar } from "@/components/organisms"
 import { BottomNavbar, PullToRefresh } from "@/components/molecules"
 import { checkRegion } from "@/lib/helpers/check-region"
 import { redirect } from "next/navigation"
@@ -32,6 +32,7 @@ export default async function RootLayout({
       </HomePageWrapper>
       <StickyCartBar />
       <BottomNavbar />
+      <DesktopSidebar />
       <Toaster />
     </>
   )

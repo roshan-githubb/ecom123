@@ -295,40 +295,48 @@ export default async function HomePage({
 
   try {
     return (
-      <div className="space-y-6 px-4 lg:px-8 py-4 pt-7">
+      <div className="space-y-6 md:space-y-8 lg:space-y-12 px-4 lg:px-8 py-4 pt-7">
         {/* Top horizontal collections scroller - Dynamic from admin panel */}
         <Suspense fallback={<TopCategoriesSkeleton />}>
-          <TopCollectionsSection locale={locale} />
+          <div className="animate-slide-in-up">
+            <TopCollectionsSection locale={locale} />
+          </div>
         </Suspense>
 
         {/* Large banner carousel */}
         <Suspense fallback={<BannerSkeleton />}>
-          <div className="pt-0">
+          <div className="pt-0 animate-scale-in" style={{ animationDelay: '0.1s' }}>
             <BannerSection />
           </div>
         </Suspense>
 
         {/* Categories grid */}
         <Suspense fallback={<CategoriesGridSkeleton />}>
-          <CategoriesSection />
+          <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+            <CategoriesSection />
+          </div>
         </Suspense>
 
         {/* Popular products Section */}
         <Suspense fallback={<FlashItemsSkeleton />}>
-          <PopularProductsRows
-            link="popular-products"
-            title="Popular Products"
-            type="new-popular"
-          />
+          <div className="animate-slide-in-left" style={{ animationDelay: '0.3s' }}>
+            <PopularProductsRows
+              link="popular-products"
+              title="Popular Products"
+              type="new-popular"
+            />
+          </div>
         </Suspense>
 
         {/* Trending products Section */}
         <Suspense fallback={<FlashItemsSkeleton />}>
-          <PopularProductsRows
-            link="trending-products"
-            title="Trending Products"
-            type="trending"
-          />
+          <div className="animate-slide-in-right" style={{ animationDelay: '0.4s' }}>
+            <PopularProductsRows
+              link="trending-products"
+              title="Trending Products"
+              type="trending"
+            />
+          </div>
         </Suspense>
 
         {/* Recommended for you */}
@@ -360,28 +368,32 @@ export default async function HomePage({
         <Suspense
           fallback={<ProductsSectionSkeleton title="Best Selling Products" />}
         >
-          <TopProducts
-            regionId={regionId}
-            title="Best Selling Products"
-            link="/bestselling-products"
-            type="bestsellers"
-          />
+          <div className="animate-slide-in-up" style={{ animationDelay: '0.5s' }}>
+            <TopProducts
+              regionId={regionId}
+              title="Best Selling Products"
+              link="/bestselling-products"
+              type="bestsellers"
+            />
+          </div>
         </Suspense>
 
         {/* Advert video section */}
         <Suspense fallback={<VideoSkeleton />}>
-          <div className="pt-0">
+          <div className="pt-0 animate-scale-in" style={{ animationDelay: '0.6s' }}>
             <VideoSection />
           </div>
         </Suspense>
 
         {/* Most Popular */}
         <Suspense fallback={<ProductsSectionSkeleton title="Top Products" />}>
-          <TopProducts
-            regionId={regionId}
-            title="Top Products"
-            link="/top-products"
-          />
+          <div className="animate-slide-in-up" style={{ animationDelay: '0.7s' }}>
+            <TopProducts
+              regionId={regionId}
+              title="Top Products"
+              link="/top-products"
+            />
+          </div>
         </Suspense>
       </div>
     )

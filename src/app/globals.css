@@ -17,11 +17,11 @@
 /* 1. Custom Typography – safe names (no conflict with Tailwind defaults) */
 /* ======================================================================== */
 
-.heading-xs   { @apply text-sm font-medium leading-snug; }
-.heading-sm   { @apply text-base font-medium leading-snug; }
-.heading-md   { @apply text-2xl font-medium leading-tight max-md:text-xl max-md:leading-8; }
-.heading-lg   { @apply text-4xl font-medium leading-tight max-md:text-2xl max-md:leading-9; }
-.heading-xl   { @apply text-5xl font-medium leading-tight max-md:text-3xl max-md:leading-10; }
+.heading-xs   { @apply text-sm md:text-base font-medium leading-snug; }
+.heading-sm   { @apply text-base md:text-lg font-medium leading-snug; }
+.heading-md   { @apply text-2xl md:text-3xl lg:text-4xl font-medium leading-tight max-md:text-xl max-md:leading-8; }
+.heading-lg   { @apply text-4xl md:text-5xl lg:text-6xl font-medium leading-tight max-md:text-2xl max-md:leading-9; }
+.heading-xl   { @apply text-5xl md:text-6xl lg:text-7xl font-medium leading-tight max-md:text-3xl max-md:leading-10; }
 
 .label-sm     { @apply text-xs leading-5 font-normal; }
 .label-md     { @apply text-sm leading-relaxed font-normal; }
@@ -41,7 +41,7 @@
 /* ======================================================================== */
 
 .container {
-  @apply w-full max-w-full px-4 md:px-6 lg:px-8 py-4 lg:py-8;
+  @apply w-full max-w-full px-4 md:px-8 lg:px-12 py-6 md:py-8 lg:py-12;
 }
 
 /* ======================================================================== */
@@ -158,6 +158,10 @@ button:disabled svg path {
 }
 
 
+/* ======================================================================== */
+/* 7. Animations */
+/* ======================================================================== */
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -169,9 +173,265 @@ button:disabled svg path {
   }
 }
 
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rotate-in {
+  from {
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(58, 58, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(58, 58, 153, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes slide-sidebar-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hamburger-top {
+  from {
+    transform: rotate(0) translateY(0);
+  }
+  to {
+    transform: rotate(45deg) translateY(8px);
+  }
+}
+
+@keyframes hamburger-middle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes hamburger-bottom {
+  from {
+    transform: rotate(0) translateY(0);
+  }
+  to {
+    transform: rotate(-45deg) translateY(-8px);
+  }
+}
+
+/* Animation Classes */
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.4s ease-out;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.4s ease-out;
+}
+
+.animate-slide-in-down {
+  animation: slide-in-down 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-rotate-in {
+  animation: rotate-in 0.4s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-sidebar-in {
+  animation: slide-sidebar-in 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-overlay-in {
+  animation: slide-overlay-in 0.35s ease-out;
+}
+
+/* Hamburger Icon Animations */
+.hamburger-line {
+  @apply transition-all duration-300 ease-out;
+}
+
+.hamburger-line.active:nth-child(1) {
+  animation: hamburger-top 0.3s ease-out forwards;
+}
+
+.hamburger-line.active:nth-child(2) {
+  animation: hamburger-middle 0.3s ease-out forwards;
+}
+
+.hamburger-line.active:nth-child(3) {
+  animation: hamburger-bottom 0.3s ease-out forwards;
+}
+
+/* Smooth Transitions */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.transition-fast {
+  @apply transition-all duration-150 ease-in;
+}
+
+.transition-slow {
+  @apply transition-all duration-500 ease-out;
+}
+
+/* Hover Scale Effect */
+.hover-scale {
+  @apply transition-transform duration-200;
+}
+
+.hover-scale:hover {
+  @apply scale-105;
+}
+
+.hover-scale:active {
+  @apply scale-95;
+}
+
+/* Card Hover Elevation */
+.card-hover {
+  @apply transition-all duration-300 shadow-sm;
+}
+
+.card-hover:hover {
+  @apply shadow-lg translate-y-[-4px];
+}
+
+/* Stagger Animation for List Items */
+.stagger-item {
+  animation: slide-in-up 0.5s ease-out;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+.stagger-item:nth-child(6) { animation-delay: 0.6s; }
 
 @media (max-width: 1023px) {
   body {

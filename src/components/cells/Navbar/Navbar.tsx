@@ -97,8 +97,9 @@ export default function Navbar({
   }
 
   return (
-    <div className="flex items-center bg-myBlue px-4 md:px-12 py-4 border-b w-full relative">
-      <div className="relative mr-3 h-10 w-10 flex items-center">
+    <div className="flex items-center bg-myBlue px-4 md:px-6 lg:px-12 py-3 md:py-4 lg:py-5 border-b w-full relative shadow-md">
+      {/* Logo and Back Button - Left Section */}
+      <div className="relative mr-3 h-10 w-10 lg:h-12 lg:w-12 flex items-center flex-shrink-0">
         <button
           onClick={handleBack}
           className={cn(
@@ -133,26 +134,25 @@ export default function Navbar({
             alt="WeeTok"
             width={40}
             height={40}
-            className="object-contain"
+            className="object-contain lg:w-12 lg:h-12"
             priority
           />
         </LocalizedClientLink>
       </div>
 
-      <div className="mr-2 lg:mr-0"></div>
-
-      <div className="flex items-center w-full">
+      {/* Center Navigation - Desktop Only */}
+      <div className="flex items-center flex-1 ml-4 lg:ml-8">
         {showSearchbar && !showBackArrow && (
-          <div className="hidden lg:flex mt-2">
-            <ul className="flex space-x-6">
+          <div className="hidden lg:block">
+            <ul className="flex space-x-1 xl:space-x-2">
               <LocalizedClientLink
                 key="home"
                 href="/"
                 className={cn(
-                  "label-md min-w-[24px] capitalize",
+                  "px-3 py-2 text-sm font-medium capitalize transition-colors rounded-md",
                   pathname === "/np"
-                    ? "text-white font-semibold"
-                    : "text-gray-300 hover:text-gray-300"
+                    ? "text-white bg-white/10"
+                    : "text-gray-100 hover:text-white hover:bg-white/5"
                 )}
               >
                 Home
@@ -161,13 +161,13 @@ export default function Navbar({
                 key="products"
                 href="/products"
                 className={cn(
-                  "label-md min-w-[24px] capitalize text-gray-300 hover:text-gray-300"
+                  "px-3 py-2 text-sm font-medium capitalize transition-colors rounded-md text-gray-100 hover:text-white hover:bg-white/5"
                 )}
               >
                 Products
               </LocalizedClientLink>
 
-              {hierarchicalCategories.slice(0,8).map((category) => {
+              {hierarchicalCategories.slice(0, 6).map((category) => {
                 const categoryHref = `/categories/${category?.handle}`
 
                 return (
@@ -175,10 +175,10 @@ export default function Navbar({
                     key={category.handle}
                     href={categoryHref}
                     className={cn(
-                      "label-md min-w-[24px] capitalize",
+                      "px-3 py-2 text-sm font-medium capitalize transition-colors rounded-md",
                       pathname === `/np${categoryHref}`
-                        ? "text-white  font-semibold"
-                        : "text-gray-300 hover:text-gray-300"
+                        ? "text-white bg-white/10"
+                        : "text-gray-100 hover:text-white hover:bg-white/5"
                     )}
                   >
                     {category?.name}
@@ -189,143 +189,37 @@ export default function Navbar({
           </div>
         )}
 
-        <>
-          <div className="mt-2 flex  justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showCheckoutLabel && (
-              <span className="text-base min-w-[240px] font-poppins font-semibold text-white">
-                Checkout
-              </span>
-            )}
-          </div>
+      </div>
 
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showPaymentMethodLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Select Payment Method
-              </span>
-            )}
-          </div>
+      {/* Center Page Labels */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex text-white font-semibold text-lg">
+        {showCheckoutLabel && <span>Checkout</span>}
+        {showPaymentMethodLabel && <span>Select Payment Method</span>}
+        {showCardLabel && <span>Debit/Credit Card</span>}
+        {showImePayNowLabel && <span>Khalti by IME</span>}
+        {showImePayWalletLink && <span>IME Pay - Wallet Link</span>}
+        {showSelectShippingAddressLabel && <span>Select Shipping Address</span>}
+        {showPickupAddressLabel && <span>Pick up from</span>}
+        {showFAQLabel && <span>WeeTok Marketplace FAQ</span>}
+        {showTrackOrderLabel && <span>Track Order</span>}
+        {showReturnsLabel && <span>Return Policies</span>}
+        {showDeliveryLabel && <span>Delivery Info</span>}
+        {showPaymentLabel && <span>Payment Info</span>}
+        {showAboutUsLabel && <span>About WeeTok Marketplace</span>}
+        {showBlogLabel && <span>WeeTok Blog</span>}
+        {showPrivacyPolicyLabel && <span>Privacy Policy</span>}
+        {showTermsAndConditionsLabel && <span>WeeTok Marketplace T&C</span>}
+      </div>
 
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showCardLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Debit/Credit Card
-              </span>
-            )}
+      {/* Right Section - Search and Menu */}
+      <div className="ml-auto flex items-center gap-3 lg:gap-4">
+        {showSearchbar && (
+          <div className="hidden md:block">
+            <NavbarSearch />
           </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showImePayNowLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Khalti by IME
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showImePayWalletLink && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                IME Pay - Wallet Link
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 flex flex-1  justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showSelectShippingAddressLabel && (
-              <span className=" min-w-[240px] flex-1 text-base font-poppins font-semibold text-white">
-                Select Shipping Address
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showPickupAddressLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Pick up from
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showFAQLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                WeeTok Marketplace FAQ
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showTrackOrderLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Track Order
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showReturnsLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Return Policies
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showDeliveryLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Delivery Info
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showPaymentLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Payment Info
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showAboutUsLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                About WeeTok Marketplace
-              </span>
-            )}
-          </div>
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showBlogLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                WeeTok Blog
-              </span>
-            )}
-          </div>
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showPrivacyPolicyLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                Privacy Policy
-              </span>
-            )}
-          </div>
-          <div className="mt-2 mt- flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-            {showTermsAndConditionsLabel && (
-              <span className=" min-w-[240px] text-base font-poppins font-semibold text-white">
-                WeeTok Marketplace T&C
-              </span>
-            )}
-          </div>
-        </>
-        {/* Right: search + menu */}
-        <div className="flex w-full justify-end lg:ml-auto items-center space-x-2">
-          {showSearchbar && <NavbarSearch />}
-
-          <div className="ml-auto">
-            <MobileNavbar
-              hierarchicalCategories={hierarchicalCategories}
-            />
-          </div>
-
-          {/* <CartButton totalItems={totalItems} goToCheckoutPage={goToCheckoutPage} /> */}
+        )}
+        <div className="md:hidden">
+          <MobileNavbar hierarchicalCategories={hierarchicalCategories} />
         </div>
       </div>
     </div>

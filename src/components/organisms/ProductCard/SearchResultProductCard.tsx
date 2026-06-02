@@ -65,7 +65,7 @@ export const SearchResultProductCard = ({
   const imageUrl =
     product.images?.[0]?.url ||
     product.thumbnail ||
-    "/images/not-available/not-available.png"
+    "/images/product-placeholder-modern.svg"
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()

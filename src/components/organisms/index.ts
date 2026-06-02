@@ -29,6 +29,7 @@ import { ProfileOverview } from "./ProfileOverview/ProfileOverview"
 import { DefaultAddressSection } from "./DefaultAddressSection/DefaultAddressSection"
 import { HomePageWrapper } from "./HomePageWrapper/HomePageWrapper"
 import { PageTransitionWrapper } from "./PageTransitionWrapper/PageTransitionWrapper"
+import { DesktopSidebar } from "./DesktopSidebar/DesktopSidebar"
 
 
 export {
@@ -63,4 +64,5 @@ export {
   DefaultAddressSection,
   HomePageWrapper,
   PageTransitionWrapper,
+  DesktopSidebar,
 }

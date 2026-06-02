@@ -71,7 +71,7 @@ export const ProductCard = ({
               <Image
                 priority
                 fetchPriority="high"
-                src="/images/placeholder.svg"
+                src="/images/product-placeholder-modern.svg"
                 alt={`${productName} image placeholder`}
                 width={100}
                 height={100}

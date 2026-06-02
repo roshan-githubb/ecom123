@@ -65,7 +65,7 @@ export const HomeProductCard = ({
   const sellerName = (api_product as any)?.seller?.name || null
 
   const imageUrl =
-    api_product.images?.[0]?.url || "/images/not-available/not-available.png"
+    api_product.images?.[0]?.url || "/images/product-placeholder-modern.svg"
   const hasMultipleVariants: boolean = useMemo(() => {
     return (api_product.variants?.length || 0) > 1
   }, [api_product?.variants])
