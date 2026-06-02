@@ -35,7 +35,7 @@
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "lucide-react": "^0.554.0",
-    "next": "15.1.4",
+    "next": "^15.5.18",
     "next-intl": "^3.26.3",
     "photoswipe": "^5.4.4",
     "react": "^18.3.1",
