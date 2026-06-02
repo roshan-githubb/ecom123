@@ -2,8 +2,8 @@
 
 import { sdk } from "../config"
 import { HttpTypes } from "@medusajs/types"
-import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { safeRevalidateTag as revalidateTag } from "@/lib/utils/cache"
 import {
   getAuthHeaders,
   getCacheOptions,

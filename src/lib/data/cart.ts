@@ -4,8 +4,8 @@ import { fetchQuery, sdk } from "../config"
 
 import medusaError from "@/lib/helpers/medusa-error"
 import { HttpTypes } from "@medusajs/types"
-import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { safeRevalidateTag as revalidateTag, safeRevalidatePath as revalidatePath } from "@/lib/utils/cache"
 import {
   getAuthHeaders,
   getCacheOptions,
