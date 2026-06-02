@@ -162,7 +162,7 @@ async function CategoriesSection() {
           hasMetadata: !!c.metadata,
           thumbnail_url: c.metadata?.thumbnail_url,
           thumbnail_url_type: typeof c.metadata?.thumbnail_url,
-          thumbnail_url_length: c.metadata?.thumbnail_url?.length,
+          thumbnail_url_length: typeof c.metadata?.thumbnail_url === 'string' ? c.metadata.thumbnail_url.length : 0,
           metadata_keys: c.metadata ? Object.keys(c.metadata) : [],
           finalUrl: thumbnailUrl,
           usingPlaceholder: thumbnailUrl === "/product-placeholder.png"
